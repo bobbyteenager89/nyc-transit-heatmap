@@ -144,9 +144,14 @@ self.onmessage = (e: MessageEvent<WorkerBatchInput>) => {
   const idxMap = buildStationIdxMap(stationMatrix.stationIds);
 
   const points: LatLng[] = [];
-  for (let lat = bounds.sw.lat; lat <= bounds.ne.lat; lat += GRID_SPACING_DEG) {
-    for (let lng = bounds.sw.lng; lng <= bounds.ne.lng; lng += GRID_SPACING_DEG) {
-      points.push({ lat: Math.round(lat * 10000) / 10000, lng: Math.round(lng * 10000) / 10000 });
+  const latSteps = Math.round((bounds.ne.lat - bounds.sw.lat) / GRID_SPACING_DEG);
+  const lngSteps = Math.round((bounds.ne.lng - bounds.sw.lng) / GRID_SPACING_DEG);
+  for (let i = 0; i <= latSteps; i++) {
+    for (let j = 0; j <= lngSteps; j++) {
+      points.push({
+        lat: Math.round((bounds.sw.lat + i * GRID_SPACING_DEG) * 10000) / 10000,
+        lng: Math.round((bounds.sw.lng + j * GRID_SPACING_DEG) * 10000) / 10000,
+      });
     }
   }
 

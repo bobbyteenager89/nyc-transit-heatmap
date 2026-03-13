@@ -7,9 +7,10 @@ export async function geocodeAddress(
   token: string
 ): Promise<{ location: LatLng; displayName: string } | null> {
   const query = encodeURIComponent(`${address}, New York, NY`);
-  const url = `${MAPBOX_GEOCODE_URL}/${query}.json?access_token=${token}&limit=1&bbox=-74.3,-40.4,-73.6,40.95`;
+  const url = `${MAPBOX_GEOCODE_URL}/${query}.json?access_token=${token}&limit=1&bbox=-74.3,40.47,-73.6,40.95`;
 
   const res = await fetch(url);
+  if (!res.ok) return null;
   const data = await res.json();
 
   if (!data.features || data.features.length === 0) return null;
