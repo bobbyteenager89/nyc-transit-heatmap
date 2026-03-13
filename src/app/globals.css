@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-pink: #fcdde8;
+  --color-red: #e21822;
+  --font-display: "Arial Black", Impact, sans-serif;
+  --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #fcdde8;
+  color: #e21822;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display-text {
+  font-family: "Arial Black", Impact, sans-serif;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
