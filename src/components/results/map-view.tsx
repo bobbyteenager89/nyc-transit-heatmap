@@ -20,30 +20,31 @@ interface MapViewProps {
 }
 
 // Accessibility mode (no destinations): time-based coloring
+// Tighter scale (5-40 min) so subway proximity clearly stands out
 function timeToColor(minutes: number): string {
-  const t = Math.min(Math.max(minutes, 10), 60);
-  const ratio = (t - 10) / 50;
-  if (ratio < 0.5) {
-    const r = Math.round(ratio * 2 * 255);
-    return `rgba(${r}, 200, 50, 0.5)`;
+  const t = Math.min(Math.max(minutes, 5), 40);
+  const ratio = (t - 5) / 35;
+  if (ratio < 0.35) {
+    const r = Math.round((ratio / 0.35) * 255);
+    return `rgba(${r}, 200, 50, 0.7)`;
   } else {
-    const g = Math.round((1 - (ratio - 0.5) * 2) * 200);
-    return `rgba(230, ${g}, 30, 0.5)`;
+    const g = Math.round((1 - (ratio - 0.35) / 0.65) * 200);
+    return `rgba(230, ${g}, 30, 0.7)`;
   }
 }
 
 // Score mode (with destinations): hours/month coloring
-// 5 hrs/mo (green) → 30 hrs/mo (yellow) → 60+ hrs/mo (red)
+// 5 hrs/mo (green) → 25 hrs/mo (yellow) → 50+ hrs/mo (red)
 function hoursToColor(monthlyMinutes: number): string {
   const hours = monthlyMinutes / 60;
-  const t = Math.min(Math.max(hours, 5), 60);
-  const ratio = (t - 5) / 55;
-  if (ratio < 0.45) {
-    const r = Math.round((ratio / 0.45) * 255);
-    return `rgba(${r}, 200, 50, 0.5)`;
+  const t = Math.min(Math.max(hours, 5), 50);
+  const ratio = (t - 5) / 45;
+  if (ratio < 0.4) {
+    const r = Math.round((ratio / 0.4) * 255);
+    return `rgba(${r}, 200, 50, 0.7)`;
   } else {
-    const g = Math.round((1 - (ratio - 0.45) / 0.55) * 200);
-    return `rgba(230, ${g}, 30, 0.5)`;
+    const g = Math.round((1 - (ratio - 0.4) / 0.6) * 200);
+    return `rgba(230, ${g}, 30, 0.7)`;
   }
 }
 
@@ -113,7 +114,7 @@ export function MapView({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: [origin.lng, origin.lat],
-      zoom: 12,
+      zoom: 11.5,
     });
 
     mapRef.current = m;
@@ -125,16 +126,40 @@ export function MapView({
         data: { type: "FeatureCollection", features: [] },
       });
 
+      // Find the first symbol layer to insert circles below labels
+      const firstSymbol = m.getStyle().layers?.find(l => l.type === "symbol")?.id;
+
       m.addLayer({
         id: "heatmap-circles",
         type: "circle",
         source: "heatmap-grid",
         paint: {
-          "circle-radius": 8,
+          "circle-radius": [
+            "interpolate", ["linear"], ["zoom"],
+            10, 6,
+            12, 12,
+            14, 24,
+          ],
           "circle-color": ["get", "color"],
-          "circle-opacity": 0.6,
+          "circle-opacity": 0.85,
         },
-      });
+      }, firstSymbol);
+
+      // Water overlay mask: hides circles over rivers/ocean
+      try {
+        m.addLayer({
+          id: "water-mask",
+          type: "fill",
+          source: "composite",
+          "source-layer": "water",
+          paint: {
+            "fill-color": "#d4dadc",
+            "fill-opacity": 1,
+          },
+        });
+      } catch {
+        // Silently skip if water source unavailable
+      }
 
       // Click handler for pin drop (uses ref to get latest callback)
       m.on("click", (e) => {
@@ -320,14 +345,14 @@ export function MapView({
         <div className="text-xs uppercase font-bold tracking-widest mb-2">
           {hasDestinations ? "Monthly Transit Hours" : "Travel Time"}
         </div>
-        <div className="w-24 h-3" role="img" aria-label={hasDestinations ? "Color scale: green is 5 hours, yellow is 30 hours, red is 60+ hours per month" : "Color scale: green is 10 minutes, yellow is 35 minutes, red is 60+ minutes"} style={{
+        <div className="w-24 h-3" role="img" aria-label={hasDestinations ? "Color scale: green is 5 hours, yellow is 25 hours, red is 50+ hours per month" : "Color scale: green is 5 minutes, yellow is 17 minutes, red is 40+ minutes"} style={{
           background: "linear-gradient(90deg, rgb(0,200,50), rgb(255,200,50), rgb(230,30,30))"
         }} />
         <div className="flex justify-between text-xs mt-1">
           {hasDestinations ? (
-            <><span>5h</span><span>30h</span><span>60h+</span></>
+            <><span>5h</span><span>25h</span><span>50h+</span></>
           ) : (
-            <><span>10m</span><span>35m</span><span>60m+</span></>
+            <><span>5m</span><span>17m</span><span>40m+</span></>
           )}
         </div>
       </div>

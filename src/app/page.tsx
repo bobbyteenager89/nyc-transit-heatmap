@@ -9,8 +9,8 @@ import { computeGrid, type GridResult } from "@/lib/grid";
 import { computeMonthlyCost } from "@/lib/cost";
 import { walkTime, bikeTime, driveTime } from "@/lib/travel-time";
 import { computeSubwayTime } from "@/lib/subway";
-import type { TransportMode, Destination, LatLng, StationGraph, StationMatrix, CompositeGridPoint, GridPoint } from "@/lib/types";
-import { DEFAULT_BOUNDS, WEEKS_PER_MONTH } from "@/lib/constants";
+import type { TransportMode, Destination, LatLng, StationGraph, StationMatrix, CompositeGridPoint, GridPoint, BoundingBox } from "@/lib/types";
+import { DEFAULT_BOUNDS, WEEKS_PER_MONTH, BOUNDS_LAT_OFFSET, BOUNDS_LNG_OFFSET } from "@/lib/constants";
 
 export default function HomePage() {
   // Core state (replaces sessionStorage)
@@ -52,13 +52,22 @@ export default function HomePage() {
     load();
   }, []);
 
+  // Dynamic bounds centered on origin
+  const bounds = useMemo<BoundingBox>(() => {
+    if (!originLocation) return DEFAULT_BOUNDS;
+    return {
+      sw: { lat: originLocation.lat - BOUNDS_LAT_OFFSET, lng: originLocation.lng - BOUNDS_LNG_OFFSET },
+      ne: { lat: originLocation.lat + BOUNDS_LAT_OFFSET, lng: originLocation.lng + BOUNDS_LNG_OFFSET },
+    };
+  }, [originLocation]);
+
   // Compute grid when state or data changes
   useEffect(() => {
     if (!originLocation || !stationGraph || !stationMatrix || !citiBikeData) return;
 
     setComputing(true);
     computeGrid(
-      DEFAULT_BOUNDS,
+      bounds,
       originLocation,
       destinations,
       modes,
@@ -72,7 +81,7 @@ export default function HomePage() {
       console.error("Grid computation failed:", err);
       setComputing(false);
     });
-  }, [originLocation, destinations, modes, stationGraph, stationMatrix, citiBikeData]);
+  }, [originLocation, destinations, modes, bounds, stationGraph, stationMatrix, citiBikeData]);
 
   // Handle map click for pin drop
   const handleMapClick = useCallback((location: LatLng) => {
@@ -214,7 +223,7 @@ export default function HomePage() {
           origin={originLocation}
           destinations={destinations}
           grid={displayGrid}
-          bounds={DEFAULT_BOUNDS}
+          bounds={bounds}
           hasDestinations={destinations.length > 0}
           pinDropMode={pinDropMode}
           onMapClick={handleMapClick}
