@@ -145,7 +145,7 @@ export function MapView({
         },
       }, firstSymbol);
 
-      // Water overlay mask: hides circles over rivers/ocean
+      // Water overlay mask: hides circles over rivers/ocean (inserted between circles and labels)
       try {
         m.addLayer({
           id: "water-mask",
@@ -156,7 +156,7 @@ export function MapView({
             "fill-color": "#d4dadc",
             "fill-opacity": 1,
           },
-        });
+        }, firstSymbol);
       } catch {
         // Silently skip if water source unavailable
       }
