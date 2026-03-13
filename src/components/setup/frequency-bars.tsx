@@ -11,7 +11,8 @@ export function FrequencyBars({ value, max = 7, onChange }: FrequencyBarsProps) 
         <button
           key={i}
           onClick={() => onChange?.(i + 1)}
-          className={`w-3 h-6 border-2 border-red cursor-pointer ${
+          aria-label={`${i + 1} times per week`}
+          className={`w-6 h-6 border-2 border-red cursor-pointer ${
             i < value ? "bg-red" : "bg-transparent"
           }`}
         />

@@ -1,5 +1,5 @@
 import type { LatLng, TransportMode, GridPoint, CompositeGridPoint, BoundingBox, StationGraph, StationMatrix, CitiBikeStation, Destination } from "../lib/types";
-import { GRID_SPACING_DEG, WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, BIKE_SUBWAY_DOCK_RANGE_MI, BIKE_SAVINGS_PERCENT, BIKE_SAVINGS_MIN } from "../lib/constants";
+import { GRID_SPACING_DEG, WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, BIKE_SUBWAY_DOCK_RANGE_MI, BIKE_SAVINGS_PERCENT, BIKE_SAVINGS_MIN, WEEKS_PER_MONTH } from "../lib/constants";
 
 // Inline distance calc (can't import from modules in worker easily)
 const DEG_LAT_MI = 69.0;
@@ -26,6 +26,7 @@ function driveMin(from: LatLng, to: LatLng): number {
 
 interface WorkerBatchInput {
   bounds: BoundingBox;
+  origin: LatLng; // needed for empty-destination accessibility mode
   destinations: Destination[];
   modes: TransportMode[];
   stationGraph: StationGraph;
@@ -138,8 +139,53 @@ function computeBikeSubwayTime(
   return Math.round(best * 10) / 10;
 }
 
+// Compute travel times from a grid point to a single destination location
+function computeTimesForLocation(
+  point: LatLng, destLoc: LatLng, modes: TransportMode[],
+  stationGraph: StationGraph, stationMatrix: { times: number[][] },
+  idxMap: Map<string, number>, citiBikeStations: CitiBikeStation[]
+): Record<TransportMode, number | null> {
+  const times: Record<TransportMode, number | null> = {
+    walk: modes.includes("walk") ? walkMin(point, destLoc) : null,
+    car: modes.includes("car") ? driveMin(point, destLoc) : null,
+    bike: null,
+    subway: null,
+    bikeSubway: null,
+  };
+
+  if (modes.includes("bike")) {
+    const hasDockOrigin = findNearestDock(point, citiBikeStations, BIKE_DOCK_RANGE_MI);
+    const hasDockDest = findNearestDock(destLoc, citiBikeStations, BIKE_DOCK_RANGE_MI);
+    if (hasDockOrigin && hasDockDest) {
+      times.bike = bikeMin(point, destLoc);
+    }
+  }
+
+  if (modes.includes("subway")) {
+    times.subway = computeSubwayTime(point, destLoc, stationGraph.stations, stationMatrix.times, idxMap);
+  }
+
+  if (modes.includes("bikeSubway")) {
+    times.bikeSubway = computeBikeSubwayTime(point, destLoc, stationGraph.stations, stationMatrix.times, idxMap, citiBikeStations);
+  }
+
+  return times;
+}
+
+function getFastestTime(times: Record<TransportMode, number | null>): { fastest: TransportMode; time: number } {
+  let fastest: TransportMode = "walk";
+  let fastestTime = Infinity;
+  for (const [mode, time] of Object.entries(times)) {
+    if (time !== null && time < fastestTime) {
+      fastestTime = time;
+      fastest = mode as TransportMode;
+    }
+  }
+  return { fastest, time: fastestTime };
+}
+
 self.onmessage = (e: MessageEvent<WorkerBatchInput>) => {
-  const { bounds, destinations, modes, stationGraph, stationMatrix, citiBikeStations } = e.data;
+  const { bounds, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations } = e.data;
 
   const idxMap = buildStationIdxMap(stationMatrix.stationIds);
 
@@ -155,54 +201,51 @@ self.onmessage = (e: MessageEvent<WorkerBatchInput>) => {
     }
   }
 
+  // Empty-destination mode: show accessibility heatmap from origin
+  if (destinations.length === 0) {
+    const accessibilityGrid: CompositeGridPoint[] = points.map((point) => {
+      const times = computeTimesForLocation(point, origin, modes, stationGraph, stationMatrix, idxMap, citiBikeStations);
+      const { fastest } = getFastestTime(times);
+      const bestTime = Math.min(...Object.values(times).filter((t): t is number => t !== null));
+      return { ...point, times, fastest, compositeScore: bestTime === Infinity ? 999 : bestTime };
+    });
+
+    self.postMessage({ compositeGrid: accessibilityGrid, destGrids: {} });
+    return;
+  }
+
   const destGrids: Map<string, GridPoint[]> = new Map();
 
   for (const dest of destinations) {
     const grid: GridPoint[] = [];
+    // Get all possible locations for this destination
+    const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
 
     for (const point of points) {
-      const times: Record<TransportMode, number | null> = {
-        walk: modes.includes("walk") ? walkMin(point, dest.location) : null,
-        car: modes.includes("car") ? driveMin(point, dest.location) : null,
-        bike: null,
-        subway: null,
-        bikeSubway: null,
-      };
+      // For multi-location destinations, find the closest location per grid point
+      let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null };
+      let overallBestTime = Infinity;
 
-      if (modes.includes("bike")) {
-        const hasDockOrigin = findNearestDock(point, citiBikeStations, BIKE_DOCK_RANGE_MI);
-        const hasDockDest = findNearestDock(dest.location, citiBikeStations, BIKE_DOCK_RANGE_MI);
-        if (hasDockOrigin && hasDockDest) {
-          times.bike = bikeMin(point, dest.location);
+      for (const destLoc of destLocations) {
+        const locTimes = computeTimesForLocation(point, destLoc, modes, stationGraph, stationMatrix, idxMap, citiBikeStations);
+        const { time } = getFastestTime(locTimes);
+
+        if (time < overallBestTime) {
+          overallBestTime = time;
+          bestTimes = locTimes;
         }
       }
 
-      if (modes.includes("subway")) {
-        times.subway = computeSubwayTime(point, dest.location, stationGraph.stations, stationMatrix.times, idxMap);
-      }
-
-      if (modes.includes("bikeSubway")) {
-        times.bikeSubway = computeBikeSubwayTime(point, dest.location, stationGraph.stations, stationMatrix.times, idxMap, citiBikeStations);
-      }
-
-      let fastest: TransportMode = "walk";
-      let fastestTime = Infinity;
-      for (const [mode, time] of Object.entries(times)) {
-        if (time !== null && time < fastestTime) {
-          fastestTime = time;
-          fastest = mode as TransportMode;
-        }
-      }
-
-      grid.push({ lat: point.lat, lng: point.lng, times, fastest });
+      const { fastest } = getFastestTime(bestTimes);
+      grid.push({ lat: point.lat, lng: point.lng, times: bestTimes, fastest });
     }
 
     destGrids.set(dest.id, grid);
   }
 
+  // Composite score: total monthly minutes = sum(bestTime[pin] × freq[pin] × 2 round trips × 4.3 weeks/month)
   const compositeGrid: CompositeGridPoint[] = points.map((point, i) => {
-    let weightedSum = 0;
-    let freqSum = 0;
+    let totalMonthlyMinutes = 0;
     const times: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null };
 
     for (const dest of destinations) {
@@ -218,12 +261,13 @@ self.onmessage = (e: MessageEvent<WorkerBatchInput>) => {
       }
 
       if (bestTime < Infinity) {
-        weightedSum += bestTime * dest.frequency;
-        freqSum += dest.frequency;
+        // frequency is visits/week, × 2 for round trip, × WEEKS_PER_MONTH
+        totalMonthlyMinutes += bestTime * dest.frequency * 2 * WEEKS_PER_MONTH;
       }
     }
 
-    const compositeScore = freqSum > 0 ? Math.round((weightedSum / freqSum) * 10) / 10 : 999;
+    // compositeScore is now total monthly minutes (convert to hours for display in UI)
+    const compositeScore = totalMonthlyMinutes > 0 ? Math.round(totalMonthlyMinutes * 10) / 10 : 999;
 
     let fastest: TransportMode = "walk";
     let fastestTime = Infinity;

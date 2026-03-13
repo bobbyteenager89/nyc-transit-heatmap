@@ -14,6 +14,7 @@ export interface Destination {
   location: LatLng;
   category: DestinationCategory;
   frequency: number; // visits per week
+  locations?: LatLng[]; // multiple locations (e.g., gym chains). If set, closest used per grid point
 }
 
 export interface GridPoint {

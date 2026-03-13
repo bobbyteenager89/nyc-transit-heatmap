@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type { CompositeGridPoint, GridPoint, LatLng, Destination, BoundingBox } from "@/lib/types";
+import type { CompositeGridPoint, GridPoint, LatLng, Destination, BoundingBox, DestinationCategory } from "@/lib/types";
 import { reverseGeocode } from "@/lib/geocode";
 
 interface MapViewProps {
@@ -11,9 +11,15 @@ interface MapViewProps {
   destinations: Destination[];
   grid: CompositeGridPoint[] | GridPoint[];
   bounds: BoundingBox;
-  onBoundsChange?: (bounds: BoundingBox) => void;
+  hasDestinations: boolean;
+  pinDropMode?: boolean;
+  onMapClick?: (location: LatLng) => void;
+  pendingPin?: LatLng | null;
+  onPinConfirm?: (name: string, category: DestinationCategory) => void;
+  onPinCancel?: () => void;
 }
 
+// Accessibility mode (no destinations): time-based coloring
 function timeToColor(minutes: number): string {
   const t = Math.min(Math.max(minutes, 10), 60);
   const ratio = (t - 10) / 50;
@@ -26,13 +32,78 @@ function timeToColor(minutes: number): string {
   }
 }
 
-export function MapView({ origin, destinations, grid, bounds, onBoundsChange }: MapViewProps) {
+// Score mode (with destinations): hours/month coloring
+// 5 hrs/mo (green) → 30 hrs/mo (yellow) → 60+ hrs/mo (red)
+function hoursToColor(monthlyMinutes: number): string {
+  const hours = monthlyMinutes / 60;
+  const t = Math.min(Math.max(hours, 5), 60);
+  const ratio = (t - 5) / 55;
+  if (ratio < 0.45) {
+    const r = Math.round((ratio / 0.45) * 255);
+    return `rgba(${r}, 200, 50, 0.5)`;
+  } else {
+    const g = Math.round((1 - (ratio - 0.45) / 0.55) * 200);
+    return `rgba(230, ${g}, 30, 0.5)`;
+  }
+}
+
+function buildGeoJSON(grid: (CompositeGridPoint | GridPoint)[], hasDestinations: boolean) {
+  const isScoreMode = hasDestinations && grid.length > 0 && "compositeScore" in (grid[0] || {});
+
+  const features = grid.map((p) => {
+    const isComposite = "compositeScore" in p;
+    const score = isComposite
+      ? (p as CompositeGridPoint).compositeScore
+      : Math.min(...Object.values(p.times).filter((t): t is number => t !== null)) || 60;
+
+    const color = (isScoreMode && isComposite)
+      ? hoursToColor(score)
+      : timeToColor(score);
+
+    return {
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
+      properties: {
+        score,
+        color,
+        ...p.times,
+        fastest: p.fastest,
+      },
+    };
+  });
+
+  return { type: "FeatureCollection" as const, features, isScoreMode };
+}
+
+const PIN_DROP_CATEGORIES: { key: DestinationCategory; label: string }[] = [
+  { key: "social", label: "Social" },
+  { key: "work", label: "Work" },
+  { key: "fitness", label: "Fitness" },
+  { key: "errands", label: "Errands" },
+  { key: "other", label: "Other" },
+];
+
+export function MapView({
+  origin, destinations, grid, bounds, hasDestinations,
+  pinDropMode, onMapClick, pendingPin, onPinConfirm, onPinCancel,
+}: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
+
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const geocodeCache = useRef<Map<string, string>>(new Map());
+  const isScoreModeRef = useRef(false);
 
+  // Pin drop form state
+  const [pinName, setPinName] = useState("");
+  const [pinCategory, setPinCategory] = useState<DestinationCategory>("social");
+
+  // Initialize map ONCE
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -45,28 +116,13 @@ export function MapView({ origin, destinations, grid, bounds, onBoundsChange }: 
       zoom: 12,
     });
 
-    map.current = m;
+    mapRef.current = m;
 
     m.on("load", () => {
-      const features = grid.map((p) => {
-        const score = "compositeScore" in p
-          ? (p as CompositeGridPoint).compositeScore
-          : Math.min(...Object.values(p.times).filter((t): t is number => t !== null)) || 60;
-        return {
-          type: "Feature" as const,
-          geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
-          properties: {
-            score,
-            color: timeToColor(score as number),
-            ...p.times,
-            fastest: p.fastest,
-          },
-        };
-      });
-
+      // Add empty source + layer for grid
       m.addSource("heatmap-grid", {
         type: "geojson",
-        data: { type: "FeatureCollection", features },
+        data: { type: "FeatureCollection", features: [] },
       });
 
       m.addLayer({
@@ -80,19 +136,10 @@ export function MapView({ origin, destinations, grid, bounds, onBoundsChange }: 
         },
       });
 
-      // Origin marker
-      new mapboxgl.Marker({ color: "#e21822" })
-        .setLngLat([origin.lng, origin.lat])
-        .addTo(m);
-
-      // Destination markers
-      for (const dest of destinations) {
-        const el = document.createElement("div");
-        el.innerHTML = `<div style="background:#e21822;color:#fcdde8;padding:2px 6px;font-size:11px;font-weight:bold;font-family:Arial Black;font-style:italic;text-transform:uppercase;white-space:nowrap">${dest.name}</div>`;
-        new mapboxgl.Marker({ element: el })
-          .setLngLat([dest.location.lng, dest.location.lat])
-          .addTo(m);
-      }
+      // Click handler for pin drop (uses ref to get latest callback)
+      m.on("click", (e) => {
+        onMapClickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      });
 
       // Hover tooltip
       m.on("mousemove", "heatmap-circles", async (e) => {
@@ -121,21 +168,142 @@ export function MapView({ origin, destinations, grid, bounds, onBoundsChange }: 
           })
           .join(" · ");
 
-        setTooltipContent(`${address}\n${lines}`);
+        const scoreInfo = (isScoreModeRef.current && props.score < 999)
+          ? `\n${(props.score / 60).toFixed(1)} hrs/month transit`
+          : "";
+
+        setTooltipContent(`${address}\n${lines}${scoreInfo}`);
         setTooltipPos({ x: e.point.x, y: e.point.y });
       });
 
       m.on("mouseleave", "heatmap-circles", () => {
         setTooltipContent(null);
       });
+
+      setMapReady(true);
     });
 
-    return () => m.remove();
-  }, [origin, destinations, grid]);
+    return () => {
+      setMapReady(false);
+      m.remove();
+      mapRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [origin.lat, origin.lng]);
+
+  // Update grid data without rebuilding map
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+
+    const { features, isScoreMode } = buildGeoJSON(grid, hasDestinations);
+    isScoreModeRef.current = isScoreMode;
+
+    const source = m.getSource("heatmap-grid") as mapboxgl.GeoJSONSource | undefined;
+    if (source) {
+      source.setData({ type: "FeatureCollection", features });
+    }
+  }, [grid, hasDestinations, mapReady]);
+
+  // Update destination markers without rebuilding map
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m) return;
+
+    // Remove old destination markers
+    for (const marker of markersRef.current) {
+      marker.remove();
+    }
+    markersRef.current = [];
+
+    // Add new markers
+    for (const dest of destinations) {
+      const el = document.createElement("div");
+      const label = document.createElement("div");
+      label.style.cssText = "background:#e21822;color:#fcdde8;padding:2px 6px;font-size:11px;font-weight:bold;font-family:Arial Black;font-style:italic;text-transform:uppercase;white-space:nowrap";
+      label.textContent = dest.name;
+      el.appendChild(label);
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([dest.location.lng, dest.location.lat])
+        .addTo(m);
+      markersRef.current.push(marker);
+    }
+  }, [destinations]);
 
   return (
     <div className="relative flex-1 h-full">
-      <div ref={mapContainer} className="w-full h-full" />
+      <div
+        ref={mapContainer}
+        className={`w-full h-full ${pinDropMode ? "cursor-crosshair" : ""}`}
+      />
+
+      {/* Pin drop mode indicator */}
+      {pinDropMode && (
+        <div role="status" aria-live="polite" className="absolute top-4 left-1/2 -translate-x-1/2 bg-red text-pink px-4 py-2 z-20 font-display italic uppercase text-sm">
+          Click anywhere on the map to drop a pin
+        </div>
+      )}
+
+      {/* Pending pin form */}
+      {pendingPin && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-pink border-3 border-red p-4 z-30 w-72">
+          <p className="text-xs uppercase font-bold tracking-widest mb-3">Name This Pin</p>
+          <input
+            type="text"
+            value={pinName}
+            onChange={(e) => setPinName(e.target.value)}
+            placeholder="e.g. Jake's place…"
+            autoFocus
+            name="pin-name"
+            autoComplete="off"
+            className="w-full bg-transparent border-3 border-red text-red p-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-red placeholder:text-red/50 focus:bg-red focus:text-pink mb-3"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && pinName.trim()) {
+                onPinConfirm?.(pinName.trim(), pinCategory);
+                setPinName("");
+              }
+            }}
+          />
+          <div className="flex gap-1 flex-wrap mb-3">
+            {PIN_DROP_CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setPinCategory(c.key)}
+                className={`text-xs border-2 border-red px-2 py-1 uppercase font-bold cursor-pointer ${
+                  pinCategory === c.key ? "bg-red text-pink" : ""
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (pinName.trim()) {
+                  onPinConfirm?.(pinName.trim(), pinCategory);
+                  setPinName("");
+                }
+              }}
+              disabled={!pinName.trim()}
+              className="flex-1 border-3 border-red bg-red text-pink font-display italic uppercase py-2 disabled:opacity-30 cursor-pointer text-sm"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => {
+                onPinCancel?.();
+                setPinName("");
+              }}
+              className="border-3 border-red px-3 py-2 font-display italic uppercase cursor-pointer text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tooltip */}
       {tooltipContent && (
         <div
           className="absolute pointer-events-none bg-red text-pink p-2 text-xs font-body z-50 max-w-xs"
@@ -149,12 +317,18 @@ export function MapView({ origin, destinations, grid, bounds, onBoundsChange }: 
 
       {/* Legend */}
       <div className="absolute bottom-6 right-6 bg-pink border-3 border-red p-3 z-10">
-        <div className="text-xs uppercase font-bold tracking-widest mb-2">Travel Time</div>
-        <div className="w-24 h-3" style={{
+        <div className="text-xs uppercase font-bold tracking-widest mb-2">
+          {hasDestinations ? "Monthly Transit Hours" : "Travel Time"}
+        </div>
+        <div className="w-24 h-3" role="img" aria-label={hasDestinations ? "Color scale: green is 5 hours, yellow is 30 hours, red is 60+ hours per month" : "Color scale: green is 10 minutes, yellow is 35 minutes, red is 60+ minutes"} style={{
           background: "linear-gradient(90deg, rgb(0,200,50), rgb(255,200,50), rgb(230,30,30))"
         }} />
         <div className="flex justify-between text-xs mt-1">
-          <span>10m</span><span>35m</span><span>60m+</span>
+          {hasDestinations ? (
+            <><span>5h</span><span>30h</span><span>60h+</span></>
+          ) : (
+            <><span>10m</span><span>35m</span><span>60m+</span></>
+          )}
         </div>
       </div>
     </div>

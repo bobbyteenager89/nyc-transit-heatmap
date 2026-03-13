@@ -32,8 +32,10 @@ export function AddressInput({ label, value, onChange }: AddressInputProps) {
         value={value}
         onChange={(e) => onChange(e.target.value, null)}
         onBlur={handleBlur}
-        placeholder="Enter address..."
-        className="bg-transparent border-3 border-red text-red font-body text-base p-3 outline-none placeholder:text-red/50 focus:bg-red focus:text-pink"
+        placeholder="Enter address…"
+        name="address"
+        autoComplete="off"
+        className="bg-transparent border-3 border-red text-red font-body text-base p-3 outline-none focus-visible:ring-2 focus-visible:ring-red placeholder:text-red/50 focus:bg-red focus:text-pink"
       />
       {isGeocoding && <span className="text-xs opacity-50">Geocoding...</span>}
     </div>

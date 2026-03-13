@@ -14,12 +14,19 @@
 - `npm run build:subway` — rebuild subway graph from GTFS data
 
 ## Structure
-- `src/app/page.tsx` — setup survey screen
-- `src/app/results/page.tsx` — results map screen
+- `src/app/page.tsx` — single-screen app (address → heatmap → build score)
+- `src/app/results/page.tsx` — redirects to `/` (legacy)
+- `src/components/results/sidebar.tsx` — sidebar with origin, modes, "Build My Score" panel
+- `src/components/results/map-view.tsx` — Mapbox heatmap with click-to-drop-pin
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode)
-- `src/workers/grid-worker.ts` — web worker for heatmap computation
+- `src/workers/grid-worker.ts` — web worker for grid computation (supports multi-location destinations)
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
 - `public/data/` — pre-built subway data (committed)
+
+## Heatmap Modes
+- **No destinations**: accessibility heatmap (travel time from origin to each grid point)
+- **With destinations**: score heatmap showing total monthly transit hours (green=low, red=high)
+- **Multi-location**: destinations with `locations[]` use closest location per grid point
 
 ## Design
 - Brutalist pink (#fcdde8) / red (#e21822) two-color system
