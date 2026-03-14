@@ -14,10 +14,14 @@
 - `npm run build:subway` — rebuild subway graph from GTFS data
 
 ## Structure
-- `src/app/page.tsx` — single-screen app (address → heatmap → build score)
-- `src/app/results/page.tsx` — redirects to `/` (legacy)
-- `src/components/results/sidebar.tsx` — sidebar with origin, modes, "Build My Score" panel
-- `src/components/results/map-view.tsx` — Mapbox heatmap with click-to-drop-pin
+- `src/app/page.tsx` — landing page with Find/Explore choice
+- `src/app/find/page.tsx` — Find My Neighborhood (wizard → results with hex heatmap)
+- `src/app/explore/page.tsx` — Explore the Map (address → accessibility heatmap)
+- `src/components/results/hex-map.tsx` — Mapbox hex map with H3 fill layer, water mask, animated reveal
+- `src/components/results/results-sidebar.tsx` — results panel with destinations, modes, sharing
+- `src/components/wizard/wizard-shell.tsx` — 4-step wizard (Work → Gym → Social → Extras)
+- `src/components/shared/address-autocomplete.tsx` — Mapbox geocoding autocomplete
+- `src/lib/hex.ts` — H3 hex grid generation + GeoJSON conversion
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode)
 - `src/workers/grid-worker.ts` — web worker for grid computation (supports multi-location destinations)
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
