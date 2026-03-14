@@ -10,7 +10,7 @@ import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { reverseGeocode } from "@/lib/geocode";
 import { encodeShareableState, decodeShareableState } from "@/lib/url-state";
-import { CORE_NYC_BOUNDS, H3_RESOLUTION, WEEKS_PER_MONTH } from "@/lib/constants";
+import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 import type {
   Destination,
   TransportMode,
@@ -38,7 +38,6 @@ export default function FindPage() {
   const [dataReady, setDataReady] = useState(false);
 
   // Results UI state
-  const [view, setView] = useState<"composite" | "perPin">("composite");
   const [selectedDestId, setSelectedDestId] = useState<string | null>(null);
   const [bestCell, setBestCell] = useState<HexCell | null>(null);
   const [bestAddress, setBestAddress] = useState<string | null>(null);
@@ -240,14 +239,15 @@ export default function FindPage() {
       : `https://nyc-transit-heatmap.vercel.app/find?${encodeShareableState(destinations, modes)}`;
 
   // Visible cells depend on view mode
+  const showPerPin = selectedDestId !== null;
   const visibleCells = (() => {
-    if (view === "perPin" && selectedDestId) {
-      // Show per-pin view: color by single destination's time
+    if (showPerPin) {
+      // Show per-pin view: raw travel time in minutes (like accessibility heatmap)
       return cells.map((cell) => {
         const destTime = cell.destBreakdown[selectedDestId] ?? null;
         return {
           ...cell,
-          compositeScore: destTime !== null ? destTime * WEEKS_PER_MONTH * 2 * 4.3 : 0,
+          compositeScore: destTime ?? 999,
         };
       });
     }
@@ -274,6 +274,8 @@ export default function FindPage() {
         onEditDestinations={handleEditDestinations}
         onDropPin={() => setPinDropMode((p) => !p)}
         pinDropMode={pinDropMode}
+        selectedDestId={selectedDestId}
+        onSelectDest={setSelectedDestId}
         bestCell={bestCell}
         bestAddress={bestAddress}
         totalHours={totalHours}
@@ -301,7 +303,7 @@ export default function FindPage() {
           center={mapCenter}
           cells={visibleCells}
           destinations={destinations}
-          hasDestinations={destinations.length > 0}
+          hasDestinations={destinations.length > 0 && !showPerPin}
           pinDropMode={pinDropMode}
           onMapClick={handleMapClick}
           pendingPin={pendingPin}
