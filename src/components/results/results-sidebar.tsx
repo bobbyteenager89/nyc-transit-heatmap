@@ -41,7 +41,7 @@ export function ResultsSidebar({
     <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
       {/* Header */}
       <PanelSection className="pb-6">
-        <h1 className="text-4xl leading-none">
+        <h1 className="text-3xl leading-none">
           Find My<br />Neighborhood
         </h1>
         <p className="font-body text-xs text-red/60 mt-1">

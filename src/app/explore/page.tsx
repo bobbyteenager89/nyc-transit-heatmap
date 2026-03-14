@@ -110,11 +110,11 @@ export default function ExplorePage() {
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
   return (
-    <div className="flex h-full border-3 border-red">
+    <div className="flex h-full">
       {/* Sidebar */}
       <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
         <PanelSection className="pb-8">
-          <h1 className="text-4xl leading-none">
+          <h1 className="text-3xl leading-none">
             Explore<br />the Map
           </h1>
           <p className="font-body text-sm text-red/70 leading-relaxed">

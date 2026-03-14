@@ -256,7 +256,7 @@ export default function FindPage() {
 
   if (phase === "wizard") {
     return (
-      <div className="flex flex-col h-full border-3 border-red">
+      <div className="flex flex-col h-full">
         <WizardShell onComplete={handleWizardComplete} />
       </div>
     );
@@ -266,7 +266,7 @@ export default function FindPage() {
   const mapCenter = bestCell?.center ?? DEFAULT_CENTER;
 
   return (
-    <div className="flex h-full border-3 border-red">
+    <div className="flex h-full">
       <ResultsSidebar
         destinations={destinations}
         modes={modes}
