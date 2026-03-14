@@ -25,7 +25,23 @@ export interface GridPoint {
 }
 
 export interface CompositeGridPoint extends GridPoint {
-  compositeScore: number; // weighted avg minutes
+  compositeScore: number; // total monthly minutes
+}
+
+/** H3 hex cell with computed travel data */
+export interface HexCell {
+  h3Index: string;
+  center: LatLng;
+  boundary: [number, number][]; // [lng, lat] pairs for GeoJSON polygon
+  times: Record<TransportMode, number | null>;
+  fastest: TransportMode;
+  compositeScore: number; // total monthly minutes (0 = no destinations)
+  /** Per-destination breakdown: destId → best travel time in minutes */
+  destBreakdown: Record<string, number>;
+}
+
+export interface HexGridResult {
+  cells: HexCell[];
 }
 
 export interface StationGraph {
@@ -57,10 +73,16 @@ export interface BoundingBox {
   ne: LatLng;
 }
 
-export interface SetupState {
-  origin: LatLng | null;
-  originAddress: string;
+/** Shareable URL state — everything needed to reconstruct a heatmap */
+export interface ShareableState {
+  v: 1; // version for forward compat
+  destinations: {
+    n: string; // name
+    a: string; // address
+    lat: number;
+    lng: number;
+    c: DestinationCategory;
+    f: number; // frequency
+  }[];
   modes: TransportMode[];
-  destinations: Destination[];
-  bounds: BoundingBox;
 }
