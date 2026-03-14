@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NYC Transit Heatmap",
-  description: "Visualize travel times across NYC by transit mode",
+  title: "NYC Transit Heatmap — Find Your Neighborhood",
+  description: "Find the NYC neighborhood that minimizes your commute. See transit times by subway, bike, and foot on an interactive hex heatmap.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
