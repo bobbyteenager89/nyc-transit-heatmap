@@ -1,21 +1,20 @@
-import type { BoundingBox, Destination, TransportMode, CompositeGridPoint, GridPoint, StationGraph, StationMatrix, CitiBikeStation, LatLng } from "./types";
+import type { Destination, TransportMode, HexCell, HexGridResult, StationGraph, StationMatrix, CitiBikeStation, LatLng } from "./types";
 
-export interface GridResult {
-  compositeGrid: CompositeGridPoint[];
-  destGrids: Record<string, GridPoint[]>;
-}
+export type { HexGridResult };
 
 let activeWorker: Worker | null = null;
 
-export function computeGrid(
-  bounds: BoundingBox,
-  origin: LatLng,
-  destinations: Destination[],
-  modes: TransportMode[],
-  stationGraph: StationGraph,
-  stationMatrix: StationMatrix,
-  citiBikeStations: CitiBikeStation[]
-): Promise<GridResult> {
+export interface HexWorkerInput {
+  hexCenters: { h3Index: string; lat: number; lng: number }[];
+  origin: LatLng | null; // null for wizard mode (no single origin)
+  destinations: Destination[];
+  modes: TransportMode[];
+  stationGraph: StationGraph;
+  stationMatrix: StationMatrix;
+  citiBikeStations: CitiBikeStation[];
+}
+
+export function computeHexGrid(input: HexWorkerInput): Promise<HexGridResult> {
   // Cancel any in-flight worker
   if (activeWorker) {
     activeWorker.terminate();
@@ -26,26 +25,27 @@ export function computeGrid(
     const worker = new Worker(new URL("../workers/grid-worker.ts", import.meta.url));
     activeWorker = worker;
 
-    worker.onmessage = (e: MessageEvent<GridResult>) => {
+    // 30s timeout
+    const timeout = setTimeout(() => {
+      worker.terminate();
+      activeWorker = null;
+      reject(new Error("Grid computation timed out after 30s"));
+    }, 30000);
+
+    worker.onmessage = (e: MessageEvent<HexGridResult>) => {
+      clearTimeout(timeout);
       resolve(e.data);
       activeWorker = null;
       worker.terminate();
     };
 
     worker.onerror = (e) => {
+      clearTimeout(timeout);
       reject(new Error(e.message));
       activeWorker = null;
       worker.terminate();
     };
 
-    worker.postMessage({
-      bounds,
-      origin,
-      destinations,
-      modes,
-      stationGraph,
-      stationMatrix,
-      citiBikeStations,
-    });
+    worker.postMessage(input);
   });
 }
