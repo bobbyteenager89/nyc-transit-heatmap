@@ -208,7 +208,7 @@ export function HexMap({
       const duration = 500;
 
       function animate(now: number) {
-        const progress = Math.min((now - start) / duration, 1);
+        const progress = Math.max(0, Math.min((now - start) / duration, 1));
         const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
         m!.setPaintProperty("hex-fill", "fill-opacity", eased * 0.85);
         m!.setPaintProperty("hex-outline", "line-opacity", eased * 0.4);
