@@ -1,133 +1,101 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import { StepWork } from "./step-work";
 import { StepGym } from "./step-gym";
 import { StepSocial } from "./step-social";
 import { StepExtras } from "./step-extras";
 import type { Destination } from "@/lib/types";
 
-const STEPS = ["Work", "Gym", "Social", "Extras"] as const;
-type StepName = (typeof STEPS)[number];
-
-export interface WizardState {
-  work: Destination | null;
-  gym: Destination | null;
-  social: Destination[];
-  extras: Destination[];
+interface WizardShellProps {
+  onComplete: (destinations: Destination[]) => void;
 }
 
-export function WizardShell() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [state, setState] = useState<WizardState>({
-    work: null,
-    gym: null,
-    social: [],
-    extras: [],
-  });
+const STEPS = ["work", "gym", "social", "extras"] as const;
+type StepName = (typeof STEPS)[number];
 
-  const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
+const STEP_LABELS: Record<StepName, string> = {
+  work: "Work",
+  gym: "Gym",
+  social: "Social",
+  extras: "Extras",
+};
 
-  const handleFinish = () => {
-    const destinations: Destination[] = [
-      ...(state.work ? [state.work] : []),
-      ...(state.gym ? [state.gym] : []),
-      ...state.social,
-      ...state.extras,
-    ];
-    sessionStorage.setItem(
-      "heatmap-setup",
-      JSON.stringify({ destinations, modes: ["subway", "bike", "bikeSubway"] })
-    );
-    router.push("/results");
-  };
+export function WizardShell({ onComplete }: WizardShellProps) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [work, setWork] = useState<Destination | null>(null);
+  const [gym, setGym] = useState<Destination | null>(null);
+  const [social, setSocial] = useState<Destination[]>([]);
+  const [extras, setExtras] = useState<Destination[]>([]);
 
-  const isLastStep = currentStep === STEPS.length - 1;
-  const canFinish =
-    state.work !== null || state.gym !== null || state.social.length > 0 || state.extras.length > 0;
+  const goNext = useCallback(() => {
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep((s) => s + 1);
+    } else {
+      const destinations: Destination[] = [
+        ...(work ? [work] : []),
+        ...(gym ? [gym] : []),
+        ...social,
+        ...extras,
+      ];
+      onComplete(destinations);
+    }
+  }, [currentStep, work, gym, social, extras, onComplete]);
+
+  const goBack = useCallback(() => {
+    if (currentStep > 0) setCurrentStep((s) => s - 1);
+  }, [currentStep]);
+
+  const stepName = STEPS[currentStep];
 
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto">
-      {/* Step indicator */}
+    <div className="flex flex-col h-full">
+      {/* Progress bar */}
       <div className="flex border-b-3 border-red">
         {STEPS.map((step, i) => (
-          <button
+          <div
             key={step}
-            onClick={() => setCurrentStep(i)}
-            className={`flex-1 py-3 font-display italic uppercase text-sm border-r-3 border-red last:border-r-0 transition-colors ${
-              i === currentStep
-                ? "bg-red text-pink"
-                : i < currentStep
-                  ? "bg-red/20 text-red"
-                  : "bg-transparent text-red/40"
-            }`}
+            className={`flex-1 py-3 text-center text-xs uppercase font-bold tracking-widest ${
+              i <= currentStep ? "bg-red text-pink" : "text-red/40"
+            } ${i < STEPS.length - 1 ? "border-r-3 border-red" : ""}`}
           >
-            <span className="block text-xs opacity-70">{i + 1}</span>
-            {step}
-          </button>
+            {STEP_LABELS[step]}
+          </div>
         ))}
       </div>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto">
-        {currentStep === 0 && (
-          <StepWork
-            value={state.work}
-            onChange={(work) => setState((s) => ({ ...s, work }))}
-          />
+      <div className="flex-1 overflow-y-auto p-6">
+        {stepName === "work" && (
+          <StepWork value={work} onChange={setWork} />
         )}
-        {currentStep === 1 && (
-          <StepGym
-            value={state.gym}
-            onChange={(gym) => setState((s) => ({ ...s, gym }))}
-          />
+        {stepName === "gym" && (
+          <StepGym value={gym} onChange={setGym} />
         )}
-        {currentStep === 2 && (
-          <StepSocial
-            value={state.social}
-            onChange={(social) => setState((s) => ({ ...s, social }))}
-          />
+        {stepName === "social" && (
+          <StepSocial value={social} onChange={setSocial} />
         )}
-        {currentStep === 3 && (
-          <StepExtras
-            value={state.extras}
-            onChange={(extras) => setState((s) => ({ ...s, extras }))}
-          />
+        {stepName === "extras" && (
+          <StepExtras value={extras} onChange={setExtras} />
         )}
       </div>
 
       {/* Navigation */}
       <div className="flex border-t-3 border-red">
-        <button
-          onClick={goBack}
-          disabled={currentStep === 0}
-          className="flex-1 py-4 font-display italic uppercase text-lg border-r-3 border-red disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red/10 transition-colors"
-        >
-          Back
-        </button>
-        {isLastStep ? (
+        {currentStep > 0 && (
           <button
-            onClick={handleFinish}
-            disabled={!canFinish}
-            className={`flex-1 py-4 font-display italic uppercase text-lg transition-colors ${
-              canFinish
-                ? "bg-red text-pink hover:bg-red/90"
-                : "bg-transparent text-red/30 cursor-not-allowed"
-            }`}
+            onClick={goBack}
+            className="px-6 py-4 font-display italic uppercase border-r-3 border-red hover:bg-red hover:text-pink transition-colors cursor-pointer"
           >
-            Show Heatmap
-          </button>
-        ) : (
-          <button
-            onClick={goNext}
-            className="flex-1 py-4 font-display italic uppercase text-lg bg-red text-pink hover:bg-red/90 transition-colors"
-          >
-            Next
+            &larr; Back
           </button>
         )}
+        <button
+          onClick={goNext}
+          className="flex-1 py-4 font-display italic uppercase bg-red text-pink hover:opacity-90 transition-opacity cursor-pointer text-lg"
+        >
+          {currentStep < STEPS.length - 1 ? "Next →" : "Show My Heatmap →"}
+        </button>
       </div>
     </div>
   );
