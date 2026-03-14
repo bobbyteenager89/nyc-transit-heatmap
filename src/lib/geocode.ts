@@ -42,3 +42,22 @@ export async function reverseGeocode(
 
   return `${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`;
 }
+
+export async function reverseGeocodeNeighborhood(
+  point: LatLng,
+  token: string
+): Promise<string> {
+  const url = `${MAPBOX_GEOCODE_URL}/${point.lng},${point.lat}.json?access_token=${token}&types=neighborhood,locality,place&limit=1`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.features?.[0]) {
+      return data.features[0].text || data.features[0].place_name || `${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`;
+    }
+  } catch {
+    // fall through
+  }
+
+  return `${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}`;
+}

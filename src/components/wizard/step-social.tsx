@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
+import { DropPinMap } from "@/components/shared/drop-pin-map";
 import { PanelSection } from "@/components/ui/panel-section";
 import type { Destination, LatLng } from "@/lib/types";
 
@@ -10,24 +11,41 @@ interface StepSocialProps {
   onChange: (destinations: Destination[]) => void;
 }
 
+type InputMode = "address" | "pin";
+
 export function StepSocial({ value, onChange }: StepSocialProps) {
   const [pendingAddress, setPendingAddress] = useState("");
+  const [inputMode, setInputMode] = useState<InputMode>("address");
 
-  const handleSelect = useCallback(
-    (selectedAddress: string, selectedLocation: LatLng) => {
+  const addDestination = useCallback(
+    (address: string, location: LatLng) => {
       const newDestination: Destination = {
         id: `social-${Date.now()}`,
         name: "Friend / Family",
-        address: selectedAddress,
-        location: selectedLocation,
+        address,
+        location,
         category: "social",
         frequency: 1,
       };
-      const updated = [...value, newDestination];
-      onChange(updated);
+      onChange([...value, newDestination]);
       setPendingAddress("");
+      setInputMode("address");
     },
     [value, onChange]
+  );
+
+  const handleAddressSelect = useCallback(
+    (selectedAddress: string, selectedLocation: LatLng) => {
+      addDestination(selectedAddress, selectedLocation);
+    },
+    [addDestination]
+  );
+
+  const handlePinDrop = useCallback(
+    (location: LatLng, displayName: string) => {
+      addDestination(displayName, location);
+    },
+    [addDestination]
   );
 
   const handleRemove = useCallback(
@@ -49,16 +67,57 @@ export function StepSocial({ value, onChange }: StepSocialProps) {
       </PanelSection>
 
       <PanelSection title="Add a Friend or Family Member">
-        <AddressAutocomplete
-          label="Their address or neighborhood"
-          placeholder="Search for address or neighborhood…"
-          onSelect={handleSelect}
-          initialValue={pendingAddress}
-          autoFocus={value.length === 0}
-        />
-        <p className="font-body text-xs text-red/50">
-          Tip: You can also drop a pin on the map later.
-        </p>
+        {/* Mode toggle */}
+        <div className="flex border-3 border-red">
+          <button
+            onClick={() => setInputMode("address")}
+            data-testid="mode-address"
+            className={`flex-1 py-2 text-xs uppercase font-bold tracking-widest cursor-pointer transition-colors ${
+              inputMode === "address"
+                ? "bg-red text-pink"
+                : "text-red hover:bg-red/10"
+            }`}
+          >
+            Search Address
+          </button>
+          <button
+            onClick={() => setInputMode("pin")}
+            data-testid="mode-pin"
+            className={`flex-1 py-2 text-xs uppercase font-bold tracking-widest border-l-3 border-red cursor-pointer transition-colors ${
+              inputMode === "pin"
+                ? "bg-red text-pink"
+                : "text-red hover:bg-red/10"
+            }`}
+          >
+            Drop a Pin
+          </button>
+        </div>
+
+        {inputMode === "address" ? (
+          <>
+            <AddressAutocomplete
+              label="Their address or neighborhood"
+              placeholder="Search for address or neighborhood..."
+              onSelect={handleAddressSelect}
+              initialValue={pendingAddress}
+              autoFocus={value.length === 0}
+            />
+            <p className="font-body text-xs text-red/50">
+              Don&apos;t know the exact address?{" "}
+              <button
+                onClick={() => setInputMode("pin")}
+                className="underline hover:text-red cursor-pointer"
+              >
+                Drop a pin on the map instead
+              </button>
+            </p>
+          </>
+        ) : (
+          <DropPinMap
+            onPinDrop={handlePinDrop}
+            onCancel={() => setInputMode("address")}
+          />
+        )}
       </PanelSection>
 
       {value.length > 0 && (
