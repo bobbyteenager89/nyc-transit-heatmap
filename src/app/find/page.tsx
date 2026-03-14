@@ -272,6 +272,8 @@ export default function FindPage() {
         modes={modes}
         onModesChange={handleModesChange}
         onEditDestinations={handleEditDestinations}
+        onDropPin={() => setPinDropMode((p) => !p)}
+        pinDropMode={pinDropMode}
         bestCell={bestCell}
         bestAddress={bestAddress}
         totalHours={totalHours}

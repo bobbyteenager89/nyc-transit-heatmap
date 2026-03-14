@@ -13,6 +13,8 @@ interface ResultsSidebarProps {
   modes: TransportMode[];
   onModesChange: (modes: TransportMode[]) => void;
   onEditDestinations: () => void;
+  onDropPin?: () => void;
+  pinDropMode?: boolean;
   bestCell: HexCell | null;
   bestAddress: string | null;
   totalHours: number;
@@ -24,6 +26,8 @@ export function ResultsSidebar({
   modes,
   onModesChange,
   onEditDestinations,
+  onDropPin,
+  pinDropMode,
   bestCell,
   bestAddress,
   totalHours,
@@ -65,12 +69,25 @@ export function ResultsSidebar({
             </li>
           ))}
         </ul>
-        <button
-          onClick={onEditDestinations}
-          className="mt-3 w-full border-3 border-red p-2 font-display italic uppercase text-sm hover:bg-red hover:text-pink transition-colors cursor-pointer"
-        >
-          Edit Destinations
-        </button>
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={onEditDestinations}
+            className="flex-1 border-3 border-red p-2 font-display italic uppercase text-sm hover:bg-red hover:text-pink transition-colors cursor-pointer"
+          >
+            Edit
+          </button>
+          {onDropPin && (
+            <button
+              onClick={onDropPin}
+              aria-pressed={!!pinDropMode}
+              className={`flex-1 border-3 border-red p-2 font-display italic uppercase text-sm transition-colors cursor-pointer ${
+                pinDropMode ? "bg-red text-pink" : "hover:bg-red hover:text-pink"
+              }`}
+            >
+              {pinDropMode ? "Cancel Pin" : "Drop a Pin"}
+            </button>
+          )}
+        </div>
       </PanelSection>
 
       {/* Transport modes */}

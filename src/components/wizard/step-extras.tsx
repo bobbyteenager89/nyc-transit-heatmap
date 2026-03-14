@@ -2,9 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
+import { DropPinMap } from "@/components/shared/drop-pin-map";
 import { FrequencyBars } from "@/components/setup/frequency-bars";
 import { PanelSection } from "@/components/ui/panel-section";
 import type { Destination, LatLng } from "@/lib/types";
+
+type InputMode = "address" | "pin";
 
 interface StepExtrasProps {
   value: Destination[];
@@ -28,10 +31,19 @@ const EMPTY_PENDING: PendingExtra = {
 
 export function StepExtras({ value, onChange }: StepExtrasProps) {
   const [pending, setPending] = useState<PendingExtra>(EMPTY_PENDING);
+  const [inputMode, setInputMode] = useState<InputMode>("address");
 
   const handleSelect = useCallback(
     (selectedAddress: string, selectedLocation: LatLng) => {
       setPending((p) => ({ ...p, address: selectedAddress, location: selectedLocation }));
+    },
+    []
+  );
+
+  const handlePinDrop = useCallback(
+    (location: LatLng, displayName: string) => {
+      setPending((p) => ({ ...p, address: displayName, location }));
+      setInputMode("address");
     },
     []
   );
@@ -71,13 +83,57 @@ export function StepExtras({ value, onChange }: StepExtrasProps) {
       </PanelSection>
 
       <PanelSection title="Add a Location">
-        <AddressAutocomplete
-          label="Address or place name"
-          placeholder="Search for any address or place…"
-          onSelect={handleSelect}
-          initialValue={pending.address}
-          autoFocus={value.length === 0}
-        />
+        {/* Mode toggle */}
+        <div className="flex border-3 border-red">
+          <button
+            onClick={() => setInputMode("address")}
+            data-testid="extras-mode-address"
+            className={`flex-1 py-2 text-xs uppercase font-bold tracking-widest cursor-pointer transition-colors ${
+              inputMode === "address"
+                ? "bg-red text-pink"
+                : "text-red hover:bg-red/10"
+            }`}
+          >
+            Search Address
+          </button>
+          <button
+            onClick={() => setInputMode("pin")}
+            data-testid="extras-mode-pin"
+            className={`flex-1 py-2 text-xs uppercase font-bold tracking-widest border-l-3 border-red cursor-pointer transition-colors ${
+              inputMode === "pin"
+                ? "bg-red text-pink"
+                : "text-red hover:bg-red/10"
+            }`}
+          >
+            Drop a Pin
+          </button>
+        </div>
+
+        {inputMode === "address" ? (
+          <>
+            <AddressAutocomplete
+              label="Address or place name"
+              placeholder="Search for any address or place…"
+              onSelect={handleSelect}
+              initialValue={pending.address}
+              autoFocus={value.length === 0}
+            />
+            <p className="font-body text-xs text-red/50">
+              Don&apos;t know the exact address?{" "}
+              <button
+                onClick={() => setInputMode("pin")}
+                className="underline hover:text-red cursor-pointer"
+              >
+                Drop a pin on the map instead
+              </button>
+            </p>
+          </>
+        ) : (
+          <DropPinMap
+            onPinDrop={handlePinDrop}
+            onCancel={() => setInputMode("address")}
+          />
+        )}
 
         <div className="flex flex-col gap-2">
           <label className="font-bold uppercase text-xs tracking-widest">

@@ -37,6 +37,8 @@ export function HexMap({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
+  const pinDropModeRef = useRef(pinDropMode);
+  pinDropModeRef.current = pinDropMode;
 
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -120,7 +122,9 @@ export function HexMap({
       // Hover tooltip
       m.on("mousemove", "hex-fill", async (e) => {
         if (!e.features?.[0]) return;
-        m.getCanvas().style.cursor = "pointer";
+        if (!pinDropModeRef.current) {
+          m.getCanvas().style.cursor = "pointer";
+        }
         const props = e.features[0].properties!;
 
         // Reverse geocode hex center
@@ -171,7 +175,9 @@ export function HexMap({
       });
 
       m.on("mouseleave", "hex-fill", () => {
-        m.getCanvas().style.cursor = "";
+        if (!pinDropModeRef.current) {
+          m.getCanvas().style.cursor = "";
+        }
         setTooltipContent(null);
       });
 
