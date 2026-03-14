@@ -17,17 +17,6 @@ export const BIKE_SAVINGS_MIN = 5; // 5-min threshold
 // Manhattan boundary (approx 96th St)
 export const MANHATTAN_BOUNDARY_LAT = 40.7831;
 
-// Grid
-export const GRID_SPACING_DEG = 0.003; // ~330m
-export const DEFAULT_BOUNDS: BoundingBox = {
-  sw: { lat: 40.695, lng: -74.02 },
-  ne: { lat: 40.81, lng: -73.91 },
-};
-
-// Dynamic bounds offsets (centered on origin)
-export const BOUNDS_LAT_OFFSET = 0.07; // ~4.8 miles → ~9.7mi total
-export const BOUNDS_LNG_OFFSET = 0.09; // ~4.7 miles → ~9.4mi total
-
 // Cost per trip
 export const COST_SUBWAY_RIDE = 2.9;
 export const COST_METROCARD_UNLIMITED = 132;

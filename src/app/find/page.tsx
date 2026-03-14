@@ -279,10 +279,6 @@ export default function FindPage() {
         modes={modes}
         onModesChange={handleModesChange}
         onEditDestinations={handleEditDestinations}
-        view={view}
-        selectedDestId={selectedDestId}
-        onViewChange={setView}
-        onSelectedDestChange={setSelectedDestId}
         bestCell={bestCell}
         bestAddress={bestAddress}
         totalHours={totalHours}

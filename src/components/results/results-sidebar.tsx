@@ -2,7 +2,6 @@
 
 import { PanelSection } from "@/components/ui/panel-section";
 import { ModeToggles } from "@/components/setup/mode-toggles";
-import { ViewSwitch } from "./view-switch";
 import { MonthlyFooter } from "./monthly-footer";
 import { BestNeighborhood } from "./best-neighborhood";
 import { SurpriseInsight } from "./surprise-insight";
@@ -14,10 +13,6 @@ interface ResultsSidebarProps {
   modes: TransportMode[];
   onModesChange: (modes: TransportMode[]) => void;
   onEditDestinations: () => void;
-  view: "composite" | "perPin";
-  selectedDestId: string | null;
-  onViewChange: (view: "composite" | "perPin") => void;
-  onSelectedDestChange: (id: string | null) => void;
   bestCell: HexCell | null;
   bestAddress: string | null;
   totalHours: number;
@@ -30,10 +25,6 @@ export function ResultsSidebar({
   modes,
   onModesChange,
   onEditDestinations,
-  view,
-  selectedDestId,
-  onViewChange,
-  onSelectedDestChange,
   bestCell,
   bestAddress,
   totalHours,
@@ -87,25 +78,6 @@ export function ResultsSidebar({
       {/* Transport modes */}
       <PanelSection title="Transport Mode">
         <ModeToggles selected={modes} onChange={onModesChange} />
-      </PanelSection>
-
-      {/* Heatmap mode */}
-      <PanelSection title="Heatmap Mode">
-        <ViewSwitch view={view} onChange={onViewChange} />
-        {view === "perPin" && destinations.length > 0 && (
-          <select
-            value={selectedDestId ?? ""}
-            onChange={(e) => onSelectedDestChange(e.target.value || null)}
-            aria-label="Select destination to view"
-            className="mt-3 bg-transparent border-3 border-red p-2 text-red font-display italic uppercase w-full"
-          >
-            {destinations.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-        )}
       </PanelSection>
 
       {/* Share */}
