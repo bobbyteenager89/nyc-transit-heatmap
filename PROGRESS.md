@@ -60,8 +60,46 @@
 - `src/components/setup/destination-card.tsx`, `src/components/setup/destination-list.tsx`
 
 ### Next Steps
-- [ ] Verify Vercel deployment works with Mapbox token
-- [ ] Browser smoke test all 3 routes (landing, find, explore)
-- [ ] Add multi-location gym support (closest per grid point)
-- [ ] Add click-to-drop-pin for friends without exact addresses
-- [ ] Monthly cost footer with real transit cost calculations
+- [x] Verify Vercel deployment works with Mapbox token
+- [x] Browser smoke test all 3 routes (landing, find, explore)
+- [x] Add multi-location gym support (closest per grid point)
+- [x] Add click-to-drop-pin for friends without exact addresses
+- [x] Monthly cost footer with real transit cost calculations
+
+---
+
+## 2026-03-14 — Session 3: Feature Swarm — Gyms, Drop-Pin, Cost Footer
+
+### Accomplished
+- Verified Vercel deployment live at https://nyc-transit-heatmap.vercel.app (Mapbox token set)
+- Browser smoke tested all 3 routes — found and fixed `/explore` crash (unhandled fetch error in useEffect)
+- Added multi-location gym chain support: 10 NYC chains (Equinox, Planet Fitness, Blink, Crunch, NYSC, YMCA, Chelsea Piers, Life Time, Orangetheory, [solidcore]) with 60+ real locations
+- Added click-to-drop-pin for friends: Mapbox map with click-to-place pin, reverse geocoding to neighborhood name, integrated into social + extras wizard steps
+- Added monthly cost footer: pay-per-ride ($2.90) vs OMNY cap ($34/wk) vs unlimited MetroCard ($132/mo) vs Citi Bike ($17.99/mo), with cheapest option highlighted
+- All features built via agent swarm (4 parallel agents, 3 in isolated worktrees)
+- 55 tests passing across 7 test files (up from 42), 17 files changed
+
+### Files Modified/Created
+| File | Changes |
+|------|---------|
+| `src/lib/gym-chains.ts` | NEW — 10 gym chain database with lat/lng locations, search helpers |
+| `src/components/wizard/step-gym.tsx` | Chain/address mode toggle, chain search + auto-populate |
+| `src/components/shared/drop-pin-map.tsx` | NEW — Mapbox click-to-pin with reverse geocoding |
+| `src/lib/geocode.ts` | Added `reverseGeocodeNeighborhood()` |
+| `src/components/wizard/step-social.tsx` | Address/pin mode toggle tabs |
+| `src/components/wizard/step-extras.tsx` | Pin drop support for extras |
+| `src/lib/cost.ts` | Added `computeCostComparison()` with NYC transit rates |
+| `src/lib/constants.ts` | Added OMNY cap + Citi Bike day pass constants |
+| `src/components/results/monthly-footer.tsx` | Cost comparison cards with "Best" badge |
+| `src/components/results/results-sidebar.tsx` | Integrated monthly footer with destinations/modes |
+| `src/app/explore/page.tsx` | Fixed crash — wrapped data loading in try/catch |
+| `src/app/find/page.tsx` | Removed old totalCost computation |
+| `src/lib/__tests__/gym-chains.test.ts` | NEW — 13 gym chain tests |
+| `src/lib/__tests__/geocode.test.ts` | NEW — 5 reverse geocode tests |
+| `src/lib/__tests__/cost.test.ts` | Added 13 cost comparison tests |
+
+### Next Steps
+- [ ] Push to deploy and verify all features on live site
+- [ ] Add walking directions integration for short-distance destinations
+- [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
+- [ ] Save/load destination profiles (localStorage or URL state)

@@ -21,6 +21,10 @@
 - `src/components/results/results-sidebar.tsx` — results panel with destinations, modes, sharing
 - `src/components/wizard/wizard-shell.tsx` — 4-step wizard (Work → Gym → Social → Extras)
 - `src/components/shared/address-autocomplete.tsx` — Mapbox geocoding autocomplete
+- `src/components/shared/drop-pin-map.tsx` — click-to-drop-pin map for location selection
+- `src/lib/gym-chains.ts` — gym chain database (10 chains, 60+ NYC locations)
+- `src/lib/cost.ts` — transit cost comparison (pay-per-ride, OMNY, unlimited, Citi Bike)
+- `src/components/results/monthly-footer.tsx` — cost comparison cards in results view
 - `src/lib/hex.ts` — H3 hex grid generation + GeoJSON conversion
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode)
 - `src/workers/grid-worker.ts` — web worker for grid computation (supports multi-location destinations)
