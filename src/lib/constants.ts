@@ -22,7 +22,9 @@ export const COST_SUBWAY_RIDE = 2.9;
 export const COST_METROCARD_UNLIMITED = 132;
 export const COST_METROCARD_THRESHOLD = 45; // trips/month
 export const COST_CITIBIKE_MONTHLY = 17.99;
+export const COST_CITIBIKE_DAY_PASS = 19.69;
 export const COST_CAR_RIDE = 15;
+export const COST_OMNY_WEEKLY_CAP = 34;
 export const WEEKS_PER_MONTH = 4.3;
 
 // Default frequencies by category

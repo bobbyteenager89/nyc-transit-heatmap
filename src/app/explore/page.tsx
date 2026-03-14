@@ -33,19 +33,28 @@ export default function ExplorePage() {
   // Load subway + Citi Bike data on mount
   useEffect(() => {
     async function load() {
-      const [graphRes, matrixRes] = await Promise.all([
-        fetch("/data/station-graph.json"),
-        fetch("/data/station-matrix.json"),
-      ]);
-      const graph: StationGraph = await graphRes.json();
-      const matrix: StationMatrix = await matrixRes.json();
-      setStationGraph(graph);
-      setStationMatrix(matrix);
-      setSubwayData(new SubwayData(graph, matrix));
+      try {
+        const [graphRes, matrixRes] = await Promise.all([
+          fetch("/data/station-graph.json"),
+          fetch("/data/station-matrix.json"),
+        ]);
+        const graph: StationGraph = await graphRes.json();
+        const matrix: StationMatrix = await matrixRes.json();
+        setStationGraph(graph);
+        setStationMatrix(matrix);
+        setSubwayData(new SubwayData(graph, matrix));
 
-      const citi = await CitiBikeData.fetch();
-      setCitiBikeData(citi);
-      setDataReady(true);
+        try {
+          const citi = await CitiBikeData.fetch();
+          setCitiBikeData(citi);
+        } catch (err) {
+          console.warn("Citi Bike data unavailable, continuing without it:", err);
+        }
+        setDataReady(true);
+      } catch (err) {
+        console.error("Failed to load transit data:", err);
+        setDataReady(true);
+      }
     }
     load();
   }, []);

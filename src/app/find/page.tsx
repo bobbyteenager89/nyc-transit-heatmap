@@ -10,7 +10,6 @@ import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { reverseGeocode } from "@/lib/geocode";
 import { encodeShareableState, decodeShareableState } from "@/lib/url-state";
-import { computeMonthlyCost } from "@/lib/cost";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION, WEEKS_PER_MONTH } from "@/lib/constants";
 import type {
   Destination,
@@ -235,12 +234,6 @@ export default function FindPage() {
   // Compute summary metrics from best cell
   const totalHours = bestCell ? bestCell.compositeScore / 60 : 0;
 
-  // Estimate cost from destinations + modes (simplified: use fastest mode assumption)
-  const totalCost = computeMonthlyCost(
-    destinations,
-    destinations.map((d) => ({ destId: d.id, mode: modes[0] ?? "subway" }))
-  );
-
   const shareUrl =
     typeof window !== "undefined"
       ? window.location.href
@@ -282,7 +275,6 @@ export default function FindPage() {
         bestCell={bestCell}
         bestAddress={bestAddress}
         totalHours={totalHours}
-        totalCost={totalCost}
         shareUrl={shareUrl}
       />
 

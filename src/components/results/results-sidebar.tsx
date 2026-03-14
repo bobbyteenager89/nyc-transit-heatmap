@@ -16,7 +16,6 @@ interface ResultsSidebarProps {
   bestCell: HexCell | null;
   bestAddress: string | null;
   totalHours: number;
-  totalCost: number;
   shareUrl: string;
 }
 
@@ -28,7 +27,6 @@ export function ResultsSidebar({
   bestCell,
   bestAddress,
   totalHours,
-  totalCost,
   shareUrl,
 }: ResultsSidebarProps) {
   return (
@@ -86,7 +84,11 @@ export function ResultsSidebar({
       </PanelSection>
 
       {/* Monthly footer */}
-      <MonthlyFooter totalHours={totalHours} totalCost={totalCost} />
+      <MonthlyFooter
+        totalHours={totalHours}
+        destinations={destinations}
+        modes={modes}
+      />
     </aside>
   );
 }
