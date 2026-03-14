@@ -107,10 +107,17 @@ export default function FindPage() {
           stationMatrix,
           citiBikeStations: citiBikeData.getAllStations(),
         });
-        setCells(result.cells);
+
+        // Worker returns cells without geometry — merge center + boundary from rawCenters
+        const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+        const fullCells: HexCell[] = result.cells.map((cell) => {
+          const geo = geoLookup.get(cell.h3Index)!;
+          return { ...cell, center: geo.center, boundary: geo.boundary };
+        });
+        setCells(fullCells);
 
         // Find the best cell (lowest composite score among cells that have scores)
-        const scoredCells = result.cells.filter((c) => c.compositeScore > 0);
+        const scoredCells = fullCells.filter((c) => c.compositeScore > 0);
         if (scoredCells.length > 0) {
           const best = scoredCells.reduce((a, b) =>
             a.compositeScore < b.compositeScore ? a : b

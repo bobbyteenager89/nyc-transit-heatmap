@@ -80,7 +80,13 @@ export default function ExplorePage() {
           stationMatrix,
           citiBikeStations: citiBikeData.getAllStations(),
         });
-        setCells(result.cells);
+
+        // Worker returns cells without geometry — merge center + boundary from rawCenters
+        const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+        setCells(result.cells.map((cell) => {
+          const geo = geoLookup.get(cell.h3Index)!;
+          return { ...cell, center: geo.center, boundary: geo.boundary };
+        }));
       } catch (err) {
         console.error("Explore compute failed:", err);
       } finally {
