@@ -42,7 +42,7 @@ describe("hexCellToGeoJSON", () => {
     expect(geojson.type).toBe("FeatureCollection");
     expect(geojson.features.length).toBe(5);
     expect(geojson.features[0].geometry.type).toBe("Polygon");
-    expect(geojson.features[0].properties.compositeScore).toBe(300);
-    expect(geojson.features[0].properties.color).toBeTruthy();
+    expect(geojson.features[0]!.properties!.compositeScore).toBe(300);
+    expect(geojson.features[0]!.properties!.color).toBeTruthy();
   });
 });
