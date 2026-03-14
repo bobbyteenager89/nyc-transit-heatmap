@@ -48,3 +48,12 @@ export const DEFAULT_FREQUENCY: Record<DestinationCategory, number> = {
 // Citi Bike GBFS
 export const CITIBIKE_STATION_INFO_URL =
   "https://gbfs.citibikenyc.com/gbfs/en/station_information.json";
+
+// H3 hex grid
+export const H3_RESOLUTION = 8; // ~460m edge length, ~3000 cells over core NYC
+
+// Core NYC bounds (Manhattan + Brooklyn + nearby Queens)
+export const CORE_NYC_BOUNDS: BoundingBox = {
+  sw: { lat: 40.63, lng: -74.04 },
+  ne: { lat: 40.83, lng: -73.87 },
+};
