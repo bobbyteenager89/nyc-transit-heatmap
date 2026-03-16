@@ -6,6 +6,8 @@ import { HexMap } from "@/components/results/hex-map";
 import { ResultsSidebar } from "@/components/results/results-sidebar";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
+import { loadFerryData } from "@/lib/ferry";
+import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { reverseGeocode } from "@/lib/geocode";
@@ -30,11 +32,13 @@ export default function FindPage() {
   const [modes, setModes] = useState<TransportMode[]>(["subway", "walk"]);
   const [cells, setCells] = useState<HexCell[]>([]);
   const [computing, setComputing] = useState(false);
+  const [computeProgress, setComputeProgress] = useState(0);
 
   // Transit data
   const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
   const [citiBikeData, setCitiBikeData] = useState<CitiBikeData | null>(null);
+  const [ferryData, setFerryData] = useState<{ data: FerryData; adjacency: FerryAdjacency } | null>(null);
   const [dataReady, setDataReady] = useState(false);
 
   // Results UI state
@@ -64,6 +68,10 @@ export default function FindPage() {
 
         const citi = await CitiBikeData.fetch();
         setCitiBikeData(citi);
+
+        const ferry = await loadFerryData();
+        setFerryData(ferry);
+
         setDataReady(true);
       } catch (err) {
         console.error("Failed to load transit data:", err);
@@ -88,9 +96,10 @@ export default function FindPage() {
 
   const runCompute = useCallback(
     async (dests: Destination[], selectedModes: TransportMode[]) => {
-      if (!stationGraph || !stationMatrix || !citiBikeData) return;
+      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
 
       setComputing(true);
+      setComputeProgress(0);
       try {
         const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
         const hexCenters = rawCenters.map((c) => ({
@@ -106,7 +115,9 @@ export default function FindPage() {
           stationGraph,
           stationMatrix,
           citiBikeStations: citiBikeData.getAllStations(),
-        });
+          ferryTerminals: ferryData.data.terminals,
+          ferryAdjacency: ferryData.adjacency,
+        }, (percent) => setComputeProgress(percent));
 
         // Worker returns cells without geometry — merge center + boundary from rawCenters
         const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
@@ -145,7 +156,7 @@ export default function FindPage() {
         setComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData]
+    [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
 
   const handleWizardComplete = useCallback(
@@ -293,7 +304,7 @@ export default function FindPage() {
         {computing && (
           <div className="absolute inset-0 bg-pink/80 z-50 flex items-center justify-center">
             <span className="font-display italic uppercase text-2xl animate-pulse">
-              Computing…
+              Computing… {computeProgress}%
             </span>
           </div>
         )}

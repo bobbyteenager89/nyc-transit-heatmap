@@ -21,7 +21,6 @@ body {
 h1, h2, h3, .display-text {
   font-family: "Arial Black", Impact, sans-serif;
   font-style: italic;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
   line-height: 1;
 }

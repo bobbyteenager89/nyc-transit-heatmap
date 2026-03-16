@@ -1,0 +1,55 @@
+{
+  "terminals": [
+    { "id": "wall-st-pier-11", "name": "Wall St / Pier 11", "lat": 40.7033, "lng": -74.0085, "routes": ["East River", "South Brooklyn", "Rockaway", "Soundview", "Governors Island"] },
+    { "id": "dumbo", "name": "DUMBO", "lat": 40.7034, "lng": -73.9897, "routes": ["East River", "South Brooklyn"] },
+    { "id": "south-williamsburg", "name": "South Williamsburg", "lat": 40.7089, "lng": -73.9714, "routes": ["East River"] },
+    { "id": "greenpoint", "name": "Greenpoint", "lat": 40.7293, "lng": -73.9612, "routes": ["East River"] },
+    { "id": "long-island-city", "name": "Long Island City", "lat": 40.7426, "lng": -73.9581, "routes": ["East River", "Astoria"] },
+    { "id": "e34th-st", "name": "E 34th St", "lat": 40.7441, "lng": -73.9712, "routes": ["East River", "Astoria", "Soundview"] },
+    { "id": "stuyvesant-cove", "name": "Stuyvesant Cove", "lat": 40.7325, "lng": -73.9749, "routes": ["East River"] },
+    { "id": "corlears-hook", "name": "Corlears Hook", "lat": 40.7131, "lng": -73.9784, "routes": ["East River"] },
+    { "id": "astoria", "name": "Astoria", "lat": 40.7782, "lng": -73.9194, "routes": ["Astoria"] },
+    { "id": "roosevelt-island", "name": "Roosevelt Island", "lat": 40.7590, "lng": -73.9537, "routes": ["Astoria"] },
+    { "id": "soundview", "name": "Soundview", "lat": 40.8143, "lng": -73.8532, "routes": ["Soundview"] },
+    { "id": "throgs-neck", "name": "Throgs Neck", "lat": 40.8096, "lng": -73.8004, "routes": ["Soundview"] },
+    { "id": "bay-ridge", "name": "Bay Ridge", "lat": 40.6359, "lng": -74.0289, "routes": ["South Brooklyn"] },
+    { "id": "sunset-park", "name": "Sunset Park", "lat": 40.6533, "lng": -74.0121, "routes": ["South Brooklyn"] },
+    { "id": "red-hook", "name": "Red Hook", "lat": 40.6749, "lng": -74.0068, "routes": ["South Brooklyn"] },
+    { "id": "atlantic-ave", "name": "Atlantic Ave", "lat": 40.6884, "lng": -73.9969, "routes": ["South Brooklyn"] },
+    { "id": "rockaway", "name": "Rockaway", "lat": 40.5724, "lng": -73.8843, "routes": ["Rockaway"] },
+    { "id": "st-george", "name": "St. George", "lat": 40.6433, "lng": -74.0735, "routes": ["St. George"] },
+    { "id": "whitehall", "name": "Whitehall", "lat": 40.7013, "lng": -74.0130, "routes": ["St. George"] },
+    { "id": "governors-island", "name": "Governors Island", "lat": 40.6892, "lng": -74.0168, "routes": ["Governors Island"] },
+    { "id": "battery-maritime", "name": "Battery Maritime Building", "lat": 40.7003, "lng": -74.0133, "routes": ["Governors Island"] }
+  ],
+  "routes": {
+    "East River": {
+      "stops": ["wall-st-pier-11", "corlears-hook", "stuyvesant-cove", "e34th-st", "greenpoint", "south-williamsburg", "dumbo", "long-island-city"],
+      "times": [5, 4, 7, 8, 4, 5, 10]
+    },
+    "South Brooklyn": {
+      "stops": ["wall-st-pier-11", "atlantic-ave", "red-hook", "sunset-park", "bay-ridge", "dumbo"],
+      "times": [8, 5, 8, 10, 15]
+    },
+    "Rockaway": {
+      "stops": ["wall-st-pier-11", "rockaway"],
+      "times": [60]
+    },
+    "Astoria": {
+      "stops": ["e34th-st", "roosevelt-island", "long-island-city", "astoria"],
+      "times": [5, 5, 12]
+    },
+    "Soundview": {
+      "stops": ["wall-st-pier-11", "e34th-st", "soundview", "throgs-neck"],
+      "times": [10, 25, 10]
+    },
+    "St. George": {
+      "stops": ["whitehall", "st-george"],
+      "times": [25]
+    },
+    "Governors Island": {
+      "stops": ["battery-maritime", "governors-island"],
+      "times": [8]
+    }
+  }
+}

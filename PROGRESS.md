@@ -103,3 +103,45 @@
 - [ ] Add walking directions integration for short-distance destinations
 - [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
 - [ ] Save/load destination profiles (localStorage or URL state)
+
+---
+
+## 2026-03-16 — Session 4: Typography, Social Step, Ferry, Hex Resolution 10
+
+### Accomplished
+- Removed global `text-transform: uppercase` from h1/h2/h3 — wizard headings now mixed-case, CTAs/labels/legend retain explicit uppercase
+- Rewrote social step (step-social.tsx) — name-first flow, FrequencyBars per friend (default 1x/week), follows step-extras pattern
+- Added ferry as transport mode — 21 terminals across 7 NYC Ferry routes, Floyd-Warshall shortest paths, walk-to-terminal + ride + walk routing
+- Added mode toggle clarification note: "The map shows the fastest of your selected modes for each hex"
+- Upgraded hex grid from resolution 8 (~3,000 cells) to resolution 10 (~150,000 cells)
+- Added spatial grid indexing (O(1) station lookups), station-pair caching, chunked processing with live progress bar
+- All 4 phases built in parallel via agent swarm (4 isolated worktrees), merged cleanly
+- Build passes clean (0 TypeScript errors)
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/globals.css` | Removed `text-transform: uppercase` from heading rule |
+| `src/components/wizard/step-social.tsx` | Rewritten — name first, FrequencyBars, pending entry pattern |
+| `src/components/wizard/step-work.tsx` | Removed explicit uppercase from heading |
+| `src/components/wizard/step-gym.tsx` | Removed explicit uppercase from heading |
+| `src/components/wizard/step-extras.tsx` | Removed explicit uppercase from heading |
+| `src/components/setup/mode-toggles.tsx` | Added ferry chip + clarification note |
+| `src/lib/types.ts` | Added `"ferry"` to TransportMode union |
+| `src/lib/constants.ts` | H3_RESOLUTION 8→10, added FERRY_SPEED_MPH |
+| `src/lib/ferry.ts` | NEW — ferry data types, loader, adjacency builder |
+| `public/data/ferry-terminals.json` | NEW — 21 terminals, 7 routes, inter-terminal times |
+| `src/workers/grid-worker.ts` | Spatial grid index, station-pair cache, chunked processing, ferry routing |
+| `src/lib/grid.ts` | Progress callback, ferry data passthrough, 60s timeout |
+| `src/lib/hex.ts` | Cached generateHexCenters(), ferry in color mapping |
+| `src/app/find/page.tsx` | Ferry data loading, progress state/display |
+| `src/app/explore/page.tsx` | Ferry data loading, progress state/display |
+| `src/components/results/hex-map.tsx` | Ferry in tooltip display |
+| `src/lib/__tests__/hex.test.ts` | Added ferry:null to test data |
+
+### Next Steps
+- [ ] Push to deploy and verify all features on live site
+- [ ] Browser test: ferry times appear in tooltip, progress bar works, hex detail is block-level
+- [ ] Performance benchmark: verify <3s compute at resolution 10
+- [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
+- [ ] Save/load destination profiles (localStorage or URL state)

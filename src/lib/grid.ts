@@ -12,9 +12,14 @@ export interface HexWorkerInput {
   stationGraph: StationGraph;
   stationMatrix: StationMatrix;
   citiBikeStations: CitiBikeStation[];
+  ferryTerminals?: { id: string; name: string; lat: number; lng: number; routes: string[] }[];
+  ferryAdjacency?: Record<string, Record<string, number>>;
 }
 
-export function computeHexGrid(input: HexWorkerInput): Promise<HexGridResult> {
+export function computeHexGrid(
+  input: HexWorkerInput,
+  onProgress?: (percent: number) => void
+): Promise<HexGridResult> {
   // Cancel any in-flight worker
   if (activeWorker) {
     activeWorker.terminate();
@@ -25,18 +30,29 @@ export function computeHexGrid(input: HexWorkerInput): Promise<HexGridResult> {
     const worker = new Worker(new URL("../workers/grid-worker.ts", import.meta.url));
     activeWorker = worker;
 
-    // 30s timeout
+    // 60s timeout (increased for res 10 with ~150k cells)
     const timeout = setTimeout(() => {
       worker.terminate();
       activeWorker = null;
-      reject(new Error("Grid computation timed out after 30s"));
-    }, 30000);
+      reject(new Error("Grid computation timed out after 60s"));
+    }, 60000);
 
-    worker.onmessage = (e: MessageEvent<HexGridResult>) => {
-      clearTimeout(timeout);
-      resolve(e.data);
-      activeWorker = null;
-      worker.terminate();
+    worker.onmessage = (e: MessageEvent) => {
+      const data = e.data;
+      if (data.type === 'progress') {
+        onProgress?.(data.percent);
+      } else if (data.type === 'result') {
+        clearTimeout(timeout);
+        resolve({ cells: data.cells });
+        activeWorker = null;
+        worker.terminate();
+      } else if (data.cells) {
+        // Legacy format fallback
+        clearTimeout(timeout);
+        resolve(data as HexGridResult);
+        activeWorker = null;
+        worker.terminate();
+      }
     };
 
     worker.onerror = (e) => {

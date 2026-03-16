@@ -1,4 +1,4 @@
-export type TransportMode = "subway" | "car" | "bike" | "bikeSubway" | "walk";
+export type TransportMode = "subway" | "car" | "bike" | "bikeSubway" | "walk" | "ferry";
 
 export type DestinationCategory = "work" | "social" | "fitness" | "errands" | "other";
 

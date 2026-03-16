@@ -7,11 +7,18 @@ interface HexCenterInfo {
   boundary: [number, number][]; // [lng, lat] for GeoJSON
 }
 
+// Cache for generateHexCenters — same bounds + resolution returns cached result
+let hexCache: { key: string; result: HexCenterInfo[] } | null = null;
+
 /**
  * Generate H3 hex cell centers within a bounding box.
  * Returns cell IDs, centers, and polygon boundaries ready for Mapbox.
+ * Results are cached — repeated calls with same bounds + resolution are free.
  */
 export function generateHexCenters(bounds: BoundingBox, resolution: number): HexCenterInfo[] {
+  const cacheKey = `${bounds.sw.lat},${bounds.sw.lng},${bounds.ne.lat},${bounds.ne.lng},${resolution}`;
+  if (hexCache && hexCache.key === cacheKey) return hexCache.result;
+
   // H3 polygonToCells expects [lat, lng] pairs
   const polygon = [
     [bounds.sw.lat, bounds.sw.lng],
@@ -22,7 +29,7 @@ export function generateHexCenters(bounds: BoundingBox, resolution: number): Hex
 
   const cellIds = polygonToCells(polygon, resolution, false);
 
-  return cellIds.map((h3Index) => {
+  const result = cellIds.map((h3Index) => {
     const [lat, lng] = cellToLatLng(h3Index);
     // cellToBoundary returns [lat, lng][] — convert to [lng, lat][] for GeoJSON
     const rawBoundary = cellToBoundary(h3Index);
@@ -30,6 +37,9 @@ export function generateHexCenters(bounds: BoundingBox, resolution: number): Hex
 
     return { h3Index, center: { lat, lng }, boundary };
   });
+
+  hexCache = { key: cacheKey, result };
+  return result;
 }
 
 /**

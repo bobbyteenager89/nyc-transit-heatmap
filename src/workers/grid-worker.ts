@@ -1,5 +1,16 @@
 import type { LatLng, TransportMode, CitiBikeStation, Destination, StationGraph, StationMatrix } from "../lib/types";
-import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, BIKE_SUBWAY_DOCK_RANGE_MI, BIKE_SAVINGS_PERCENT, BIKE_SAVINGS_MIN, WEEKS_PER_MONTH } from "../lib/constants";
+import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, BIKE_SUBWAY_DOCK_RANGE_MI, BIKE_SAVINGS_PERCENT, BIKE_SAVINGS_MIN, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI } from "../lib/constants";
+
+// Ferry types (inlined — can't import from lib in worker)
+interface FerryTerminalData {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  routes: string[];
+}
+/** Pre-computed all-pairs shortest ferry times: terminalId → { terminalId → minutes } */
+type FerryAdjacencyData = Record<string, Record<string, number>>;
 
 // --- Inline distance/travel calculations (can't import lib in worker) ---
 
@@ -25,37 +36,111 @@ function driveMin(from: LatLng, to: LatLng): number {
   return (manhattanDist(from, to) / speed) * 60;
 }
 
+// --- Spatial grid index for fast nearest-neighbor lookups ---
+// Turns O(n) scans into ~O(1) by bucketing items into 0.01° grid cells
+
+const GRID_CELL_SIZE = 0.01; // ~0.7 mi lat, ~0.5 mi lng
+
+interface SpatialGrid<T> {
+  cells: Map<string, T[]>;
+}
+
+function gridKey(lat: number, lng: number): string {
+  return `${Math.floor(lat / GRID_CELL_SIZE)},${Math.floor(lng / GRID_CELL_SIZE)}`;
+}
+
+function buildSpatialGrid<T extends { lat: number; lng: number }>(items: T[]): SpatialGrid<T> {
+  const cells = new Map<string, T[]>();
+  for (const item of items) {
+    const key = gridKey(item.lat, item.lng);
+    let bucket = cells.get(key);
+    if (!bucket) { bucket = []; cells.set(key, bucket); }
+    bucket.push(item);
+  }
+  return { cells };
+}
+
+function buildStationSpatialGrid(stations: Record<string, { lat: number; lng: number }>): SpatialGrid<{ id: string; lat: number; lng: number }> {
+  const items: { id: string; lat: number; lng: number }[] = [];
+  for (const [id, s] of Object.entries(stations)) {
+    items.push({ id, lat: s.lat, lng: s.lng });
+  }
+  return buildSpatialGrid(items);
+}
+
+function searchGrid<T extends { lat: number; lng: number }>(
+  point: LatLng, grid: SpatialGrid<T>, maxDist: number
+): { item: T; dist: number }[] {
+  const latRange = Math.ceil(maxDist / (DEG_LAT_MI * GRID_CELL_SIZE));
+  const lngRange = Math.ceil(maxDist / (DEG_LNG_MI * GRID_CELL_SIZE));
+  const cLat = Math.floor(point.lat / GRID_CELL_SIZE);
+  const cLng = Math.floor(point.lng / GRID_CELL_SIZE);
+  const results: { item: T; dist: number }[] = [];
+  for (let dLat = -latRange; dLat <= latRange; dLat++) {
+    for (let dLng = -lngRange; dLng <= lngRange; dLng++) {
+      const key = `${cLat + dLat},${cLng + dLng}`;
+      const bucket = grid.cells.get(key);
+      if (!bucket) continue;
+      for (const item of bucket) {
+        const dist = manhattanDist(point, item);
+        if (dist <= maxDist) results.push({ item, dist });
+      }
+    }
+  }
+  return results;
+}
+
 // --- Station helpers ---
 
 function buildStationIdxMap(ids: string[]): Map<string, number> {
   return new Map(ids.map((id, i) => [id, i]));
 }
 
-function findNearestStations(point: LatLng, stations: Record<string, { lat: number; lng: number }>, maxDist: number, count: number) {
-  return Object.entries(stations)
-    .map(([id, s]) => ({ id, dist: manhattanDist(point, { lat: s.lat, lng: s.lng }) }))
-    .filter((s) => s.dist <= maxDist)
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, count);
+function findNearestStationsIndexed(
+  point: LatLng, grid: SpatialGrid<{ id: string; lat: number; lng: number }>, maxDist: number, count: number
+) {
+  const results = searchGrid(point, grid, maxDist).map(({ item, dist }) => ({ id: item.id, dist }));
+  results.sort((a, b) => a.dist - b.dist);
+  return results.slice(0, count);
 }
 
-function findNearestDock(point: LatLng, docks: CitiBikeStation[], maxDist: number): CitiBikeStation | null {
+function findNearestDockIndexed(point: LatLng, grid: SpatialGrid<CitiBikeStation>, maxDist: number): CitiBikeStation | null {
   let best: CitiBikeStation | null = null;
   let bestDist = maxDist;
-  for (const d of docks) {
-    const dist = manhattanDist(point, { lat: d.lat, lng: d.lng });
-    if (dist < bestDist) { bestDist = dist; best = d; }
+  for (const { item, dist } of searchGrid(point, grid, maxDist)) {
+    if (dist < bestDist) { bestDist = dist; best = item; }
   }
   return best;
 }
 
+function findNearestTerminalsIndexed(
+  point: LatLng, grid: SpatialGrid<FerryTerminalData>, maxDist: number, count: number
+) {
+  const results = searchGrid(point, grid, maxDist).map(({ item, dist }) => ({ id: item.id, lat: item.lat, lng: item.lng, dist }));
+  results.sort((a, b) => a.dist - b.dist);
+  return results.slice(0, count);
+}
+
+// --- Station-pair travel time cache ---
+
+const subwayTimeCache = new Map<number, number>();
+
+function cachedMatrixLookup(matrix: number[][], fi: number, ti: number): number {
+  const key = fi * 100000 + ti;
+  const cached = subwayTimeCache.get(key);
+  if (cached !== undefined) return cached;
+  const val = matrix[fi][ti];
+  subwayTimeCache.set(key, val);
+  return val;
+}
+
 function computeSubwayTime(
   from: LatLng, to: LatLng,
-  stations: Record<string, { lat: number; lng: number }>,
+  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
   matrix: number[][], idxMap: Map<string, number>
 ): number | null {
-  const nearFrom = findNearestStations(from, stations, SUBWAY_MAX_WALK_MI, 3);
-  const nearTo = findNearestStations(to, stations, SUBWAY_MAX_WALK_MI, 3);
+  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 3);
+  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 3);
   if (nearFrom.length === 0 || nearTo.length === 0) return null;
   let best = Infinity;
   for (const f of nearFrom) {
@@ -65,7 +150,7 @@ function computeSubwayTime(
     for (const t of nearTo) {
       const ti = idxMap.get(t.id);
       if (ti === undefined) continue;
-      const stationTime = matrix[fi][ti];
+      const stationTime = cachedMatrixLookup(matrix, fi, ti);
       if (stationTime >= 999) continue;
       const walkFromStation = (t.dist / WALK_SPEED) * 60;
       const total = walkToStation + stationTime + walkFromStation;
@@ -77,21 +162,22 @@ function computeSubwayTime(
 
 function computeBikeSubwayTime(
   from: LatLng, to: LatLng,
+  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
   stations: Record<string, { lat: number; lng: number }>,
   matrix: number[][], idxMap: Map<string, number>,
-  docks: CitiBikeStation[]
+  dockGrid: SpatialGrid<CitiBikeStation>
 ): number | null {
-  const nearFrom = findNearestStations(from, stations, SUBWAY_MAX_WALK_MI, 3);
-  const nearTo = findNearestStations(to, stations, SUBWAY_MAX_WALK_MI, 3);
+  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 3);
+  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 3);
   if (nearFrom.length === 0 || nearTo.length === 0) return null;
-  const plainSubway = computeSubwayTime(from, to, stations, matrix, idxMap);
+  const plainSubway = computeSubwayTime(from, to, stationGrid, matrix, idxMap);
   if (plainSubway === null) return null;
   let best = plainSubway;
   for (const f of nearFrom) {
     const fi = idxMap.get(f.id);
     if (fi === undefined) continue;
     const stationLoc = stations[f.id];
-    const dockNearStation = findNearestDock(stationLoc, docks, BIKE_SUBWAY_DOCK_RANGE_MI);
+    const dockNearStation = findNearestDockIndexed(stationLoc, dockGrid, BIKE_SUBWAY_DOCK_RANGE_MI);
     if (!dockNearStation) continue;
     const bikeToStation = bikeMin(from, { lat: dockNearStation.lat, lng: dockNearStation.lng });
     const walkToStation = walkMin(from, stationLoc);
@@ -101,13 +187,13 @@ function computeBikeSubwayTime(
     for (const t of nearTo) {
       const ti = idxMap.get(t.id);
       if (ti === undefined) continue;
-      const stationTime = matrix[fi][ti];
+      const stationTime = cachedMatrixLookup(matrix, fi, ti);
       if (stationTime >= 999) continue;
       const destStationLoc = stations[t.id];
       const walkOut = (t.dist / WALK_SPEED) * 60;
       const v1 = legIn + stationTime + walkOut;
       if (v1 < best) best = v1;
-      const dockNearDest = findNearestDock(destStationLoc, docks, BIKE_SUBWAY_DOCK_RANGE_MI);
+      const dockNearDest = findNearestDockIndexed(destStationLoc, dockGrid, BIKE_SUBWAY_DOCK_RANGE_MI);
       if (dockNearDest) {
         const bikeFromStation = bikeMin({ lat: dockNearDest.lat, lng: dockNearDest.lng }, to);
         const useBikeOut = (walkOut - bikeFromStation) >= BIKE_SAVINGS_MIN ||
@@ -121,28 +207,64 @@ function computeBikeSubwayTime(
   return Math.round(best * 10) / 10;
 }
 
+// --- Ferry helpers ---
+
+function computeFerryTime(
+  from: LatLng, to: LatLng,
+  terminalGrid: SpatialGrid<FerryTerminalData>,
+  adjacency: FerryAdjacencyData
+): number | null {
+  const nearFrom = findNearestTerminalsIndexed(from, terminalGrid, FERRY_MAX_WALK_MI, 3);
+  const nearTo = findNearestTerminalsIndexed(to, terminalGrid, FERRY_MAX_WALK_MI, 3);
+  if (nearFrom.length === 0 || nearTo.length === 0) return null;
+
+  let best = Infinity;
+  for (const f of nearFrom) {
+    const walkToTerminal = (f.dist / WALK_SPEED) * 60;
+    const adj = adjacency[f.id];
+    if (!adj) continue;
+    for (const t of nearTo) {
+      if (f.id === t.id) continue;
+      const ferryTime = adj[t.id];
+      if (ferryTime === undefined) continue;
+      const walkFromTerminal = (t.dist / WALK_SPEED) * 60;
+      // Add average wait time of ~10 min for ferry service
+      const total = walkToTerminal + 10 + ferryTime + walkFromTerminal;
+      if (total < best) best = total;
+    }
+  }
+  return best === Infinity ? null : Math.round(best * 10) / 10;
+}
+
 // --- Compute travel times from a point to a destination ---
 
 function computeTimesForLocation(
   point: LatLng, destLoc: LatLng, modes: TransportMode[],
+  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
   stationGraph: StationGraph, stationMatrix: { times: number[][] },
-  idxMap: Map<string, number>, citiBikeStations: CitiBikeStation[]
+  idxMap: Map<string, number>,
+  dockGrid: SpatialGrid<CitiBikeStation>,
+  terminalGrid: SpatialGrid<FerryTerminalData>,
+  ferryAdjacency: FerryAdjacencyData
 ): Record<TransportMode, number | null> {
   const times: Record<TransportMode, number | null> = {
     walk: modes.includes("walk") ? walkMin(point, destLoc) : null,
     car: modes.includes("car") ? driveMin(point, destLoc) : null,
-    bike: null, subway: null, bikeSubway: null,
+    bike: null, subway: null, bikeSubway: null, ferry: null,
   };
   if (modes.includes("bike")) {
-    const hasDockOrigin = findNearestDock(point, citiBikeStations, BIKE_DOCK_RANGE_MI);
-    const hasDockDest = findNearestDock(destLoc, citiBikeStations, BIKE_DOCK_RANGE_MI);
+    const hasDockOrigin = findNearestDockIndexed(point, dockGrid, BIKE_DOCK_RANGE_MI);
+    const hasDockDest = findNearestDockIndexed(destLoc, dockGrid, BIKE_DOCK_RANGE_MI);
     if (hasDockOrigin && hasDockDest) times.bike = bikeMin(point, destLoc);
   }
   if (modes.includes("subway")) {
-    times.subway = computeSubwayTime(point, destLoc, stationGraph.stations, stationMatrix.times, idxMap);
+    times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);
   }
   if (modes.includes("bikeSubway")) {
-    times.bikeSubway = computeBikeSubwayTime(point, destLoc, stationGraph.stations, stationMatrix.times, idxMap, citiBikeStations);
+    times.bikeSubway = computeBikeSubwayTime(point, destLoc, stationGrid, stationGraph.stations, stationMatrix.times, idxMap, dockGrid);
+  }
+  if (modes.includes("ferry")) {
+    times.ferry = computeFerryTime(point, destLoc, terminalGrid, ferryAdjacency);
   }
   return times;
 }
@@ -166,71 +288,114 @@ interface WorkerInput {
   stationGraph: StationGraph;
   stationMatrix: StationMatrix;
   citiBikeStations: CitiBikeStation[];
+  ferryTerminals: FerryTerminalData[];
+  ferryAdjacency: FerryAdjacencyData;
 }
 
+const CHUNK_SIZE = 5000;
+
+type CellResult = {
+  h3Index: string;
+  times: Record<TransportMode, number | null>;
+  fastest: TransportMode;
+  compositeScore: number;
+  destBreakdown: Record<string, number>;
+};
+
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
-  const { hexCenters, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations } = e.data;
+  const { hexCenters, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations, ferryTerminals, ferryAdjacency } = e.data;
   const idxMap = buildStationIdxMap(stationMatrix.stationIds);
+  const fTerminals = ferryTerminals ?? [];
+  const fAdjacency = ferryAdjacency ?? {};
 
-  // Explore mode (no destinations, has origin): accessibility from origin
-  if (destinations.length === 0 && origin) {
-    const cells = hexCenters.map((hex) => {
-      const point: LatLng = { lat: hex.lat, lng: hex.lng };
-      const times = computeTimesForLocation(point, origin, modes, stationGraph, stationMatrix, idxMap, citiBikeStations);
-      const { fastest, time } = getFastestTime(times);
-      return {
-        h3Index: hex.h3Index,
-        times,
-        fastest,
-        compositeScore: time === Infinity ? 999 : Math.round(time * 10) / 10,
-        destBreakdown: {} as Record<string, number>,
-      };
-    });
-    self.postMessage({ cells });
-    return;
-  }
+  // Clear caches for fresh computation
+  subwayTimeCache.clear();
 
-  // Score mode (with destinations): total monthly minutes per hex cell
-  const cells = hexCenters.map((hex) => {
-    const point: LatLng = { lat: hex.lat, lng: hex.lng };
-    let totalMonthlyMinutes = 0;
-    const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null };
-    const destBreakdown: Record<string, number> = {};
+  // Build spatial indexes (one-time cost, pays off over ~150k cells)
+  const stationGrid = buildStationSpatialGrid(stationGraph.stations);
+  const dockGrid = buildSpatialGrid(citiBikeStations);
+  const terminalGrid = buildSpatialGrid(fTerminals);
 
-    for (const dest of destinations) {
-      const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
-      let bestTime = Infinity;
-      let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null };
+  const total = hexCenters.length;
+  const cells: CellResult[] = new Array(total);
+  let processed = 0;
 
-      for (const destLoc of destLocations) {
-        const locTimes = computeTimesForLocation(point, destLoc, modes, stationGraph, stationMatrix, idxMap, citiBikeStations);
-        const { time } = getFastestTime(locTimes);
-        if (time < bestTime) { bestTime = time; bestTimes = locTimes; }
+  function processChunk() {
+    const end = Math.min(processed + CHUNK_SIZE, total);
+
+    if (destinations.length === 0 && origin) {
+      // Explore mode: accessibility from origin
+      for (let i = processed; i < end; i++) {
+        const hex = hexCenters[i];
+        const point: LatLng = { lat: hex.lat, lng: hex.lng };
+        const times = computeTimesForLocation(point, origin, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency);
+        const { fastest, time } = getFastestTime(times);
+        cells[i] = {
+          h3Index: hex.h3Index,
+          times,
+          fastest,
+          compositeScore: time === Infinity ? 999 : Math.round(time * 10) / 10,
+          destBreakdown: {} as Record<string, number>,
+        };
       }
+    } else {
+      // Score mode: total monthly minutes per hex cell
+      for (let i = processed; i < end; i++) {
+        const hex = hexCenters[i];
+        const point: LatLng = { lat: hex.lat, lng: hex.lng };
+        let totalMonthlyMinutes = 0;
+        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null, ferry: null };
+        const destBreakdown: Record<string, number> = {};
 
-      // Aggregate times (keep shortest per mode across all destinations)
-      for (const [mode, t] of Object.entries(bestTimes)) {
-        if (t !== null && (aggTimes[mode as TransportMode] === null || t < aggTimes[mode as TransportMode]!)) {
-          aggTimes[mode as TransportMode] = t;
+        for (const dest of destinations) {
+          const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
+          let bestTime = Infinity;
+          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null, ferry: null };
+
+          for (const destLoc of destLocations) {
+            const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency);
+            const { time } = getFastestTime(locTimes);
+            if (time < bestTime) { bestTime = time; bestTimes = locTimes; }
+          }
+
+          for (const [mode, t] of Object.entries(bestTimes)) {
+            if (t !== null && (aggTimes[mode as TransportMode] === null || t < aggTimes[mode as TransportMode]!)) {
+              aggTimes[mode as TransportMode] = t;
+            }
+          }
+
+          if (bestTime < Infinity) {
+            totalMonthlyMinutes += bestTime * dest.frequency * 2 * WEEKS_PER_MONTH;
+            destBreakdown[dest.id] = Math.round(bestTime * 10) / 10;
+          }
         }
-      }
 
-      if (bestTime < Infinity) {
-        totalMonthlyMinutes += bestTime * dest.frequency * 2 * WEEKS_PER_MONTH;
-        destBreakdown[dest.id] = Math.round(bestTime * 10) / 10;
+        const { fastest } = getFastestTime(aggTimes);
+
+        cells[i] = {
+          h3Index: hex.h3Index,
+          times: aggTimes,
+          fastest,
+          compositeScore: totalMonthlyMinutes > 0 ? Math.round(totalMonthlyMinutes * 10) / 10 : 999,
+          destBreakdown,
+        };
       }
     }
 
-    const { fastest } = getFastestTime(aggTimes);
+    processed = end;
 
-    return {
-      h3Index: hex.h3Index,
-      times: aggTimes,
-      fastest,
-      compositeScore: totalMonthlyMinutes > 0 ? Math.round(totalMonthlyMinutes * 10) / 10 : 999,
-      destBreakdown,
-    };
-  });
+    // Post progress update
+    self.postMessage({ type: 'progress', percent: Math.round((processed / total) * 100) });
 
-  self.postMessage({ cells });
+    if (processed < total) {
+      // Yield to avoid blocking the worker thread, then continue
+      setTimeout(processChunk, 0);
+    } else {
+      // Done — send final result
+      self.postMessage({ type: 'result', cells });
+    }
+  }
+
+  // Start chunked processing
+  processChunk();
 };

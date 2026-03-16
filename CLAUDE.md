@@ -26,8 +26,9 @@
 - `src/lib/cost.ts` — transit cost comparison (pay-per-ride, OMNY, unlimited, Citi Bike)
 - `src/components/results/monthly-footer.tsx` — cost comparison cards in results view
 - `src/lib/hex.ts` — H3 hex grid generation + GeoJSON conversion
-- `src/lib/` — core logic (travel time, cost, subway, citibike, geocode)
-- `src/workers/grid-worker.ts` — web worker for grid computation (supports multi-location destinations)
+- `src/lib/ferry.ts` — ferry terminal data loader + Floyd-Warshall adjacency
+- `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry)
+- `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
 - `public/data/` — pre-built subway data (committed)
 
@@ -35,6 +36,8 @@
 - **No destinations**: accessibility heatmap (travel time from origin to each grid point)
 - **With destinations**: score heatmap showing total monthly transit hours (green=low, red=high)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
+- **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
+- **Resolution 10**: ~150k hex cells with spatial grid indexing for O(1) station lookups
 
 ## Design
 - Brutalist pink (#fcdde8) / red (#e21822) two-color system

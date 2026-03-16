@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { DropPinMap } from "@/components/shared/drop-pin-map";
+import { FrequencyBars } from "@/components/setup/frequency-bars";
 import { PanelSection } from "@/components/ui/panel-section";
 import type { Destination, LatLng } from "@/lib/types";
 
@@ -13,40 +14,52 @@ interface StepSocialProps {
 
 type InputMode = "address" | "pin";
 
+interface PendingFriend {
+  name: string;
+  address: string;
+  location: LatLng | null;
+  frequency: number;
+}
+
+const EMPTY_PENDING: PendingFriend = {
+  name: "",
+  address: "",
+  location: null,
+  frequency: 1,
+};
+
 export function StepSocial({ value, onChange }: StepSocialProps) {
-  const [pendingAddress, setPendingAddress] = useState("");
+  const [pending, setPending] = useState<PendingFriend>(EMPTY_PENDING);
   const [inputMode, setInputMode] = useState<InputMode>("address");
 
-  const addDestination = useCallback(
-    (address: string, location: LatLng) => {
-      const newDestination: Destination = {
-        id: `social-${Date.now()}`,
-        name: "Friend / Family",
-        address,
-        location,
-        category: "social",
-        frequency: 1,
-      };
-      onChange([...value, newDestination]);
-      setPendingAddress("");
-      setInputMode("address");
-    },
-    [value, onChange]
-  );
-
-  const handleAddressSelect = useCallback(
+  const handleSelect = useCallback(
     (selectedAddress: string, selectedLocation: LatLng) => {
-      addDestination(selectedAddress, selectedLocation);
+      setPending((p) => ({ ...p, address: selectedAddress, location: selectedLocation }));
     },
-    [addDestination]
+    []
   );
 
   const handlePinDrop = useCallback(
     (location: LatLng, displayName: string) => {
-      addDestination(displayName, location);
+      setPending((p) => ({ ...p, address: displayName, location }));
+      setInputMode("address");
     },
-    [addDestination]
+    []
   );
+
+  const handleAdd = useCallback(() => {
+    if (!pending.location || !pending.name.trim()) return;
+    const newDestination: Destination = {
+      id: `social-${Date.now()}`,
+      name: pending.name.trim(),
+      address: pending.address,
+      location: pending.location,
+      category: "social",
+      frequency: pending.frequency,
+    };
+    onChange([...value, newDestination]);
+    setPending(EMPTY_PENDING);
+  }, [pending, value, onChange]);
 
   const handleRemove = useCallback(
     (id: string) => {
@@ -55,18 +68,35 @@ export function StepSocial({ value, onChange }: StepSocialProps) {
     [value, onChange]
   );
 
+  const canAdd = pending.location !== null && pending.name.trim().length > 0;
+
   return (
     <div className="flex flex-col">
       <PanelSection>
-        <h2 className="font-display italic uppercase text-3xl leading-none">
+        <h2 className="font-display italic text-3xl leading-none">
           Where do<br />friends live?
         </h2>
         <p className="font-body text-sm text-red/60">
-          Add addresses for people you visit regularly. Each counts as ~1x/week.
+          Add people you visit regularly — we&apos;ll factor in how often you see them.
         </p>
       </PanelSection>
 
       <PanelSection title="Add a Friend or Family Member">
+        {/* Name input — first field, auto-focused */}
+        <div className="flex flex-col gap-2">
+          <label className="font-bold uppercase text-xs tracking-widest">
+            Name
+          </label>
+          <input
+            type="text"
+            value={pending.name}
+            onChange={(e) => setPending((p) => ({ ...p, name: e.target.value }))}
+            placeholder="e.g. Mom, Jake, Sarah…"
+            autoFocus
+            className="bg-transparent border-3 border-red text-red font-body text-base p-3 outline-none placeholder:text-red/50 focus:bg-red focus:text-pink"
+          />
+        </div>
+
         {/* Mode toggle */}
         <div className="flex border-3 border-red">
           <button
@@ -98,9 +128,8 @@ export function StepSocial({ value, onChange }: StepSocialProps) {
             <AddressAutocomplete
               label="Their address or neighborhood"
               placeholder="Search for address or neighborhood..."
-              onSelect={handleAddressSelect}
-              initialValue={pendingAddress}
-              autoFocus={value.length === 0}
+              onSelect={handleSelect}
+              initialValue={pending.address}
             />
             <p className="font-body text-xs text-red/50">
               Don&apos;t know the exact address?{" "}
@@ -118,25 +147,51 @@ export function StepSocial({ value, onChange }: StepSocialProps) {
             onCancel={() => setInputMode("address")}
           />
         )}
+
+        {/* Frequency — shown after address is selected */}
+        {pending.location && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <FrequencyBars
+                value={pending.frequency}
+                max={7}
+                onChange={(f) => setPending((p) => ({ ...p, frequency: f }))}
+              />
+              <span className="font-body text-sm font-bold ml-4">{pending.frequency}x / week</span>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={handleAdd}
+          disabled={!canAdd}
+          className={`w-full border-3 border-red font-display italic uppercase text-base py-3 transition-colors ${
+            canAdd
+              ? "bg-red text-pink hover:bg-red/90 cursor-pointer"
+              : "bg-transparent text-red/30 cursor-not-allowed"
+          }`}
+        >
+          Add Friend
+        </button>
       </PanelSection>
 
       {value.length > 0 && (
-        <PanelSection title={`${value.length} Location${value.length === 1 ? "" : "s"} Added`}>
+        <PanelSection title={`${value.length} Friend${value.length === 1 ? "" : "s"} Added`}>
           <ul className="flex flex-col gap-2">
-            {value.map((dest, i) => (
+            {value.map((dest) => (
               <li
                 key={dest.id}
                 className="flex items-center justify-between border-3 border-red p-3"
               >
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="font-body text-xs font-bold uppercase tracking-widest text-red/60">
-                    Friend {i + 1}
+                    {dest.name} &middot; {dest.frequency}x/wk
                   </span>
                   <span className="font-body text-sm truncate">{dest.address}</span>
                 </div>
                 <button
                   onClick={() => handleRemove(dest.id)}
-                  aria-label={`Remove ${dest.address}`}
+                  aria-label={`Remove ${dest.name}`}
                   className="ml-4 flex-shrink-0 w-8 h-8 border-3 border-red flex items-center justify-center font-display italic text-sm hover:bg-red hover:text-pink transition-colors"
                 >
                   X
@@ -147,7 +202,7 @@ export function StepSocial({ value, onChange }: StepSocialProps) {
         </PanelSection>
       )}
 
-      {value.length === 0 && (
+      {value.length === 0 && !pending.location && (
         <div className="p-6">
           <p className="font-body text-sm text-red/50 italic">
             Skip this step if social visits aren&apos;t a factor.

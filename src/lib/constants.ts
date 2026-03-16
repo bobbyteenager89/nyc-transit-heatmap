@@ -6,6 +6,9 @@ export const BIKE_SPEED = 9;
 export const DRIVE_SPEED_MANHATTAN = 12;
 export const DRIVE_SPEED_OUTER = 20;
 
+export const FERRY_SPEED_MPH = 15;
+export const FERRY_MAX_WALK_MI = 1.0; // max walk to/from terminal
+
 // Thresholds
 export const BIKE_DOCK_RANGE_MI = 0.25; // 5-min walk
 export const SUBWAY_MAX_WALK_MI = 1.5;
@@ -41,7 +44,7 @@ export const CITIBIKE_STATION_INFO_URL =
   "https://gbfs.citibikenyc.com/gbfs/en/station_information.json";
 
 // H3 hex grid
-export const H3_RESOLUTION = 8; // ~460m edge length, ~3000 cells over core NYC
+export const H3_RESOLUTION = 10; // ~66m edge length, ~150k cells over core NYC
 
 // Core NYC bounds (Manhattan + Brooklyn + nearby Queens)
 export const CORE_NYC_BOUNDS: BoundingBox = {

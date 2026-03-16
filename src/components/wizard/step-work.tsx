@@ -52,7 +52,7 @@ export function StepWork({ value, onChange }: StepWorkProps) {
   return (
     <div className="flex flex-col">
       <PanelSection>
-        <h2 className="font-display italic uppercase text-3xl leading-none">
+        <h2 className="font-display italic text-3xl leading-none">
           Where do<br />you work?
         </h2>
         <p className="font-body text-sm text-red/60">
