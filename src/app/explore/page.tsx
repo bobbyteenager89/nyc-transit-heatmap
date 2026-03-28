@@ -16,6 +16,7 @@ import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
+import { FriendInput } from "@/components/isochrone/friend-input";
 import type {
   LatLng,
   TransportMode,
@@ -36,6 +37,10 @@ export default function ExplorePage() {
   const [cells, setCells] = useState<HexCell[]>([]);
   const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
   const [computing, setComputing] = useState(false);
+  const [friendOrigin, setFriendOrigin] = useState<LatLng | null>(null);
+  const [friendAddress, setFriendAddress] = useState("");
+  const [friendContours, setFriendContours] = useState<IsochroneContour[]>([]);
+  const [showFriend, setShowFriend] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
   const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
@@ -148,6 +153,15 @@ export default function ExplorePage() {
     [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
 
+  const runFriendCompute = useCallback(
+    async (loc: LatLng) => {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+      const contours = await fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b");
+      setFriendContours(contours);
+    },
+    []
+  );
+
   // Restore state from URL on mount
   useEffect(() => {
     if (!dataReady) return;
@@ -191,6 +205,22 @@ export default function ExplorePage() {
     [runCompute, updateURL, maxMinutes, activeModes]
   );
 
+  const handleFriendSelect = useCallback(
+    (address: string, location: LatLng) => {
+      setFriendAddress(address);
+      setFriendOrigin(location);
+      runFriendCompute(location);
+    },
+    [runFriendCompute]
+  );
+
+  const removeFriend = useCallback(() => {
+    setFriendOrigin(null);
+    setFriendAddress("");
+    setFriendContours([]);
+    setShowFriend(false);
+  }, []);
+
   const [, startTransition] = useTransition();
 
   const toggleMode = useCallback((mode: TransportMode) => {
@@ -211,6 +241,8 @@ export default function ExplorePage() {
       updateURL(origin, mins, activeModes);
     });
   }, [updateURL, origin, activeModes]);
+
+  const allContours = [...apiContours, ...friendContours];
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
@@ -275,6 +307,24 @@ export default function ExplorePage() {
             </PanelSection>
 
             <PanelSection>
+              {!showFriend ? (
+                <button
+                  onClick={() => setShowFriend(true)}
+                  className="w-full border-3 border-red/50 font-display italic uppercase text-sm py-2 cursor-pointer hover:border-red hover:bg-red hover:text-pink transition-colors text-red/50 hover:text-pink"
+                >
+                  + Add a Friend
+                </button>
+              ) : (
+                <FriendInput
+                  onSelect={handleFriendSelect}
+                  onRemove={removeFriend}
+                  initialValue={friendAddress}
+                  hasResult={friendOrigin !== null}
+                />
+              )}
+            </PanelSection>
+
+            <PanelSection>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
@@ -316,7 +366,7 @@ export default function ExplorePage() {
         <IsochroneMap
           center={mapCenter}
           cells={cells}
-          apiContours={apiContours}
+          apiContours={allContours}
           activeModes={activeModes}
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}
