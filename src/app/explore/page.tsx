@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
-import { ModeToggles } from "@/components/setup/mode-toggles";
-import { HexMap } from "@/components/results/hex-map";
+import { IsochroneMap } from "@/components/isochrone/isochrone-map";
+import { TimeSlider } from "@/components/isochrone/time-slider";
+import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
@@ -11,19 +12,24 @@ import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
+import { generateIsochroneLayers } from "@/lib/isochrone";
 import type {
   LatLng,
   TransportMode,
   HexCell,
+  IsochroneLayer,
   StationGraph,
   StationMatrix,
 } from "@/lib/types";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
+const ALL_MODES: TransportMode[] = ["subway", "walk", "car", "bike", "bikeSubway", "ferry"];
+
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [modes, setModes] = useState<TransportMode[]>(["subway", "walk"]);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(ALL_MODES);
+  const [maxMinutes, setMaxMinutes] = useState(30);
   const [cells, setCells] = useState<HexCell[]>([]);
   const [computing, setComputing] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
@@ -31,10 +37,13 @@ export default function ExplorePage() {
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
   const [subwayData, setSubwayData] = useState<SubwayData | null>(null);
   const [citiBikeData, setCitiBikeData] = useState<CitiBikeData | null>(null);
-  const [ferryData, setFerryData] = useState<{ data: FerryData; adjacency: FerryAdjacency } | null>(null);
+  const [ferryData, setFerryData] = useState<{
+    data: FerryData;
+    adjacency: FerryAdjacency;
+  } | null>(null);
   const [dataReady, setDataReady] = useState(false);
 
-  // Load subway + Citi Bike data on mount
+  // Load transit data on mount
   useEffect(() => {
     async function load() {
       try {
@@ -52,7 +61,7 @@ export default function ExplorePage() {
           const citi = await CitiBikeData.fetch();
           setCitiBikeData(citi);
         } catch (err) {
-          console.warn("Citi Bike data unavailable, continuing without it:", err);
+          console.warn("Citi Bike data unavailable:", err);
         }
 
         const ferry = await loadFerryData();
@@ -68,7 +77,7 @@ export default function ExplorePage() {
   }, []);
 
   const runCompute = useCallback(
-    async (loc: LatLng, selectedModes: TransportMode[]) => {
+    async (loc: LatLng) => {
       if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
 
       setComputing(true);
@@ -80,26 +89,31 @@ export default function ExplorePage() {
           lat: c.center.lat,
           lng: c.center.lng,
         }));
-        const result = await computeHexGrid({
-          hexCenters,
-          origin: loc,
-          destinations: [],
-          modes: selectedModes,
-          stationGraph,
-          stationMatrix,
-          citiBikeStations: citiBikeData.getAllStations(),
-          ferryTerminals: ferryData.data.terminals,
-          ferryAdjacency: ferryData.adjacency,
-        }, (percent) => setComputeProgress(percent));
 
-        // Worker returns cells without geometry — merge center + boundary from rawCenters
+        const result = await computeHexGrid(
+          {
+            hexCenters,
+            origin: loc,
+            destinations: [],
+            modes: ALL_MODES,
+            stationGraph,
+            stationMatrix,
+            citiBikeStations: citiBikeData.getAllStations(),
+            ferryTerminals: ferryData.data.terminals,
+            ferryAdjacency: ferryData.adjacency,
+          },
+          (percent) => setComputeProgress(percent)
+        );
+
         const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-        setCells(result.cells.map((cell) => {
+        const fullCells = result.cells.map((cell) => {
           const geo = geoLookup.get(cell.h3Index)!;
           return { ...cell, center: geo.center, boundary: geo.boundary };
-        }));
+        });
+
+        setCells(fullCells);
       } catch (err) {
-        console.error("Explore compute failed:", err);
+        console.error("Compute failed:", err);
       } finally {
         setComputing(false);
       }
@@ -107,22 +121,38 @@ export default function ExplorePage() {
     [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
 
+  // Generate isochrone layers (memoized — only recomputes when cells change)
+  const isochroneLayers: IsochroneLayer[] = useMemo(() => {
+    if (cells.length === 0) return [];
+    return generateIsochroneLayers(cells, ALL_MODES, 60);
+  }, [cells]);
+
   const handleAddressSelect = useCallback(
     (address: string, location: LatLng) => {
       setOriginAddress(address);
       setOrigin(location);
-      runCompute(location, modes);
+      runCompute(location);
     },
-    [modes, runCompute]
+    [runCompute]
   );
 
-  const handleModesChange = useCallback(
-    (newModes: TransportMode[]) => {
-      setModes(newModes);
-      if (origin) runCompute(origin, newModes);
+  const handleMapClick = useCallback(
+    (location: LatLng) => {
+      setOrigin(location);
+      setOriginAddress("");
+      runCompute(location);
     },
-    [origin, runCompute]
+    [runCompute]
   );
+
+  const toggleMode = useCallback((mode: TransportMode) => {
+    setActiveModes((prev) => {
+      if (prev.includes(mode)) {
+        return prev.length > 1 ? prev.filter((m) => m !== mode) : prev;
+      }
+      return [...prev, mode];
+    });
+  }, []);
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
@@ -130,16 +160,16 @@ export default function ExplorePage() {
     <div className="flex h-full">
       {/* Sidebar */}
       <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
-        <PanelSection className="pb-8">
+        <PanelSection className="pb-6">
           <h1 className="text-3xl leading-none">
-            Explore<br />the Map
+            Isochrone<br />Explorer
           </h1>
           <p className="font-body text-sm text-red/70 leading-relaxed">
-            Enter any address to see how long it takes to get anywhere in NYC.
+            How far can you go? Enter an address or click anywhere on the map.
           </p>
         </PanelSection>
 
-        <PanelSection title="Your Location">
+        <PanelSection title="Location">
           <AddressAutocomplete
             label="Address"
             placeholder="Start typing an address…"
@@ -154,22 +184,22 @@ export default function ExplorePage() {
           )}
         </PanelSection>
 
-        <PanelSection title="Transport Mode">
-          <ModeToggles selected={modes} onChange={handleModesChange} />
+        <PanelSection title="Travel Time">
+          <TimeSlider value={maxMinutes} onChange={setMaxMinutes} />
         </PanelSection>
 
-        {!origin && dataReady && (
-          <PanelSection>
-            <p className="font-body text-sm text-red/70">
-              Enter an address above to generate your accessibility heatmap.
-            </p>
-          </PanelSection>
-        )}
+        <PanelSection title="Transport Modes">
+          <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
+          <p className="font-body text-xs text-red/50 mt-2">
+            All modes shown. Click to toggle.
+          </p>
+        </PanelSection>
 
         {origin && !computing && cells.length > 0 && (
           <PanelSection title="Reading the Map">
             <p className="font-body text-xs text-red/70 leading-relaxed">
-              Green = fast (&lt;5 min). Yellow = moderate (~17 min). Red = slow (40+ min). Hover any hex for exact times.
+              Bright inner rings = reachable quickly. Faded outer rings = takes
+              longer. Each color is a transport mode. Hover for details.
             </p>
           </PanelSection>
         )}
@@ -178,8 +208,8 @@ export default function ExplorePage() {
       {/* Map */}
       <main className="flex-1 relative">
         {computing && (
-          <div className="absolute inset-0 bg-pink/80 z-50 flex items-center justify-center">
-            <span className="font-display italic uppercase text-2xl animate-pulse">
+          <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center">
+            <span className="font-display italic uppercase text-2xl text-pink animate-pulse">
               Computing… {computeProgress}%
             </span>
           </div>
@@ -188,21 +218,22 @@ export default function ExplorePage() {
         {!origin && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             <div className="text-center">
-              <p className="font-display italic uppercase text-3xl text-red/30">
+              <p className="font-display italic uppercase text-3xl text-white/20">
                 Enter an address
               </p>
-              <p className="font-body text-sm text-red/20 mt-2">
-                to see your accessibility heatmap
+              <p className="font-body text-sm text-white/10 mt-2">
+                or click the map to drop a pin
               </p>
             </div>
           </div>
         )}
 
-        <HexMap
+        <IsochroneMap
           center={mapCenter}
-          cells={cells}
-          destinations={[]}
-          hasDestinations={false}
+          layers={isochroneLayers}
+          activeModes={activeModes}
+          maxMinutes={maxMinutes}
+          onMapClick={handleMapClick}
         />
       </main>
     </div>

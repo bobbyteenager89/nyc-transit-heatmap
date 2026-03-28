@@ -20,8 +20,8 @@ export default function LandingPage() {
           />
           <ModeCard
             href="/explore"
-            title="Explore the Map"
-            description="Enter any address and instantly see how long it takes to get anywhere in NYC by subway, bike, or foot."
+            title="Isochrone Explorer"
+            description="Drop a pin and see how far you can go. Glowing contour rings show your reach by subway, bike, foot, and car — drag the slider to watch them grow."
             cta="Explore"
           />
         </div>
