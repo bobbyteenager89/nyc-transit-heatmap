@@ -79,6 +79,8 @@ export function IsochroneMap({
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const originMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const animationRef = useRef<number>(0);
+  const prevCellCountRef = useRef(0);
 
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -178,6 +180,7 @@ export function IsochroneMap({
 
     return () => {
       setMapReady(false);
+      cancelAnimationFrame(animationRef.current);
       originMarkerRef.current?.remove();
       m.remove();
       mapRef.current = null;
@@ -213,6 +216,45 @@ export function IsochroneMap({
     const source = m.getSource("iso-points") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
+    }
+
+    // Animated reveal: only animate when new compute results arrive (cell count changed),
+    // not when the user just moves the maxMinutes slider
+    const isNewCompute = cells.length !== prevCellCountRef.current && cells.length > 0;
+    prevCellCountRef.current = cells.length;
+
+    if (isNewCompute) {
+      cancelAnimationFrame(animationRef.current);
+
+      // Set all heatmap layers to 0 opacity first
+      for (const mode of MODE_LIST) {
+        const layerId = `iso-heat-${mode}`;
+        if (m.getLayer(layerId)) {
+          m.setPaintProperty(layerId, "heatmap-opacity", 0);
+        }
+      }
+
+      const start = performance.now();
+      const duration = 800;
+
+      function animate(now: number) {
+        const progress = Math.max(0, Math.min((now - start) / duration, 1));
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const opacity = eased * 0.85;
+
+        for (const mode of MODE_LIST) {
+          const layerId = `iso-heat-${mode}`;
+          if (m!.getLayer(layerId)) {
+            m!.setPaintProperty(layerId, "heatmap-opacity", opacity);
+          }
+        }
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
     }
   }, [cells, maxMinutes, mapReady]);
 
