@@ -16,6 +16,7 @@ export const HEX_MODES: TransportMode[] = ["subway", "bikeSubway", "ferry"];
 export interface IsochroneContour {
   mode: TransportMode;
   minutes: number;
+  personId: "a" | "b";
   polygon: GeoJSON.Feature;
 }
 
@@ -28,7 +29,8 @@ export async function fetchIsochrone(
   origin: LatLng,
   mode: TransportMode,
   maxMinutes: number,
-  token: string
+  token: string,
+  personId: "a" | "b" = "a"
 ): Promise<IsochroneContour[]> {
   const profile = MODE_TO_PROFILE[mode];
   if (!profile) return [];
@@ -61,11 +63,13 @@ export async function fetchIsochrone(
     return data.features.map((feature) => ({
       mode,
       minutes: feature.properties?.contour ?? 0,
+      personId,
       polygon: {
         ...feature,
         properties: {
           ...feature.properties,
           mode,
+          personId,
           minutes: feature.properties?.contour ?? 0,
         },
       },
@@ -83,13 +87,14 @@ export async function fetchAllIsochrones(
   origin: LatLng,
   modes: TransportMode[],
   maxMinutes: number,
-  token: string
+  token: string,
+  personId: "a" | "b" = "a"
 ): Promise<IsochroneContour[]> {
   const apiModes = modes.filter((m) => API_MODES.includes(m));
   if (apiModes.length === 0) return [];
 
   const results = await Promise.all(
-    apiModes.map((mode) => fetchIsochrone(origin, mode, maxMinutes, token))
+    apiModes.map((mode) => fetchIsochrone(origin, mode, maxMinutes, token, personId))
   );
 
   return results.flat();
