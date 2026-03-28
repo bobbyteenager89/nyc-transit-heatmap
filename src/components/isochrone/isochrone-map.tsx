@@ -42,8 +42,8 @@ function cellsToFillGeoJSON(
     // Skip unreachable or beyond slider
     if (fastest === Infinity || fastest > maxMinutes) continue;
 
-    // Absolute ratio: 0 = at origin, 1 = 60 min away (fixed scale, not relative to slider)
-    const ratio = Math.min(fastest / 60, 1);
+    // Relative ratio: 0 = at origin, 1 = at edge of current slider range
+    const ratio = Math.min(fastest / maxMinutes, 1);
 
     features.push({
       type: "Feature",
@@ -133,7 +133,8 @@ export function IsochroneMap({
         },
       }, firstSymbol);
 
-      // Water mask — covers heatmap over water with dark map water color
+      // Water mask — covers hex fill over water with dark map water color
+      // Must render ABOVE iso-fill to cut off hexes over water
       try {
         m.addLayer({
           id: "water-mask",
@@ -141,12 +142,29 @@ export function IsochroneMap({
           source: "composite",
           "source-layer": "water",
           paint: {
-            "fill-color": "#111118",
+            "fill-color": "#0a0a12",
             "fill-opacity": 1,
           },
         }, firstSymbol);
       } catch {
         // Skip if water source unavailable
+      }
+
+      // Also mask waterways (canals, streams)
+      try {
+        m.addLayer({
+          id: "waterway-mask",
+          type: "line",
+          source: "composite",
+          "source-layer": "waterway",
+          paint: {
+            "line-color": "#0a0a12",
+            "line-width": 8,
+            "line-opacity": 1,
+          },
+        }, firstSymbol);
+      } catch {
+        // Skip if waterway source unavailable
       }
 
       // Click handler
