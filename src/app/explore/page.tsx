@@ -28,6 +28,7 @@ export default function ExplorePage() {
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(ALL_MODES);
   const [maxMinutes, setMaxMinutes] = useState(30);
+  const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
   const [computing, setComputing] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
@@ -72,6 +73,19 @@ export default function ExplorePage() {
       }
     }
     load();
+  }, []);
+
+  // Sync state to URL
+  const updateURL = useCallback((loc: LatLng | null, mins: number, modes: TransportMode[]) => {
+    const params = new URLSearchParams();
+    if (loc) {
+      params.set("lat", loc.lat.toFixed(4));
+      params.set("lng", loc.lng.toFixed(4));
+    }
+    params.set("t", String(mins));
+    params.set("m", modes.join(","));
+    const url = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", url);
   }, []);
 
   const runCompute = useCallback(
@@ -119,13 +133,37 @@ export default function ExplorePage() {
     [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
 
+  // Restore state from URL on mount
+  useEffect(() => {
+    if (!dataReady) return;
+    const params = new URLSearchParams(window.location.search);
+    const lat = params.get("lat");
+    const lng = params.get("lng");
+    const t = params.get("t");
+    const m = params.get("m");
+
+    if (t) setMaxMinutes(Number(t));
+    if (m) {
+      const modes = m.split(",").filter((mode): mode is TransportMode =>
+        ALL_MODES.includes(mode as TransportMode)
+      ) as TransportMode[];
+      if (modes.length > 0) setActiveModes(modes);
+    }
+    if (lat && lng) {
+      const loc = { lat: Number(lat), lng: Number(lng) };
+      setOrigin(loc);
+      runCompute(loc);
+    }
+  }, [dataReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAddressSelect = useCallback(
     (address: string, location: LatLng) => {
       setOriginAddress(address);
       setOrigin(location);
       runCompute(location);
+      updateURL(location, maxMinutes, activeModes);
     },
-    [runCompute]
+    [runCompute, updateURL, maxMinutes, activeModes]
   );
 
   const handleMapClick = useCallback(
@@ -133,18 +171,25 @@ export default function ExplorePage() {
       setOrigin(location);
       setOriginAddress("");
       runCompute(location);
+      updateURL(location, maxMinutes, activeModes);
     },
-    [runCompute]
+    [runCompute, updateURL, maxMinutes, activeModes]
   );
 
   const toggleMode = useCallback((mode: TransportMode) => {
     setActiveModes((prev) => {
-      if (prev.includes(mode)) {
-        return prev.length > 1 ? prev.filter((m) => m !== mode) : prev;
-      }
-      return [...prev, mode];
+      const next = prev.includes(mode)
+        ? prev.length > 1 ? prev.filter((m) => m !== mode) : prev
+        : [...prev, mode];
+      updateURL(origin, maxMinutes, next);
+      return next;
     });
-  }, []);
+  }, [updateURL, origin, maxMinutes]);
+
+  const handleMaxMinutesChange = useCallback((mins: number) => {
+    setMaxMinutes(mins);
+    updateURL(origin, mins, activeModes);
+  }, [updateURL, origin, activeModes]);
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
@@ -177,7 +222,7 @@ export default function ExplorePage() {
         </PanelSection>
 
         <PanelSection title="Travel Time">
-          <TimeSlider value={maxMinutes} onChange={setMaxMinutes} />
+          <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
         </PanelSection>
 
         <PanelSection title="Transport Modes">
@@ -188,12 +233,27 @@ export default function ExplorePage() {
         </PanelSection>
 
         {origin && !computing && cells.length > 0 && (
-          <PanelSection title="Reading the Map">
-            <p className="font-body text-xs text-red/70 leading-relaxed">
-              Bright inner rings = reachable quickly. Faded outer rings = takes
-              longer. Each color is a transport mode. Hover for details.
-            </p>
-          </PanelSection>
+          <>
+            <PanelSection title="Reading the Map">
+              <p className="font-body text-xs text-red/70 leading-relaxed">
+                Bright inner rings = reachable quickly. Faded outer rings = takes
+                longer. Each color is a transport mode. Hover for details.
+              </p>
+            </PanelSection>
+
+            <PanelSection>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  setCopyLabel("Copied!");
+                  setTimeout(() => setCopyLabel("Copy Link"), 1500);
+                }}
+                className="w-full border-3 border-red font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-red hover:text-pink transition-colors"
+              >
+                {copyLabel}
+              </button>
+            </PanelSection>
+          </>
         )}
       </aside>
 
