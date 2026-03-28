@@ -73,6 +73,21 @@ export interface BoundingBox {
   ne: LatLng;
 }
 
+/** A single time-band contour polygon for one mode */
+export interface IsochroneBand {
+  mode: TransportMode;
+  minMinutes: number;
+  maxMinutes: number;
+  polygon: GeoJSON.Feature<GeoJSON.MultiPolygon | GeoJSON.Polygon>;
+}
+
+/** All contour bands for a single mode */
+export interface IsochroneLayer {
+  mode: TransportMode;
+  color: string;
+  bands: IsochroneBand[];
+}
+
 /** Shareable URL state — everything needed to reconstruct a heatmap */
 export interface ShareableState {
   v: 1; // version for forward compat
