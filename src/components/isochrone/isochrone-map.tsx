@@ -4,7 +4,6 @@ import { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { LatLng, TransportMode, HexCell } from "@/lib/types";
-import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
 
 interface IsochroneMapProps {
@@ -18,48 +17,52 @@ interface IsochroneMapProps {
 const MODE_LIST: TransportMode[] = ["subway", "walk", "car", "bike", "bikeSubway", "ferry"];
 
 /**
- * Build a GeoJSON FeatureCollection of Point features from hex cells.
- * Each point has per-mode travel times as properties.
+ * Build GeoJSON FeatureCollection of hex polygons colored by fastest travel time.
+ * Only includes cells reachable within maxMinutes by at least one active mode.
  */
-function cellsToPointGeoJSON(
+function cellsToFillGeoJSON(
   cells: HexCell[],
+  activeModes: TransportMode[],
   maxMinutes: number
 ): GeoJSON.FeatureCollection {
   const features: GeoJSON.Feature[] = [];
 
   for (const cell of cells) {
-    // Check if any mode has a reachable time within maxMinutes
-    let hasReachable = false;
-    for (const mode of MODE_LIST) {
+    // Find fastest time among active modes
+    let fastest = Infinity;
+    let fastestMode: TransportMode = "walk";
+    for (const mode of activeModes) {
       const t = cell.times[mode];
-      if (t !== null && t !== undefined && t <= maxMinutes) {
-        hasReachable = true;
-        break;
+      if (t !== null && t !== undefined && t < fastest) {
+        fastest = t;
+        fastestMode = mode;
       }
     }
-    if (!hasReachable) continue;
 
-    const props: Record<string, number> = {};
-    for (const mode of MODE_LIST) {
-      const t = cell.times[mode];
-      // Weight: higher = closer/brighter. 0 = unreachable or beyond slider
-      if (t !== null && t !== undefined && t <= maxMinutes) {
-        props[`${mode}_weight`] = Math.max(0, maxMinutes - t) / maxMinutes;
-      } else {
-        props[`${mode}_weight`] = 0;
-      }
-      // Raw time for tooltip
-      props[`${mode}_time`] = t ?? -1;
-    }
-    props.fastest_time = cell.compositeScore;
+    // Skip unreachable or beyond slider
+    if (fastest === Infinity || fastest > maxMinutes) continue;
+
+    // Normalized ratio: 0 = at origin, 1 = at edge of range
+    const ratio = Math.min(fastest / maxMinutes, 1);
 
     features.push({
       type: "Feature",
       geometry: {
-        type: "Point",
-        coordinates: [cell.center.lng, cell.center.lat],
+        type: "Polygon",
+        coordinates: [[...cell.boundary, cell.boundary[0]]], // close the ring
       },
-      properties: props,
+      properties: {
+        time: Math.round(fastest * 10) / 10,
+        ratio,
+        fastest_mode: fastestMode,
+        // Per-mode times for tooltip
+        walk: cell.times.walk ?? -1,
+        bike: cell.times.bike ?? -1,
+        subway: cell.times.subway ?? -1,
+        car: cell.times.car ?? -1,
+        bikeSubway: cell.times.bikeSubway ?? -1,
+        ferry: cell.times.ferry ?? -1,
+      },
     });
   }
 
@@ -100,58 +103,37 @@ export function IsochroneMap({
     mapRef.current = m;
 
     m.on("load", () => {
-      // Add empty source for isochrone points
-      m.addSource("iso-points", {
+      // Add hex fill source
+      m.addSource("iso-hexes", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
       });
 
-      // Find the first symbol layer to insert heatmaps below labels
       const firstSymbol = m.getStyle().layers?.find((l) => l.type === "symbol")?.id;
 
-      // Add a heatmap layer per mode
-      for (const mode of MODE_LIST) {
-        const color = MODE_COLORS[mode];
+      // Hex fill layer — colored by travel time ratio
+      // Warm gradient: bright green (close) → yellow → orange → red (far)
+      m.addLayer({
+        id: "iso-fill",
+        type: "fill",
+        source: "iso-hexes",
+        paint: {
+          "fill-color": [
+            "interpolate", ["linear"], ["get", "ratio"],
+            0, "#00ff87",     // bright green (right at origin)
+            0.15, "#39ff14",  // neon green
+            0.3, "#b8ff00",   // yellow-green
+            0.45, "#ffdd00",  // warm yellow
+            0.6, "#ff9500",   // orange
+            0.75, "#ff4d00",  // red-orange
+            0.9, "#e21822",   // red
+            1.0, "#8b0000",   // dark red (edge of range)
+          ],
+          "fill-opacity": 0, // animated in
+        },
+      }, firstSymbol);
 
-        m.addLayer({
-          id: `iso-heat-${mode}`,
-          type: "heatmap",
-          source: "iso-points",
-          paint: {
-            // Weight from pre-computed property
-            "heatmap-weight": ["get", `${mode}_weight`],
-            // Intensity scales with zoom
-            "heatmap-intensity": [
-              "interpolate", ["linear"], ["zoom"],
-              10, 0.8,
-              13, 1.5,
-              15, 2.5,
-            ],
-            // Radius in pixels — larger at lower zoom
-            "heatmap-radius": [
-              "interpolate", ["linear"], ["zoom"],
-              10, 8,
-              12, 15,
-              14, 25,
-              16, 40,
-            ],
-            // Color ramp: transparent → mode color
-            "heatmap-color": [
-              "interpolate", ["linear"], ["heatmap-density"],
-              0, "rgba(0,0,0,0)",
-              0.1, hexToRgba(color, 0.05),
-              0.3, hexToRgba(color, 0.15),
-              0.5, hexToRgba(color, 0.3),
-              0.7, hexToRgba(color, 0.45),
-              1.0, hexToRgba(color, 0.7),
-            ],
-            // Opacity — slightly transparent to see map underneath
-            "heatmap-opacity": 0.85,
-          },
-        }, firstSymbol);
-      }
-
-      // Water mask — render water on top of heatmaps to cut off glow over water
+      // Water mask — covers heatmap over water with dark map water color
       try {
         m.addLayer({
           id: "water-mask",
@@ -159,7 +141,7 @@ export function IsochroneMap({
           source: "composite",
           "source-layer": "water",
           paint: {
-            "fill-color": "#111118", // dark-v11 water color
+            "fill-color": "#111118",
             "fill-opacity": 1,
           },
         }, firstSymbol);
@@ -167,12 +149,58 @@ export function IsochroneMap({
         // Skip if water source unavailable
       }
 
-      // Click handler for pin drop
+      // Click handler
       m.on("click", (e) => {
-        // Block clicks on water
         const waterFeatures = m.queryRenderedFeatures(e.point, { layers: ["water-mask"] });
         if (waterFeatures.length > 0) return;
         onMapClickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      });
+
+      // Hover tooltip
+      m.on("mousemove", "iso-fill", async (e) => {
+        if (!e.features?.[0]) return;
+        m.getCanvas().style.cursor = "pointer";
+        const props = e.features[0].properties!;
+
+        // Reverse geocode
+        const geom = e.features[0].geometry as GeoJSON.Polygon;
+        const coords = geom.coordinates[0];
+        const cx = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+        const cy = coords.reduce((s, c) => s + c[1], 0) / coords.length;
+        const cacheKey = `${cy.toFixed(3)},${cx.toFixed(3)}`;
+        let address = geocodeCache.current.get(cacheKey);
+        if (!address) {
+          address = await reverseGeocode(
+            { lat: cy, lng: cx },
+            process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
+          );
+          geocodeCache.current.set(cacheKey, address);
+        }
+
+        // Build mode lines
+        const modeLabels: Record<string, string> = {
+          walk: "Walk", bike: "Bike", subway: "Subway",
+          car: "Car", bikeSubway: "Bike+Sub", ferry: "Ferry",
+        };
+        const lines = activeModes
+          .map((mode) => {
+            const t = props[mode] as number;
+            if (t < 0 || t > maxMinutes) return null;
+            const isFastest = mode === props.fastest_mode;
+            const label = modeLabels[mode] ?? mode;
+            const val = Math.round(t);
+            return isFastest ? `**${label}: ${val}m**` : `${label}: ${val}m`;
+          })
+          .filter(Boolean)
+          .join(" · ");
+
+        setTooltipContent(`${address}\n${lines}`);
+        setTooltipPos({ x: e.point.x, y: e.point.y });
+      });
+
+      m.on("mouseleave", "iso-fill", () => {
+        m.getCanvas().style.cursor = "";
+        setTooltipContent(null);
       });
 
       setMapReady(true);
@@ -198,7 +226,7 @@ export function IsochroneMap({
     if (center) {
       const el = document.createElement("div");
       el.style.cssText =
-        "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 16px rgba(255,255,255,0.8)";
+        "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4)";
       originMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([center.lng, center.lat])
         .addTo(m);
@@ -207,189 +235,39 @@ export function IsochroneMap({
     }
   }, [center, mapReady]);
 
-  // Update heatmap data when cells or maxMinutes change
+  // Update hex data
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
 
-    const geojson = cellsToPointGeoJSON(cells, maxMinutes);
-    const source = m.getSource("iso-points") as mapboxgl.GeoJSONSource | undefined;
+    const geojson = cellsToFillGeoJSON(cells, activeModes, maxMinutes);
+    const source = m.getSource("iso-hexes") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
     }
 
-    // Animated reveal: only animate when new compute results arrive (cell count changed),
-    // not when the user just moves the maxMinutes slider
+    // Animate reveal on new compute (cell count changed)
     const isNewCompute = cells.length !== prevCellCountRef.current && cells.length > 0;
     prevCellCountRef.current = cells.length;
 
     if (isNewCompute) {
       cancelAnimationFrame(animationRef.current);
-
-      // Set all heatmap layers to 0 opacity first
-      for (const mode of MODE_LIST) {
-        const layerId = `iso-heat-${mode}`;
-        if (m.getLayer(layerId)) {
-          m.setPaintProperty(layerId, "heatmap-opacity", 0);
-        }
-      }
+      m.setPaintProperty("iso-fill", "fill-opacity", 0);
 
       const start = performance.now();
       const duration = 800;
 
       function animate(now: number) {
         const progress = Math.max(0, Math.min((now - start) / duration, 1));
-        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const opacity = eased * 0.85;
-
-        for (const mode of MODE_LIST) {
-          const layerId = `iso-heat-${mode}`;
-          if (m!.getLayer(layerId)) {
-            m!.setPaintProperty(layerId, "heatmap-opacity", opacity);
-          }
-        }
-
+        const eased = 1 - Math.pow(1 - progress, 3);
+        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.8);
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
         }
       }
-
       animationRef.current = requestAnimationFrame(animate);
     }
-  }, [cells, maxMinutes, mapReady]);
-
-  // Toggle mode visibility
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m || !mapReady) return;
-
-    for (const mode of MODE_LIST) {
-      const layerId = `iso-heat-${mode}`;
-      if (m.getLayer(layerId)) {
-        m.setLayoutProperty(
-          layerId,
-          "visibility",
-          activeModes.includes(mode) ? "visible" : "none"
-        );
-      }
-    }
-  }, [activeModes, mapReady]);
-
-  // Tooltip on mousemove
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m || !mapReady) return;
-
-    const handleMouseMove = async (e: mapboxgl.MapMouseEvent) => {
-      // Query nearby isochrone points
-      const bbox: [mapboxgl.PointLike, mapboxgl.PointLike] = [
-        [e.point.x - 20, e.point.y - 20],
-        [e.point.x + 20, e.point.y + 20],
-      ];
-
-      // Check if over water
-      const waterFeatures = m.queryRenderedFeatures(e.point, { layers: ["water-mask"] });
-      if (waterFeatures.length > 0) {
-        setTooltipContent(null);
-        m.getCanvas().style.cursor = "";
-        return;
-      }
-
-      // Find any visible heatmap layers that have data near cursor
-      const visibleLayers = MODE_LIST
-        .filter((mode) => activeModes.includes(mode))
-        .map((mode) => `iso-heat-${mode}`)
-        .filter((id) => m.getLayer(id));
-
-      if (visibleLayers.length === 0 || cells.length === 0) {
-        setTooltipContent(null);
-        m.getCanvas().style.cursor = "";
-        return;
-      }
-
-      // Find nearest cell to cursor
-      const cursorLat = e.lngLat.lat;
-      const cursorLng = e.lngLat.lng;
-      let nearestCell: HexCell | null = null;
-      let nearestDist = Infinity;
-      for (const cell of cells) {
-        const dLat = cell.center.lat - cursorLat;
-        const dLng = cell.center.lng - cursorLng;
-        const dist = dLat * dLat + dLng * dLng;
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestCell = cell;
-        }
-      }
-
-      // Only show tooltip if within ~200m
-      if (!nearestCell || nearestDist > 0.00001) {
-        setTooltipContent(null);
-        m.getCanvas().style.cursor = "";
-        return;
-      }
-
-      // Check if any active mode reaches this cell within maxMinutes
-      let hasReachable = false;
-      for (const mode of activeModes) {
-        const t = nearestCell.times[mode];
-        if (t !== null && t !== undefined && t <= maxMinutes) {
-          hasReachable = true;
-          break;
-        }
-      }
-      if (!hasReachable) {
-        setTooltipContent(null);
-        m.getCanvas().style.cursor = "";
-        return;
-      }
-
-      m.getCanvas().style.cursor = "pointer";
-
-      // Reverse geocode
-      const cacheKey = `${cursorLat.toFixed(3)},${cursorLng.toFixed(3)}`;
-      let address = geocodeCache.current.get(cacheKey);
-      if (!address) {
-        address = await reverseGeocode(
-          { lat: cursorLat, lng: cursorLng },
-          process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
-        );
-        geocodeCache.current.set(cacheKey, address);
-      }
-
-      const modeLabels: Record<string, string> = {
-        walk: "Walk", bike: "Bike", subway: "Subway",
-        car: "Car", bikeSubway: "Bike+Sub", ferry: "Ferry",
-      };
-
-      const lines = activeModes
-        .map((mode) => {
-          const t = nearestCell!.times[mode];
-          if (t === null || t === undefined || t > maxMinutes) return null;
-          return `${modeLabels[mode] ?? mode}: ${Math.round(t)}m`;
-        })
-        .filter(Boolean)
-        .join(" · ");
-
-      if (lines) {
-        setTooltipContent(`${address}\n${lines}`);
-        setTooltipPos({ x: e.point.x, y: e.point.y });
-      }
-    };
-
-    const handleMouseLeave = () => {
-      setTooltipContent(null);
-      m.getCanvas().style.cursor = "";
-    };
-
-    m.on("mousemove", handleMouseMove);
-    m.on("mouseout", handleMouseLeave);
-
-    return () => {
-      m.off("mousemove", handleMouseMove);
-      m.off("mouseout", handleMouseLeave);
-    };
-  }, [mapReady, activeModes, cells, maxMinutes]);
+  }, [cells, activeModes, maxMinutes, mapReady]);
 
   return (
     <div className="relative flex-1 h-full">
@@ -408,12 +286,4 @@ export function IsochroneMap({
       )}
     </div>
   );
-}
-
-/** Convert hex color + alpha to rgba string */
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
 }
