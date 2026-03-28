@@ -7,6 +7,7 @@ import { TimeSlider } from "@/components/isochrone/time-slider";
 import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
+import { PlayButton } from "@/components/isochrone/play-button";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -214,7 +215,7 @@ export default function ExplorePage() {
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full p-3">
       {/* Sidebar */}
       <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
         <PanelSection className="pb-6">
@@ -243,6 +244,14 @@ export default function ExplorePage() {
 
         <PanelSection title="Travel Time">
           <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
+        </PanelSection>
+
+        <PanelSection>
+          <PlayButton
+            currentValue={maxMinutes}
+            onChange={handleMaxMinutesChange}
+            disabled={!origin || computing || cells.length === 0}
+          />
         </PanelSection>
 
         <PanelSection title="Transport Modes">
