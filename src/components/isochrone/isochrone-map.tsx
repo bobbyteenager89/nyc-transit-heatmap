@@ -16,6 +16,7 @@ interface IsochroneMapProps {
   activeModes: TransportMode[];
   maxMinutes: number;
   onMapClick?: (location: LatLng) => void;
+  friendOrigin?: LatLng | null;
 }
 
 /**
@@ -86,6 +87,7 @@ export function IsochroneMap({
   activeModes,
   maxMinutes,
   onMapClick,
+  friendOrigin,
 }: IsochroneMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -93,6 +95,7 @@ export function IsochroneMap({
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const originMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const friendMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const animationRef = useRef<number>(0);
   const prevCellCountRef = useRef(0);
 
@@ -146,6 +149,33 @@ export function IsochroneMap({
           },
         }, firstSymbol);
       }
+
+      // Person B (friend) API isochrone layers — amber
+      m.addSource("friend-iso", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+
+      m.addLayer({
+        id: "friend-fill",
+        type: "fill",
+        source: "friend-iso",
+        paint: {
+          "fill-color": "#f59e0b",
+          "fill-opacity": 0,
+        },
+      }, firstSymbol);
+
+      m.addLayer({
+        id: "friend-line",
+        type: "line",
+        source: "friend-iso",
+        paint: {
+          "line-color": "#f59e0b",
+          "line-width": 1.5,
+          "line-opacity": 0,
+        },
+      }, firstSymbol);
 
       // --- Hex fill source (subway, ferry, bikeSubway) ---
       m.addSource("iso-hexes", {
@@ -281,6 +311,7 @@ export function IsochroneMap({
       setMapReady(false);
       cancelAnimationFrame(animationRef.current);
       originMarkerRef.current?.remove();
+      friendMarkerRef.current?.remove();
       m.remove();
       mapRef.current = null;
     };
@@ -303,6 +334,24 @@ export function IsochroneMap({
     }
   }, [center, mapReady]);
 
+  // Friend origin marker (amber)
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+
+    friendMarkerRef.current?.remove();
+    friendMarkerRef.current = null;
+
+    if (friendOrigin) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "width:14px;height:14px;background:#f59e0b;border:3px solid #f59e0b;border-radius:50%;box-shadow:0 0 20px rgba(245,158,11,0.9),0 0 40px rgba(245,158,11,0.4)";
+      friendMarkerRef.current = new mapboxgl.Marker({ element: el })
+        .setLngLat([friendOrigin.lng, friendOrigin.lat])
+        .addTo(m);
+    }
+  }, [friendOrigin, mapReady]);
+
   // Update API isochrone layers (walk, bike, car)
   useEffect(() => {
     const m = mapRef.current;
@@ -315,7 +364,7 @@ export function IsochroneMap({
       const isActive = activeModes.includes(mode);
       // Get contours for this mode, sorted outermost first (rendered first = behind)
       const contours = apiContours
-        .filter((c) => c.mode === mode && c.minutes <= maxMinutes)
+        .filter((c) => c.personId === "a" && c.mode === mode && c.minutes <= maxMinutes)
         .sort((a, b) => b.minutes - a.minutes);
 
       if (!isActive || contours.length === 0) {
@@ -331,6 +380,27 @@ export function IsochroneMap({
       source.setData({ type: "FeatureCollection", features: contours.map((c) => c.polygon) });
       m.setPaintProperty(`api-fill-${mode}`, "fill-opacity", 0.15);
       m.setPaintProperty(`api-line-${mode}`, "line-opacity", 0.6);
+    }
+
+    // Person B (friend) contours — amber
+    const friendSource = m.getSource("friend-iso") as mapboxgl.GeoJSONSource | undefined;
+    if (friendSource) {
+      const friendContourData = apiContours
+        .filter((c) => c.personId === "b" && c.minutes <= maxMinutes)
+        .sort((a, b) => b.minutes - a.minutes);
+
+      if (friendContourData.length === 0) {
+        friendSource.setData({ type: "FeatureCollection", features: [] });
+        m.setPaintProperty("friend-fill", "fill-opacity", 0);
+        m.setPaintProperty("friend-line", "line-opacity", 0);
+      } else {
+        friendSource.setData({
+          type: "FeatureCollection",
+          features: friendContourData.map((c) => c.polygon),
+        });
+        m.setPaintProperty("friend-fill", "fill-opacity", 0.15);
+        m.setPaintProperty("friend-line", "line-opacity", 0.6);
+      }
     }
   }, [apiContours, activeModes, maxMinutes, mapReady]);
 
