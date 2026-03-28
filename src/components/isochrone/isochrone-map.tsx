@@ -133,8 +133,7 @@ export function IsochroneMap({
         },
       }, firstSymbol);
 
-      // Water mask — covers hex fill over water with dark map water color
-      // Must render ABOVE iso-fill to cut off hexes over water
+      // Water mask — opaque dark layer on top of hex fill
       try {
         m.addLayer({
           id: "water-mask",
@@ -150,7 +149,7 @@ export function IsochroneMap({
         // Skip if water source unavailable
       }
 
-      // Also mask waterways (canals, streams)
+      // Waterways (canals, streams)
       try {
         m.addLayer({
           id: "waterway-mask",
@@ -165,6 +164,63 @@ export function IsochroneMap({
         }, firstSymbol);
       } catch {
         // Skip if waterway source unavailable
+      }
+
+      // Parks — dark green blocks visible through the fill
+      try {
+        m.addLayer({
+          id: "park-overlay",
+          type: "fill",
+          source: "composite",
+          "source-layer": "landuse",
+          filter: ["in", "class", "park", "cemetery", "pitch"],
+          paint: {
+            "fill-color": "#0d2818",
+            "fill-opacity": 0.7,
+          },
+        }, firstSymbol);
+      } catch {
+        // Skip if landuse source unavailable
+      }
+
+      // Street grid — thin lines on top of hex fill so streets are visible
+      try {
+        m.addLayer({
+          id: "street-overlay",
+          type: "line",
+          source: "composite",
+          "source-layer": "road",
+          filter: ["in", "class", "street", "primary", "secondary", "tertiary", "motorway", "trunk"],
+          paint: {
+            "line-color": "rgba(255,255,255,0.12)",
+            "line-width": [
+              "interpolate", ["linear"], ["zoom"],
+              10, 0.3,
+              13, 0.8,
+              16, 1.5,
+            ],
+          },
+        }, firstSymbol);
+      } catch {
+        // Skip if road source unavailable
+      }
+
+      // Neighborhood/admin boundaries
+      try {
+        m.addLayer({
+          id: "neighborhood-lines",
+          type: "line",
+          source: "composite",
+          "source-layer": "admin",
+          filter: [">=", "admin_level", 2],
+          paint: {
+            "line-color": "rgba(255,255,255,0.2)",
+            "line-width": 1,
+            "line-dasharray": [3, 2],
+          },
+        }, firstSymbol);
+      } catch {
+        // Skip if admin source unavailable
       }
 
       // Click handler
@@ -278,7 +334,7 @@ export function IsochroneMap({
       function animate(now: number) {
         const progress = Math.max(0, Math.min((now - start) / duration, 1));
         const eased = 1 - Math.pow(1 - progress, 3);
-        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.8);
+        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.55);
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
         }

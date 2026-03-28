@@ -27,7 +27,7 @@ const ALL_MODES: TransportMode[] = ["subway", "walk", "car", "bike", "bikeSubway
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [activeModes, setActiveModes] = useState<TransportMode[]>(ALL_MODES);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "walk", "bike", "bikeSubway", "ferry"]);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
