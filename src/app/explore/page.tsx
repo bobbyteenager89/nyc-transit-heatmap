@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import { TimeSlider } from "@/components/isochrone/time-slider";
@@ -12,12 +12,10 @@ import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
-import { generateIsochroneLayers } from "@/lib/isochrone";
 import type {
   LatLng,
   TransportMode,
   HexCell,
-  IsochroneLayer,
   StationGraph,
   StationMatrix,
 } from "@/lib/types";
@@ -120,12 +118,6 @@ export default function ExplorePage() {
     },
     [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
-
-  // Generate isochrone layers (memoized — only recomputes when cells change)
-  const isochroneLayers: IsochroneLayer[] = useMemo(() => {
-    if (cells.length === 0) return [];
-    return generateIsochroneLayers(cells, ALL_MODES, 60);
-  }, [cells]);
 
   const handleAddressSelect = useCallback(
     (address: string, location: LatLng) => {
@@ -230,7 +222,7 @@ export default function ExplorePage() {
 
         <IsochroneMap
           center={mapCenter}
-          layers={isochroneLayers}
+          cells={cells}
           activeModes={activeModes}
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}
