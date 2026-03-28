@@ -6,6 +6,7 @@ import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import { TimeSlider } from "@/components/isochrone/time-slider";
 import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
+import { ReachStats } from "@/components/isochrone/reach-stats";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -239,6 +240,10 @@ export default function ExplorePage() {
                 Bright inner rings = reachable quickly. Faded outer rings = takes
                 longer. Each color is a transport mode. Hover for details.
               </p>
+            </PanelSection>
+
+            <PanelSection title="Your Reach">
+              <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
             </PanelSection>
 
             <PanelSection>
