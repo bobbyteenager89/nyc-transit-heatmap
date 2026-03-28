@@ -28,7 +28,7 @@ export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(ALL_MODES);
-  const [maxMinutes, setMaxMinutes] = useState(30);
+  const [maxMinutes, setMaxMinutes] = useState(60);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
   const [computing, setComputing] = useState(false);

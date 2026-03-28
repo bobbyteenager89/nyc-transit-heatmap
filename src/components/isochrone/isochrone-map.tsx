@@ -42,8 +42,8 @@ function cellsToFillGeoJSON(
     // Skip unreachable or beyond slider
     if (fastest === Infinity || fastest > maxMinutes) continue;
 
-    // Normalized ratio: 0 = at origin, 1 = at edge of range
-    const ratio = Math.min(fastest / maxMinutes, 1);
+    // Absolute ratio: 0 = at origin, 1 = 60 min away (fixed scale, not relative to slider)
+    const ratio = Math.min(fastest / 60, 1);
 
     features.push({
       type: "Feature",
