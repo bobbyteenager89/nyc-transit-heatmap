@@ -17,6 +17,8 @@ interface IsochroneMapProps {
   maxMinutes: number;
   onMapClick?: (location: LatLng) => void;
   friendOrigin?: LatLng | null;
+  friendCells?: HexCell[];
+  fairnessRange?: number; // max acceptable time diff in minutes (default 5)
 }
 
 /**
@@ -67,6 +69,72 @@ function cellsToHexGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
+/**
+ * Build GeoJSON for the fairness zone — cells where both people can reach
+ * and the time difference is within the fairness range.
+ * Colored by how "fair" the spot is: green = equal, fading as diff increases.
+ */
+function buildFairnessGeoJSON(
+  cellsA: HexCell[],
+  cellsB: HexCell[],
+  activeModes: TransportMode[],
+  maxMinutes: number,
+  fairnessRange: number
+): GeoJSON.FeatureCollection {
+  if (cellsA.length === 0 || cellsB.length === 0) {
+    return { type: "FeatureCollection", features: [] };
+  }
+
+  // Build lookup from h3Index to cell for Person B
+  const bLookup = new Map<string, HexCell>();
+  for (const cell of cellsB) {
+    bLookup.set(cell.h3Index, cell);
+  }
+
+  const features: GeoJSON.Feature[] = [];
+
+  for (const cellA of cellsA) {
+    const cellB = bLookup.get(cellA.h3Index);
+    if (!cellB) continue;
+
+    // Get fastest time for each person among active modes
+    let fastA = Infinity;
+    let fastB = Infinity;
+    for (const mode of activeModes) {
+      const tA = cellA.times[mode];
+      const tB = cellB.times[mode];
+      if (tA !== null && tA !== undefined && tA < fastA) fastA = tA;
+      if (tB !== null && tB !== undefined && tB < fastB) fastB = tB;
+    }
+
+    // Both must be reachable within maxMinutes
+    if (fastA > maxMinutes || fastB > maxMinutes) continue;
+    if (fastA === Infinity || fastB === Infinity) continue;
+
+    const diff = Math.abs(fastA - fastB);
+    if (diff > fairnessRange) continue;
+
+    // Ratio: 0 = perfectly equal, 1 = at edge of fairness range
+    const ratio = diff / fairnessRange;
+
+    features.push({
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [[...cellA.boundary, cellA.boundary[0]]],
+      },
+      properties: {
+        diff: Math.round(diff * 10) / 10,
+        ratio,
+        timeA: Math.round(fastA),
+        timeB: Math.round(fastB),
+      },
+    });
+  }
+
+  return { type: "FeatureCollection", features };
+}
+
 /** Color ramp expression for hex fill */
 const COLOR_RAMP: mapboxgl.Expression = [
   "interpolate", ["linear"], ["get", "ratio"],
@@ -88,6 +156,8 @@ export function IsochroneMap({
   maxMinutes,
   onMapClick,
   friendOrigin,
+  friendCells = [],
+  fairnessRange = 5,
 }: IsochroneMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -174,6 +244,38 @@ export function IsochroneMap({
           "line-color": "#f59e0b",
           "line-width": 1.5,
           "line-opacity": 0,
+        },
+      }, firstSymbol);
+
+      // Fairness zone source + layer
+      m.addSource("fairness-zone", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+
+      m.addLayer({
+        id: "fairness-fill",
+        type: "fill",
+        source: "fairness-zone",
+        paint: {
+          "fill-color": [
+            "interpolate", ["linear"], ["get", "ratio"],
+            0, "#00ff87",    // bright green = perfectly equal
+            0.5, "#39ff14",  // neon green
+            1.0, "#ffdd00",  // yellow = edge of fairness range
+          ],
+          "fill-opacity": 0.6,
+        },
+      }, firstSymbol);
+
+      m.addLayer({
+        id: "fairness-line",
+        type: "line",
+        source: "fairness-zone",
+        paint: {
+          "line-color": "#00ff87",
+          "line-width": 0.5,
+          "line-opacity": 0.3,
         },
       }, firstSymbol);
 
@@ -300,6 +402,35 @@ export function IsochroneMap({
       });
 
       m.on("mouseleave", "iso-fill", () => {
+        m.getCanvas().style.cursor = "";
+        setTooltipContent(null);
+      });
+
+      m.on("mousemove", "fairness-fill", async (e) => {
+        if (!e.features?.[0]) return;
+        m.getCanvas().style.cursor = "pointer";
+        const props = e.features[0].properties!;
+
+        const geom = e.features[0].geometry as GeoJSON.Polygon;
+        const coords = geom.coordinates[0];
+        const cx = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+        const cy = coords.reduce((s, c) => s + c[1], 0) / coords.length;
+        const cacheKey = `${cy.toFixed(3)},${cx.toFixed(3)}`;
+        let address = geocodeCache.current.get(cacheKey);
+        if (!address) {
+          address = await reverseGeocode({ lat: cy, lng: cx }, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!);
+          geocodeCache.current.set(cacheKey, address);
+        }
+
+        const diff = props.diff as number;
+        const timeA = props.timeA as number;
+        const timeB = props.timeB as number;
+
+        setTooltipContent(`${address}\nYou: ${timeA}m · Friend: ${timeB}m · Diff: ${diff}m`);
+        setTooltipPos({ x: e.point.x, y: e.point.y });
+      });
+
+      m.on("mouseleave", "fairness-fill", () => {
         m.getCanvas().style.cursor = "";
         setTooltipContent(null);
       });
@@ -436,6 +567,23 @@ export function IsochroneMap({
       animationRef.current = requestAnimationFrame(animate);
     }
   }, [cells, activeModes, maxMinutes, mapReady]);
+
+  // Update fairness zone (when both people have data)
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+
+    const source = m.getSource("fairness-zone") as mapboxgl.GeoJSONSource | undefined;
+    if (!source) return;
+
+    if (friendCells.length === 0 || cells.length === 0) {
+      source.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+
+    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes, maxMinutes, fairnessRange);
+    source.setData(geojson);
+  }, [cells, friendCells, activeModes, maxMinutes, fairnessRange, mapReady]);
 
   return (
     <div className="relative flex-1 h-full">
