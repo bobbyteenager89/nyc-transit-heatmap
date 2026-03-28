@@ -13,6 +13,8 @@ import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
+import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
+import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import type {
   LatLng,
   TransportMode,
@@ -31,6 +33,7 @@ export default function ExplorePage() {
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
+  const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
   const [computing, setComputing] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
   const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
@@ -96,35 +99,45 @@ export default function ExplorePage() {
       setComputing(true);
       setComputeProgress(0);
       try {
-        const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
-        const hexCenters = rawCenters.map((c) => ({
-          h3Index: c.h3Index,
-          lat: c.center.lat,
-          lng: c.center.lng,
-        }));
+        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-        const result = await computeHexGrid(
-          {
-            hexCenters,
-            origin: loc,
-            destinations: [],
-            modes: ALL_MODES,
-            stationGraph,
-            stationMatrix,
-            citiBikeStations: citiBikeData.getAllStations(),
-            ferryTerminals: ferryData.data.terminals,
-            ferryAdjacency: ferryData.adjacency,
-          },
-          (percent) => setComputeProgress(percent)
-        );
+        // Run hex compute (for subway/ferry/bikeSubway) and API isochrones (walk/bike/car) in parallel
+        const [hexResult, contours] = await Promise.all([
+          (async () => {
+            const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
+            const hexCenters = rawCenters.map((c) => ({
+              h3Index: c.h3Index,
+              lat: c.center.lat,
+              lng: c.center.lng,
+            }));
 
-        const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-        const fullCells = result.cells.map((cell) => {
-          const geo = geoLookup.get(cell.h3Index)!;
-          return { ...cell, center: geo.center, boundary: geo.boundary };
-        });
+            const result = await computeHexGrid(
+              {
+                hexCenters,
+                origin: loc,
+                destinations: [],
+                modes: ALL_MODES,
+                stationGraph,
+                stationMatrix,
+                citiBikeStations: citiBikeData.getAllStations(),
+                ferryTerminals: ferryData.data.terminals,
+                ferryAdjacency: ferryData.adjacency,
+              },
+              (percent) => setComputeProgress(percent)
+            );
 
-        setCells(fullCells);
+            const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+            return result.cells.map((cell) => {
+              const geo = geoLookup.get(cell.h3Index)!;
+              return { ...cell, center: geo.center, boundary: geo.boundary };
+            });
+          })(),
+          // Fetch API isochrones for walk/bike/car — max 60 min to cache all bands
+          fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
+        ]);
+
+        setCells(hexResult);
+        setApiContours(contours);
       } catch (err) {
         console.error("Compute failed:", err);
       } finally {
@@ -288,6 +301,7 @@ export default function ExplorePage() {
         <IsochroneMap
           center={mapCenter}
           cells={cells}
+          apiContours={apiContours}
           activeModes={activeModes}
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}

@@ -4,74 +4,85 @@ import { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { LatLng, TransportMode, HexCell } from "@/lib/types";
+import type { IsochroneContour } from "@/lib/mapbox-isochrone";
+import { HEX_MODES } from "@/lib/mapbox-isochrone";
+import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
 
 interface IsochroneMapProps {
   center: LatLng;
   cells: HexCell[];
+  apiContours: IsochroneContour[];
   activeModes: TransportMode[];
   maxMinutes: number;
   onMapClick?: (location: LatLng) => void;
 }
 
-const MODE_LIST: TransportMode[] = ["subway", "walk", "car", "bike", "bikeSubway", "ferry"];
-
 /**
- * Build GeoJSON FeatureCollection of hex polygons colored by fastest travel time.
- * Only includes cells reachable within maxMinutes by at least one active mode.
+ * Build hex fill GeoJSON for transit modes only (subway, ferry, bikeSubway).
+ * Walk/bike/car use API polygons instead.
  */
-function cellsToFillGeoJSON(
+function cellsToHexGeoJSON(
   cells: HexCell[],
   activeModes: TransportMode[],
   maxMinutes: number
 ): GeoJSON.FeatureCollection {
-  const features: GeoJSON.Feature[] = [];
+  const hexModes = activeModes.filter((m) => HEX_MODES.includes(m));
+  if (hexModes.length === 0) return { type: "FeatureCollection", features: [] };
 
+  const features: GeoJSON.Feature[] = [];
   for (const cell of cells) {
-    // Find fastest time among active modes
     let fastest = Infinity;
-    let fastestMode: TransportMode = "walk";
-    for (const mode of activeModes) {
+    let fastestMode: TransportMode = "subway";
+    for (const mode of hexModes) {
       const t = cell.times[mode];
       if (t !== null && t !== undefined && t < fastest) {
         fastest = t;
         fastestMode = mode;
       }
     }
-
-    // Skip unreachable or beyond slider
     if (fastest === Infinity || fastest > maxMinutes) continue;
 
-    // Relative ratio: 0 = at origin, 1 = at edge of current slider range
     const ratio = Math.min(fastest / maxMinutes, 1);
-
     features.push({
       type: "Feature",
       geometry: {
         type: "Polygon",
-        coordinates: [[...cell.boundary, cell.boundary[0]]], // close the ring
+        coordinates: [[...cell.boundary, cell.boundary[0]]],
       },
       properties: {
         time: Math.round(fastest * 10) / 10,
         ratio,
         fastest_mode: fastestMode,
-        // Per-mode times for tooltip
-        walk: cell.times.walk ?? -1,
-        bike: cell.times.bike ?? -1,
         subway: cell.times.subway ?? -1,
-        car: cell.times.car ?? -1,
         bikeSubway: cell.times.bikeSubway ?? -1,
         ferry: cell.times.ferry ?? -1,
+        walk: cell.times.walk ?? -1,
+        bike: cell.times.bike ?? -1,
+        car: cell.times.car ?? -1,
       },
     });
   }
-
   return { type: "FeatureCollection", features };
 }
+
+/** Color ramp expression for hex fill */
+const COLOR_RAMP: mapboxgl.Expression = [
+  "interpolate", ["linear"], ["get", "ratio"],
+  0, "#00ff87",
+  0.15, "#39ff14",
+  0.3, "#b8ff00",
+  0.45, "#ffdd00",
+  0.6, "#ff9500",
+  0.75, "#ff4d00",
+  0.9, "#e21822",
+  1.0, "#8b0000",
+];
 
 export function IsochroneMap({
   center,
   cells,
+  apiContours,
   activeModes,
   maxMinutes,
   onMapClick,
@@ -103,70 +114,80 @@ export function IsochroneMap({
     mapRef.current = m;
 
     m.on("load", () => {
-      // Add hex fill source
+      const firstSymbol = m.getStyle().layers?.find((l) => l.type === "symbol")?.id;
+
+      // --- API isochrone sources (walk, bike, car) ---
+      // Each mode gets its own source + fill layer
+      for (const mode of ["walk", "bike", "car"] as TransportMode[]) {
+        m.addSource(`api-iso-${mode}`, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+
+        m.addLayer({
+          id: `api-fill-${mode}`,
+          type: "fill",
+          source: `api-iso-${mode}`,
+          paint: {
+            "fill-color": MODE_COLORS[mode],
+            "fill-opacity": 0,
+          },
+        }, firstSymbol);
+
+        // Outline for API contours — gives that clean isochrone edge
+        m.addLayer({
+          id: `api-line-${mode}`,
+          type: "line",
+          source: `api-iso-${mode}`,
+          paint: {
+            "line-color": MODE_COLORS[mode],
+            "line-width": 1.5,
+            "line-opacity": 0,
+          },
+        }, firstSymbol);
+      }
+
+      // --- Hex fill source (subway, ferry, bikeSubway) ---
       m.addSource("iso-hexes", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
       });
 
-      const firstSymbol = m.getStyle().layers?.find((l) => l.type === "symbol")?.id;
-
-      // Hex fill layer — colored by travel time ratio
-      // Warm gradient: bright green (close) → yellow → orange → red (far)
       m.addLayer({
         id: "iso-fill",
         type: "fill",
         source: "iso-hexes",
         paint: {
-          "fill-color": [
-            "interpolate", ["linear"], ["get", "ratio"],
-            0, "#00ff87",     // bright green (right at origin)
-            0.15, "#39ff14",  // neon green
-            0.3, "#b8ff00",   // yellow-green
-            0.45, "#ffdd00",  // warm yellow
-            0.6, "#ff9500",   // orange
-            0.75, "#ff4d00",  // red-orange
-            0.9, "#e21822",   // red
-            1.0, "#8b0000",   // dark red (edge of range)
-          ],
-          "fill-opacity": 0, // animated in
+          "fill-color": COLOR_RAMP,
+          "fill-opacity": 0,
         },
       }, firstSymbol);
 
-      // Water mask — opaque dark layer on top of hex fill
+      // --- Overlay layers ---
+
+      // Water mask
       try {
         m.addLayer({
           id: "water-mask",
           type: "fill",
           source: "composite",
           "source-layer": "water",
-          paint: {
-            "fill-color": "#0a0a12",
-            "fill-opacity": 1,
-          },
+          paint: { "fill-color": "#0a0a12", "fill-opacity": 1 },
         }, firstSymbol);
-      } catch {
-        // Skip if water source unavailable
-      }
+      } catch { /* skip */ }
 
-      // Waterways (canals, streams)
+      // Waterways
       try {
         m.addLayer({
           id: "waterway-mask",
           type: "line",
           source: "composite",
           "source-layer": "waterway",
-          paint: {
-            "line-color": "#0a0a12",
-            "line-width": 8,
-            "line-opacity": 1,
-          },
+          paint: { "line-color": "#0a0a12", "line-width": 8, "line-opacity": 1 },
         }, firstSymbol);
-      } catch {
-        // Skip if waterway source unavailable
-      }
+      } catch { /* skip */ }
 
-      // Parks — dark green blocks visible through the fill
+      // Parks
       try {
         m.addLayer({
           id: "park-overlay",
@@ -174,16 +195,11 @@ export function IsochroneMap({
           source: "composite",
           "source-layer": "landuse",
           filter: ["in", "class", "park", "cemetery", "pitch"],
-          paint: {
-            "fill-color": "#0d2818",
-            "fill-opacity": 0.7,
-          },
+          paint: { "fill-color": "#0d2818", "fill-opacity": 0.7 },
         }, firstSymbol);
-      } catch {
-        // Skip if landuse source unavailable
-      }
+      } catch { /* skip */ }
 
-      // Street grid — thin lines on top of hex fill so streets are visible
+      // Street grid
       try {
         m.addLayer({
           id: "street-overlay",
@@ -193,19 +209,12 @@ export function IsochroneMap({
           filter: ["in", "class", "street", "primary", "secondary", "tertiary", "motorway", "trunk"],
           paint: {
             "line-color": "rgba(255,255,255,0.12)",
-            "line-width": [
-              "interpolate", ["linear"], ["zoom"],
-              10, 0.3,
-              13, 0.8,
-              16, 1.5,
-            ],
+            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.3, 13, 0.8, 16, 1.5],
           },
         }, firstSymbol);
-      } catch {
-        // Skip if road source unavailable
-      }
+      } catch { /* skip */ }
 
-      // Neighborhood/admin boundaries
+      // Neighborhood lines
       try {
         m.addLayer({
           id: "neighborhood-lines",
@@ -213,15 +222,9 @@ export function IsochroneMap({
           source: "composite",
           "source-layer": "admin",
           filter: [">=", "admin_level", 2],
-          paint: {
-            "line-color": "rgba(255,255,255,0.2)",
-            "line-width": 1,
-            "line-dasharray": [3, 2],
-          },
+          paint: { "line-color": "rgba(255,255,255,0.2)", "line-width": 1, "line-dasharray": [3, 2] },
         }, firstSymbol);
-      } catch {
-        // Skip if admin source unavailable
-      }
+      } catch { /* skip */ }
 
       // Click handler
       m.on("click", (e) => {
@@ -230,13 +233,12 @@ export function IsochroneMap({
         onMapClickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
       });
 
-      // Hover tooltip
+      // Hover tooltip on hex fill
       m.on("mousemove", "iso-fill", async (e) => {
         if (!e.features?.[0]) return;
         m.getCanvas().style.cursor = "pointer";
         const props = e.features[0].properties!;
 
-        // Reverse geocode
         const geom = e.features[0].geometry as GeoJSON.Polygon;
         const coords = geom.coordinates[0];
         const cx = coords.reduce((s, c) => s + c[0], 0) / coords.length;
@@ -244,14 +246,10 @@ export function IsochroneMap({
         const cacheKey = `${cy.toFixed(3)},${cx.toFixed(3)}`;
         let address = geocodeCache.current.get(cacheKey);
         if (!address) {
-          address = await reverseGeocode(
-            { lat: cy, lng: cx },
-            process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
-          );
+          address = await reverseGeocode({ lat: cy, lng: cx }, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!);
           geocodeCache.current.set(cacheKey, address);
         }
 
-        // Build mode lines
         const modeLabels: Record<string, string> = {
           walk: "Walk", bike: "Bike", subway: "Subway",
           car: "Car", bikeSubway: "Bike+Sub", ferry: "Ferry",
@@ -262,8 +260,7 @@ export function IsochroneMap({
             if (t < 0 || t > maxMinutes) return null;
             const isFastest = mode === props.fastest_mode;
             const label = modeLabels[mode] ?? mode;
-            const val = Math.round(t);
-            return isFastest ? `**${label}: ${val}m**` : `${label}: ${val}m`;
+            return isFastest ? `**${label}: ${Math.round(t)}m**` : `${label}: ${Math.round(t)}m`;
           })
           .filter(Boolean)
           .join(" · ");
@@ -294,9 +291,7 @@ export function IsochroneMap({
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
-
     originMarkerRef.current?.remove();
-
     if (center) {
       const el = document.createElement("div");
       el.style.cssText =
@@ -304,23 +299,60 @@ export function IsochroneMap({
       originMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([center.lng, center.lat])
         .addTo(m);
-
       m.flyTo({ center: [center.lng, center.lat], zoom: 12, duration: 800 });
     }
   }, [center, mapReady]);
 
-  // Update hex data
+  // Update API isochrone layers (walk, bike, car)
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
 
-    const geojson = cellsToFillGeoJSON(cells, activeModes, maxMinutes);
+    for (const mode of ["walk", "bike", "car"] as TransportMode[]) {
+      const source = m.getSource(`api-iso-${mode}`) as mapboxgl.GeoJSONSource | undefined;
+      if (!source) continue;
+
+      const isActive = activeModes.includes(mode);
+      // Get contours for this mode, sorted outermost first
+      const contours = apiContours
+        .filter((c) => c.mode === mode && c.minutes <= maxMinutes)
+        .sort((a, b) => b.minutes - a.minutes);
+
+      if (!isActive || contours.length === 0) {
+        source.setData({ type: "FeatureCollection", features: [] });
+        m.setPaintProperty(`api-fill-${mode}`, "fill-opacity", 0);
+        m.setPaintProperty(`api-line-${mode}`, "line-opacity", 0);
+        continue;
+      }
+
+      // Build feature collection with opacity based on contour band
+      const features = contours.map((c, i) => ({
+        ...c.polygon,
+        properties: {
+          ...c.polygon.properties,
+          // Outermost = lowest opacity, innermost = highest
+          opacity: 0.12 + (contours.length - 1 - i) * (0.35 / Math.max(contours.length - 1, 1)),
+        },
+      }));
+
+      source.setData({ type: "FeatureCollection", features });
+      m.setPaintProperty(`api-fill-${mode}`, "fill-opacity", ["get", "opacity"]);
+      m.setPaintProperty(`api-line-${mode}`, "line-opacity", 0.5);
+    }
+  }, [apiContours, activeModes, maxMinutes, mapReady]);
+
+  // Update hex data (subway, ferry, bikeSubway)
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+
+    const geojson = cellsToHexGeoJSON(cells, activeModes, maxMinutes);
     const source = m.getSource("iso-hexes") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
     }
 
-    // Animate reveal on new compute (cell count changed)
+    // Animate reveal on new compute
     const isNewCompute = cells.length !== prevCellCountRef.current && cells.length > 0;
     prevCellCountRef.current = cells.length;
 
@@ -330,7 +362,6 @@ export function IsochroneMap({
 
       const start = performance.now();
       const duration = 800;
-
       function animate(now: number) {
         const progress = Math.max(0, Math.min((now - start) / duration, 1));
         const eased = 1 - Math.pow(1 - progress, 3);
@@ -346,8 +377,6 @@ export function IsochroneMap({
   return (
     <div className="relative flex-1 h-full">
       <div ref={mapContainer} className="w-full h-full cursor-crosshair" />
-
-      {/* Tooltip */}
       {tooltipContent && (
         <div
           className="absolute pointer-events-none bg-red text-pink p-2 text-xs font-body z-50 max-w-xs"
