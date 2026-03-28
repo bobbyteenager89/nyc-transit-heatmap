@@ -17,6 +17,7 @@ import { generateHexCenters } from "@/lib/hex";
 import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { FriendInput } from "@/components/isochrone/friend-input";
+import { FairnessSlider } from "@/components/isochrone/fairness-slider";
 import type {
   LatLng,
   TransportMode,
@@ -41,6 +42,8 @@ export default function ExplorePage() {
   const [friendAddress, setFriendAddress] = useState("");
   const [friendContours, setFriendContours] = useState<IsochroneContour[]>([]);
   const [showFriend, setShowFriend] = useState(false);
+  const [friendCells, setFriendCells] = useState<HexCell[]>([]);
+  const [fairnessRange, setFairnessRange] = useState(5);
   const [computeProgress, setComputeProgress] = useState(0);
   const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
@@ -155,11 +158,47 @@ export default function ExplorePage() {
 
   const runFriendCompute = useCallback(
     async (loc: LatLng) => {
+      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
       const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-      const contours = await fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b");
+
+      // Run hex compute AND API isochrones for friend in parallel
+      const [hexResult, contours] = await Promise.all([
+        (async () => {
+          const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
+          const hexCenters = rawCenters.map((c) => ({
+            h3Index: c.h3Index,
+            lat: c.center.lat,
+            lng: c.center.lng,
+          }));
+
+          const result = await computeHexGrid(
+            {
+              hexCenters,
+              origin: loc,
+              destinations: [],
+              modes: ALL_MODES,
+              stationGraph,
+              stationMatrix,
+              citiBikeStations: citiBikeData.getAllStations(),
+              ferryTerminals: ferryData.data.terminals,
+              ferryAdjacency: ferryData.adjacency,
+            },
+            () => {} // no progress bar for friend compute
+          );
+
+          const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+          return result.cells.map((cell) => {
+            const geo = geoLookup.get(cell.h3Index)!;
+            return { ...cell, center: geo.center, boundary: geo.boundary };
+          });
+        })(),
+        fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b"),
+      ]);
+
+      setFriendCells(hexResult);
       setFriendContours(contours);
     },
-    []
+    [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
 
   // Restore state from URL on mount
@@ -218,6 +257,7 @@ export default function ExplorePage() {
     setFriendOrigin(null);
     setFriendAddress("");
     setFriendContours([]);
+    setFriendCells([]);
     setShowFriend(false);
   }, []);
 
@@ -324,6 +364,12 @@ export default function ExplorePage() {
               )}
             </PanelSection>
 
+            {friendCells.length > 0 && (
+              <PanelSection>
+                <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
+              </PanelSection>
+            )}
+
             <PanelSection>
               <button
                 onClick={() => {
@@ -366,10 +412,13 @@ export default function ExplorePage() {
         <IsochroneMap
           center={mapCenter}
           cells={cells}
+          friendCells={friendCells}
+          fairnessRange={fairnessRange}
           apiContours={allContours}
           activeModes={activeModes}
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}
+          friendOrigin={friendOrigin}
         />
       </main>
     </div>
