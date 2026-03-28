@@ -140,8 +140,50 @@
 | `src/lib/__tests__/hex.test.ts` | Added ferry:null to test data |
 
 ### Next Steps
-- [ ] Push to deploy and verify all features on live site
+- [x] Push to deploy and verify all features on live site
 - [ ] Browser test: ferry times appear in tooltip, progress bar works, hex detail is block-level
 - [ ] Performance benchmark: verify <3s compute at resolution 10
 - [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
-- [ ] Save/load destination profiles (localStorage or URL state)
+- [x] Save/load destination profiles (localStorage or URL state)
+
+---
+
+## 2026-03-27 — Session 5: Isochrone Explorer — Dark Map, Heatmap Contours, Interactivity
+
+### Accomplished
+- Replaced Explore page with Isochrone Explorer — dark Mapbox map (`dark-v11`) with smooth heatmap contours
+- Built isochrone contour generator (`isochrone.ts`) with h3-js `cellsToMultiPolygon` for polygon dissolve, then switched to Mapbox native heatmap layers for smooth organic glow (no hex edges)
+- Added per-mode color coding: subway (blue), walk (amber), car (purple), bike (green), ferry (cyan), bike+sub (teal-green)
+- Added water mask layer on top of heatmaps — cleanly cuts off glow over water areas
+- Built time slider component (1-60 min, 7 snap points) — contours grow/shrink as you drag
+- Built mode legend component — color-coded toggle buttons, all modes on by default, click to hide
+- Added reach stats bar chart — sidebar shows reachable area per mode, updates live with slider
+- Added shareable URL state — origin lat/lng, time, modes encoded in URL query string + Copy Link button
+- Added animated heatmap reveal — 800ms ease-out bloom on new compute, slider changes stay instant
+- Updated landing page card: "Isochrone Explorer" with new description
+- All 63 tests passing, clean build, 8 commits, deployed to Vercel
+- All work done via subagent-driven development (3-agent swarm for interactivity features)
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/lib/isochrone.ts` | Time band grouping, mode colors, isochrone layer generation |
+| `src/lib/__tests__/isochrone.test.ts` | 8 tests for grouping, layer generation, band contiguity |
+| `src/components/isochrone/isochrone-map.tsx` | Dark Mapbox map with heatmap layers, water mask, tooltips |
+| `src/components/isochrone/time-slider.tsx` | Draggable range slider with snap points |
+| `src/components/isochrone/mode-legend.tsx` | Color-coded mode toggle grid |
+| `src/components/isochrone/reach-stats.tsx` | Bar chart showing reachable area per mode |
+| `docs/superpowers/plans/2026-03-27-isochrone-explore-upgrade.md` | Implementation plan |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/lib/types.ts` | Added IsochroneBand, IsochroneLayer types |
+| `src/app/explore/page.tsx` | Full rewrite — isochrone map, slider, legend, URL state, reach stats |
+| `src/app/page.tsx` | Updated Explore card to "Isochrone Explorer" with new copy |
+
+### Next Steps
+- [ ] Tune heatmap intensity/radius if glow is too strong or too faint on live site
+- [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
+- [ ] Mobile responsive layout for sidebar + map
+- [ ] Shareable isochrone screenshot cards for social sharing

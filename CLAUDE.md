@@ -27,14 +27,16 @@
 - `src/components/results/monthly-footer.tsx` — cost comparison cards in results view
 - `src/lib/hex.ts` — H3 hex grid generation + GeoJSON conversion
 - `src/lib/ferry.ts` — ferry terminal data loader + Floyd-Warshall adjacency
+- `src/lib/isochrone.ts` — time band grouping, mode colors, isochrone layer generation
+- `src/components/isochrone/` — isochrone-map (dark Mapbox heatmap), time-slider, mode-legend, reach-stats
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry)
 - `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
 - `public/data/` — pre-built subway data (committed)
 
 ## Heatmap Modes
-- **No destinations**: accessibility heatmap (travel time from origin to each grid point)
-- **With destinations**: score heatmap showing total monthly transit hours (green=low, red=high)
+- **Isochrone Explorer** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
+- **Find My Neighborhood** (`/find`): score heatmap showing total monthly transit hours (green=low, red=high)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
 - **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
 - **Resolution 10**: ~150k hex cells with spatial grid indexing for O(1) station lookups
