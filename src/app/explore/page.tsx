@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import { TimeSlider } from "@/components/isochrone/time-slider";
@@ -190,19 +190,25 @@ export default function ExplorePage() {
     [runCompute, updateURL, maxMinutes, activeModes]
   );
 
+  const [, startTransition] = useTransition();
+
   const toggleMode = useCallback((mode: TransportMode) => {
-    setActiveModes((prev) => {
-      const next = prev.includes(mode)
-        ? prev.length > 1 ? prev.filter((m) => m !== mode) : prev
-        : [...prev, mode];
-      updateURL(origin, maxMinutes, next);
-      return next;
+    startTransition(() => {
+      setActiveModes((prev) => {
+        const next = prev.includes(mode)
+          ? prev.length > 1 ? prev.filter((m) => m !== mode) : prev
+          : [...prev, mode];
+        updateURL(origin, maxMinutes, next);
+        return next;
+      });
     });
   }, [updateURL, origin, maxMinutes]);
 
   const handleMaxMinutesChange = useCallback((mins: number) => {
-    setMaxMinutes(mins);
-    updateURL(origin, mins, activeModes);
+    startTransition(() => {
+      setMaxMinutes(mins);
+      updateURL(origin, mins, activeModes);
+    });
   }, [updateURL, origin, activeModes]);
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };

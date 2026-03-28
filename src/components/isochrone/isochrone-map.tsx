@@ -313,7 +313,7 @@ export function IsochroneMap({
       if (!source) continue;
 
       const isActive = activeModes.includes(mode);
-      // Get contours for this mode, sorted outermost first
+      // Get contours for this mode, sorted outermost first (rendered first = behind)
       const contours = apiContours
         .filter((c) => c.mode === mode && c.minutes <= maxMinutes)
         .sort((a, b) => b.minutes - a.minutes);
@@ -325,19 +325,12 @@ export function IsochroneMap({
         continue;
       }
 
-      // Build feature collection with opacity based on contour band
-      const features = contours.map((c, i) => ({
-        ...c.polygon,
-        properties: {
-          ...c.polygon.properties,
-          // Outermost = lowest opacity, innermost = highest
-          opacity: 0.12 + (contours.length - 1 - i) * (0.35 / Math.max(contours.length - 1, 1)),
-        },
-      }));
-
-      source.setData({ type: "FeatureCollection", features });
-      m.setPaintProperty(`api-fill-${mode}`, "fill-opacity", ["get", "opacity"]);
-      m.setPaintProperty(`api-line-${mode}`, "line-opacity", 0.5);
+      // Each contour feature rendered with uniform opacity.
+      // Since polygons are nested (outer includes inner area), overlapping
+      // regions accumulate opacity naturally — center is brightest.
+      source.setData({ type: "FeatureCollection", features: contours.map((c) => c.polygon) });
+      m.setPaintProperty(`api-fill-${mode}`, "fill-opacity", 0.15);
+      m.setPaintProperty(`api-line-${mode}`, "line-opacity", 0.6);
     }
   }, [apiContours, activeModes, maxMinutes, mapReady]);
 
