@@ -23,7 +23,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ModeCard
             href="/explore"
-            title="Isochrone Explorer"
+            title="Isochrone NYC"
             description="Drop a pin and see how far you can go. Smooth contour rings show your reach by every mode."
             cta="Explore"
             primary

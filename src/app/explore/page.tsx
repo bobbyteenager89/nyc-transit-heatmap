@@ -304,7 +304,7 @@ export default function ExplorePage() {
       <aside className="w-[420px] flex-shrink-0 flex flex-col bg-surface overflow-y-auto gap-3 p-4">
         <div className="px-1 pt-2 pb-1">
           <h1 className="text-2xl leading-none text-white">
-            Isochrone<br /><span className="text-accent">Explorer</span>
+            Isochrone<br /><span className="text-accent">NYC</span>
           </h1>
           <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
         </div>

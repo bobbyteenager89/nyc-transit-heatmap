@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NYC Transit Heatmap — Find Your Neighborhood",
+  title: "Isochrone NYC",
   description: "Find the NYC neighborhood that minimizes your commute. See transit times by subway, bike, and foot on an interactive hex heatmap.",
 };
 

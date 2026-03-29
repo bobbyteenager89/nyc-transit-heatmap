@@ -35,7 +35,7 @@
 - `public/data/` — pre-built subway data (committed)
 
 ## Heatmap Modes
-- **Isochrone Explorer** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
+- **Isochrone NYC** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
 - **Find My Neighborhood** (`/find`): score heatmap showing total monthly transit hours (green=low, red=high)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
 - **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
