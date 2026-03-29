@@ -47,29 +47,33 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
 
   return (
     <div className="space-y-2">
-      <p className="font-body text-xs text-white/40 mb-1">
-        Reachable area within {maxMinutes} min
+      <p className="font-body text-[10px] text-white/30 mb-1">
+        Area reachable within {maxMinutes} min by mode
       </p>
-      {counts.map(({ mode, count, color }) => (
-        <div key={mode} className="flex items-center gap-2">
-          <span className="font-display italic uppercase text-[10px] w-14 text-white/60 flex-shrink-0">
-            {MODE_LABELS[mode]}
-          </span>
-          <div className="flex-1 h-3 bg-white/5 relative">
-            <div
-              className="h-full transition-all duration-300"
-              style={{
-                width: `${(count / maxCount) * 100}%`,
-                backgroundColor: color,
-                opacity: 0.7,
-              }}
-            />
+      {counts.map(({ mode, count, color }) => {
+        // Each H3 res-10 hex ≈ 0.0000115 sq mi
+        const sqMi = (count * 0.0000115).toFixed(1);
+        return (
+          <div key={mode} className="flex items-center gap-2">
+            <span className="font-display italic uppercase text-[10px] w-14 text-white/60 flex-shrink-0">
+              {MODE_LABELS[mode]}
+            </span>
+            <div className="flex-1 h-2.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${(count / maxCount) * 100}%`,
+                  backgroundColor: color,
+                  opacity: 0.8,
+                }}
+              />
+            </div>
+            <span className="font-body text-[10px] text-white/40 w-14 text-right tabular-nums">
+              {sqMi} mi²
+            </span>
           </div>
-          <span className="font-body text-xs text-white/40 w-12 text-right tabular-nums">
-            {count.toLocaleString()}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
