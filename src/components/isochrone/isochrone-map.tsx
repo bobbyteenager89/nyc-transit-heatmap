@@ -22,22 +22,21 @@ interface IsochroneMapProps {
 }
 
 /**
- * Build hex fill GeoJSON for transit modes only (subway, ferry, bikeSubway).
- * Walk/bike/car use API polygons instead.
+ * Build hex fill GeoJSON colored by fastest time across ALL active modes.
+ * Uses the worker-computed times for every mode (walk, bike, car included).
  */
 function cellsToHexGeoJSON(
   cells: HexCell[],
   activeModes: TransportMode[],
   maxMinutes: number
 ): GeoJSON.FeatureCollection {
-  const hexModes = activeModes.filter((m) => HEX_MODES.includes(m));
-  if (hexModes.length === 0) return { type: "FeatureCollection", features: [] };
+  if (activeModes.length === 0) return { type: "FeatureCollection", features: [] };
 
   const features: GeoJSON.Feature[] = [];
   for (const cell of cells) {
     let fastest = Infinity;
-    let fastestMode: TransportMode = "subway";
-    for (const mode of hexModes) {
+    let fastestMode: TransportMode = "walk";
+    for (const mode of activeModes) {
       const t = cell.times[mode];
       if (t !== null && t !== undefined && t < fastest) {
         fastest = t;
