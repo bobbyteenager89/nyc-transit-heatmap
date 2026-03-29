@@ -46,7 +46,6 @@ function cellsToHexGeoJSON(
     }
     if (fastest === Infinity || fastest > maxMinutes) continue;
 
-    const ratio = Math.min(fastest / maxMinutes, 1);
     features.push({
       type: "Feature",
       geometry: {
@@ -55,7 +54,6 @@ function cellsToHexGeoJSON(
       },
       properties: {
         time: Math.round(fastest * 10) / 10,
-        ratio,
         fastest_mode: fastestMode,
         subway: cell.times.subway ?? -1,
         bikeSubway: cell.times.bikeSubway ?? -1,
@@ -135,17 +133,17 @@ function buildFairnessGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
-/** Color ramp expression for hex fill */
+/** Color ramp expression — keyed on absolute time in minutes (0-60) */
 const COLOR_RAMP: mapboxgl.Expression = [
-  "interpolate", ["linear"], ["get", "ratio"],
-  0, "#00ff87",
-  0.15, "#39ff14",
-  0.3, "#b8ff00",
-  0.45, "#ffdd00",
-  0.6, "#ff9500",
-  0.75, "#ff4d00",
-  0.9, "#e21822",
-  1.0, "#8b0000",
+  "interpolate", ["linear"], ["get", "time"],
+  0,  "#00ff87",   // 0 min — bright green (origin)
+  5,  "#39ff14",   // 5 min — neon green
+  10, "#b8ff00",   // 10 min — lime
+  15, "#ffdd00",   // 15 min — yellow
+  20, "#ffaa00",   // 20 min — amber
+  30, "#ff6600",   // 30 min — orange
+  45, "#e21822",   // 45 min — red
+  60, "#8b0000",   // 60 min — dark red
 ];
 
 export function IsochroneMap({
