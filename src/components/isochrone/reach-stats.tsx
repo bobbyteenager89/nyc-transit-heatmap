@@ -45,15 +45,15 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
 
   return (
     <div className="space-y-2">
-      <p className="font-body text-xs text-red/50 mb-1">
+      <p className="font-body text-xs text-white/40 mb-1">
         Reachable area within {maxMinutes} min
       </p>
       {counts.map(({ mode, count, color }) => (
         <div key={mode} className="flex items-center gap-2">
-          <span className="font-display italic uppercase text-xs w-16 flex-shrink-0">
+          <span className="font-display italic uppercase text-[10px] w-14 text-white/60 flex-shrink-0">
             {MODE_LABELS[mode]}
           </span>
-          <div className="flex-1 h-3 bg-red/10 relative">
+          <div className="flex-1 h-3 bg-white/5 relative">
             <div
               className="h-full transition-all duration-300"
               style={{
@@ -63,7 +63,7 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
               }}
             />
           </div>
-          <span className="font-body text-xs text-red/60 w-12 text-right tabular-nums">
+          <span className="font-body text-xs text-white/40 w-12 text-right tabular-nums">
             {count.toLocaleString()}
           </span>
         </div>

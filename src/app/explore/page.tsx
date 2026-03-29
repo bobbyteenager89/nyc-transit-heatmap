@@ -8,6 +8,7 @@ import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
+import { MapLegend } from "@/components/isochrone/map-legend";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -287,17 +288,15 @@ export default function ExplorePage() {
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
   return (
-    <div className="flex h-full p-3">
+    <div className="flex h-full">
       {/* Sidebar */}
-      <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
-        <PanelSection className="pb-6">
-          <h1 className="text-3xl leading-none">
-            Isochrone<br />Explorer
+      <aside className="w-[420px] flex-shrink-0 flex flex-col bg-surface overflow-y-auto gap-3 p-4">
+        <div className="px-1 pt-2 pb-1">
+          <h1 className="text-2xl leading-none text-white">
+            Isochrone<br /><span className="text-accent">Explorer</span>
           </h1>
-          <p className="font-body text-sm text-red/70 leading-relaxed">
-            How far can you go? Enter an address or click anywhere on the map.
-          </p>
-        </PanelSection>
+          <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
+        </div>
 
         <PanelSection title="Location">
           <AddressAutocomplete
@@ -308,27 +307,28 @@ export default function ExplorePage() {
             autoFocus
           />
           {!dataReady && (
-            <p className="font-body text-xs text-red/60 animate-pulse">
+            <p className="font-body text-xs text-white/40 animate-pulse">
               Loading transit data…
             </p>
           )}
         </PanelSection>
 
-        <PanelSection title="Travel Time">
-          <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
-        </PanelSection>
-
-        <PanelSection>
-          <PlayButton
-            currentValue={maxMinutes}
-            onChange={handleMaxMinutesChange}
-            disabled={!origin || computing || cells.length === 0}
-          />
+        <PanelSection title="Reach Time">
+          <div className="flex items-center gap-3">
+            <PlayButton
+              currentValue={maxMinutes}
+              onChange={handleMaxMinutesChange}
+              disabled={!origin || computing || cells.length === 0}
+            />
+            <div className="flex-1">
+              <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
+            </div>
+          </div>
         </PanelSection>
 
         <PanelSection title="Transport Modes">
           <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
-          <p className="font-body text-xs text-red/50 mt-2">
+          <p className="font-body text-xs text-white/30 mt-2">
             All modes shown. Click to toggle.
           </p>
         </PanelSection>
@@ -336,7 +336,7 @@ export default function ExplorePage() {
         {origin && !computing && cells.length > 0 && (
           <>
             <PanelSection title="Reading the Map">
-              <p className="font-body text-xs text-red/70 leading-relaxed">
+              <p className="font-body text-xs text-white/50 leading-relaxed">
                 Bright inner rings = reachable quickly. Faded outer rings = takes
                 longer. Each color is a transport mode. Hover for details.
               </p>
@@ -350,7 +350,7 @@ export default function ExplorePage() {
               {!showFriend ? (
                 <button
                   onClick={() => setShowFriend(true)}
-                  className="w-full border-3 border-red/50 font-display italic uppercase text-sm py-2 cursor-pointer hover:border-red hover:bg-red hover:text-pink transition-colors text-red/50 hover:text-pink"
+                  className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50"
                 >
                   + Add a Friend
                 </button>
@@ -377,7 +377,7 @@ export default function ExplorePage() {
                   setCopyLabel("Copied!");
                   setTimeout(() => setCopyLabel("Copy Link"), 1500);
                 }}
-                className="w-full border-3 border-red font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-red hover:text-pink transition-colors"
+                className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50"
               >
                 {copyLabel}
               </button>
@@ -389,8 +389,8 @@ export default function ExplorePage() {
       {/* Map */}
       <main className="flex-1 relative">
         {computing && (
-          <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center">
-            <span className="font-display italic uppercase text-2xl text-pink animate-pulse">
+          <div className="absolute inset-0 bg-surface/90 z-50 flex items-center justify-center">
+            <span className="font-display italic uppercase text-2xl text-accent animate-pulse">
               Computing… {computeProgress}%
             </span>
           </div>
@@ -408,6 +408,8 @@ export default function ExplorePage() {
             </div>
           </div>
         )}
+
+        {cells.length > 0 && <MapLegend />}
 
         <IsochroneMap
           center={mapCenter}

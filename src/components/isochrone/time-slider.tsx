@@ -29,10 +29,12 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-display italic uppercase text-sm">
-          {value} min
-        </span>
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="font-display italic uppercase text-xs text-white/50">Reach Time</span>
+        <div>
+          <span className="font-display italic text-2xl text-white">{value}</span>
+          <span className="font-body text-xs text-white/40 ml-1">min</span>
+        </div>
       </div>
 
       <input
@@ -42,28 +44,31 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
         step={1}
         value={value}
         onChange={handleChange}
-        className="w-full h-2 appearance-none bg-red/30 cursor-pointer
+        className="w-full h-1.5 appearance-none rounded-full cursor-pointer
+          bg-gradient-to-r from-green-400 via-yellow-400 to-red-500
           [&::-webkit-slider-thumb]:appearance-none
-          [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-          [&::-webkit-slider-thumb]:bg-red [&::-webkit-slider-thumb]:border-3
-          [&::-webkit-slider-thumb]:border-pink [&::-webkit-slider-thumb]:cursor-pointer
-          [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5
-          [&::-moz-range-thumb]:bg-red [&::-moz-range-thumb]:border-3
-          [&::-moz-range-thumb]:border-pink [&::-moz-range-thumb]:border-solid
-          [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-none"
+          [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+          [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full
+          [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]
+          [&::-webkit-slider-thumb]:cursor-pointer
+          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4
+          [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full
+          [&::-moz-range-thumb]:border-none
+          [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]
+          [&::-moz-range-thumb]:cursor-pointer"
         aria-label={`Maximum travel time: ${value} minutes`}
       />
 
-      <div className="flex justify-between mt-1">
-        {SNAP_POINTS.map((pt) => (
+      <div className="flex justify-between mt-1.5">
+        {[5, 30, 60].map((pt) => (
           <button
             key={pt}
             onClick={() => onChange(pt)}
-            className={`text-xs font-body cursor-pointer transition-colors ${
-              value >= pt ? "text-red" : "text-red/30"
+            className={`text-[10px] font-body cursor-pointer transition-colors ${
+              value >= pt ? "text-white/50" : "text-white/20"
             }`}
           >
-            {pt}
+            {pt}m
           </button>
         ))}
       </div>

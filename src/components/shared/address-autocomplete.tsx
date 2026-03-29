@@ -127,12 +127,12 @@ export function AddressAutocomplete({
         name="address"
         autoComplete="off"
         autoFocus={autoFocus}
-        className="bg-transparent border-3 border-red text-red font-body text-base p-3 outline-none focus-visible:ring-2 focus-visible:ring-red placeholder:text-red/50 focus:bg-red focus:text-pink"
+        className="bg-white/5 border border-white/20 text-white font-body text-base p-3 outline-none rounded-lg focus-visible:ring-1 focus-visible:ring-accent placeholder:text-white/30 focus:bg-white/10 focus:border-accent transition-colors"
       />
       {showDropdown && suggestions.length > 0 && (
         <ul
           role="listbox"
-          className="absolute top-full left-0 right-0 bg-pink border-3 border-red border-t-0 z-50 max-h-48 overflow-y-auto"
+          className="absolute top-full left-0 right-0 bg-surface-card border border-white/20 border-t-0 z-50 max-h-48 overflow-y-auto rounded-b-lg"
         >
           {suggestions.map((s, i) => (
             <li
@@ -140,8 +140,8 @@ export function AddressAutocomplete({
               role="option"
               aria-selected={i === selectedIndex}
               onClick={() => handleSelect(s)}
-              className={`px-3 py-2 text-sm cursor-pointer ${
-                i === selectedIndex ? "bg-red text-pink" : "hover:bg-red/10"
+              className={`px-3 py-2 text-sm cursor-pointer text-white ${
+                i === selectedIndex ? "bg-accent/20 text-accent" : "hover:bg-white/10"
               }`}
             >
               {s.place_name}

@@ -56,10 +56,14 @@ export function PlayButton({ currentValue, onChange, disabled }: PlayButtonProps
     <button
       onClick={playing ? stop : play}
       disabled={disabled}
-      className="w-full border-3 border-red font-display italic uppercase text-sm py-2.5 cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red hover:text-pink"
+      className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 cursor-pointer transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/30 flex-shrink-0"
       aria-label={playing ? "Stop animation" : "Play time lapse"}
     >
-      {playing ? "■ Stop" : "▶ Play Time Lapse"}
+      {playing ? (
+        <span className="text-white text-sm">■</span>
+      ) : (
+        <span className="text-white text-sm ml-0.5">▶</span>
+      )}
     </button>
   );
 }

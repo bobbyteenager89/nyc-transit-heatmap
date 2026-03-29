@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
+  --color-surface: #12131a;
+  --color-surface-card: #1a1b24;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-accent: #22d3ee;
   --color-pink: #fcdde8;
   --color-red: #e21822;
   --font-display: "Arial Black", Impact, sans-serif;
@@ -12,8 +16,8 @@
 }
 
 body {
-  background-color: #fcdde8;
-  color: #e21822;
+  background-color: #0a0a12;
+  color: #ffffff;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

@@ -20,7 +20,7 @@ export function FriendInput({ onSelect, onRemove, initialValue, hasResult }: Fri
         {hasResult && (
           <button
             onClick={onRemove}
-            className="text-xs font-body text-red/50 hover:text-red cursor-pointer"
+            className="text-xs font-body text-white/40 hover:text-white cursor-pointer"
           >
             Remove
           </button>
@@ -32,7 +32,7 @@ export function FriendInput({ onSelect, onRemove, initialValue, hasResult }: Fri
         onSelect={onSelect}
         initialValue={initialValue ?? ""}
       />
-      <p className="font-body text-[10px] text-red/40 leading-tight">
+      <p className="font-body text-[10px] text-white/30 leading-tight">
         See where your reachable areas overlap — the best place to meet.
       </p>
     </div>

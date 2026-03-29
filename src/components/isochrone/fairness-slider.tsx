@@ -50,7 +50,7 @@ export function FairnessSlider({ value, onChange }: FairnessSliderProps) {
         ))}
       </div>
 
-      <p className="font-body text-[10px] text-red/40 mt-2 leading-tight">
+      <p className="font-body text-[10px] text-white/30 mt-2 leading-tight">
         Green = equally convenient for both. Tight range = fewer options, more fair.
       </p>
     </div>
