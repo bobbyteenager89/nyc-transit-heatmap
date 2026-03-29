@@ -19,12 +19,14 @@ import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { FriendInput } from "@/components/isochrone/friend-input";
 import { FairnessSlider } from "@/components/isochrone/fairness-slider";
+import { DestinationInput } from "@/components/isochrone/destination-input";
 import type {
   LatLng,
   TransportMode,
   HexCell,
   StationGraph,
   StationMatrix,
+  Destination,
 } from "@/lib/types";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
@@ -56,6 +58,7 @@ export default function ExplorePage() {
     adjacency: FerryAdjacency;
   } | null>(null);
   const [dataReady, setDataReady] = useState(false);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
 
   // Load transit data on mount
   useEffect(() => {
@@ -126,7 +129,7 @@ export default function ExplorePage() {
               {
                 hexCenters,
                 origin: loc,
-                destinations: [],
+                destinations: destinations,
                 modes: ALL_MODES,
                 stationGraph,
                 stationMatrix,
@@ -155,7 +158,7 @@ export default function ExplorePage() {
         setComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, destinations]
   );
 
   const runFriendCompute = useCallback(
@@ -270,6 +273,22 @@ export default function ExplorePage() {
     setShowFriend(false);
   }, []);
 
+  const addDestination = useCallback((dest: Destination) => {
+    setDestinations((prev) => [...prev, dest]);
+  }, []);
+
+  const removeDestination = useCallback((id: string) => {
+    setDestinations((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
+  // Re-compute when destinations change
+  useEffect(() => {
+    if (origin && destinations.length > 0 && !computing) {
+      runCompute(origin);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destinations]);
+
   const [, startTransition] = useTransition();
 
   const toggleMode = useCallback((mode: TransportMode) => {
@@ -355,6 +374,14 @@ export default function ExplorePage() {
 
             <PanelSection title="Your Reach">
               <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
+            </PanelSection>
+
+            <PanelSection title="Destinations">
+              <DestinationInput
+                destinations={destinations}
+                onAdd={addDestination}
+                onRemove={removeDestination}
+              />
             </PanelSection>
 
             <PanelSection>
