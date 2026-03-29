@@ -20,6 +20,8 @@ import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { FriendInput } from "@/components/isochrone/friend-input";
 import { FairnessSlider } from "@/components/isochrone/fairness-slider";
 import { DestinationInput } from "@/components/isochrone/destination-input";
+import { ModeTabs } from "@/components/isochrone/mode-tabs";
+import type { ExploreMode } from "@/components/isochrone/mode-tabs";
 import type {
   LatLng,
   TransportMode,
@@ -48,6 +50,7 @@ export default function ExplorePage() {
   const [showFriend, setShowFriend] = useState(false);
   const [friendCells, setFriendCells] = useState<HexCell[]>([]);
   const [fairnessRange, setFairnessRange] = useState(5);
+  const [exploreMode, setExploreMode] = useState<ExploreMode>("reach");
   const [computeProgress, setComputeProgress] = useState(0);
   const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
@@ -321,6 +324,7 @@ export default function ExplorePage() {
     <div className="flex h-full">
       {/* Sidebar */}
       <aside className="w-[420px] flex-shrink-0 flex flex-col bg-surface overflow-y-auto gap-3 p-4">
+        {/* Header + Mode Tabs */}
         <div className="px-1 pt-2 pb-1">
           <h1 className="text-2xl leading-none text-white">
             Isochrone<br /><span className="text-accent">NYC</span>
@@ -328,7 +332,17 @@ export default function ExplorePage() {
           <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
         </div>
 
-        <PanelSection title="Location">
+        <ModeTabs active={exploreMode} onChange={setExploreMode} />
+
+        {/* Mode description */}
+        <p className="font-body text-xs text-white/30 px-1">
+          {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
+          {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
+          {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
+        </p>
+
+        {/* Shared: Address input */}
+        <PanelSection title={exploreMode === "meet" ? "Your Location" : "Location"}>
           <AddressAutocomplete
             label="Address"
             placeholder="Start typing an address…"
@@ -343,6 +357,38 @@ export default function ExplorePage() {
           )}
         </PanelSection>
 
+        {/* MEET mode: Friend input right after your location */}
+        {exploreMode === "meet" && (
+          <PanelSection title="Friend's Location">
+            <FriendInput
+              onSelect={handleFriendSelect}
+              onRemove={removeFriend}
+              initialValue={friendAddress}
+              hasResult={friendOrigin !== null}
+            />
+            {friendComputing && (
+              <p className="font-body text-xs text-accent animate-pulse mt-1">Computing friend&apos;s reach…</p>
+            )}
+            {friendCells.length > 0 && (
+              <div className="mt-2">
+                <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
+              </div>
+            )}
+          </PanelSection>
+        )}
+
+        {/* LIVE mode: Destinations */}
+        {exploreMode === "live" && origin && !computing && cells.length > 0 && (
+          <PanelSection title="Your Destinations">
+            <DestinationInput
+              destinations={destinations}
+              onAdd={addDestination}
+              onRemove={removeDestination}
+            />
+          </PanelSection>
+        )}
+
+        {/* Shared: Time slider + play */}
         <PanelSection>
           <div className="flex items-center gap-3">
             <PlayButton
@@ -356,63 +402,17 @@ export default function ExplorePage() {
           </div>
         </PanelSection>
 
+        {/* Shared: Transport modes */}
         <PanelSection title="Transport Modes">
           <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
-          <p className="font-body text-xs text-white/30 mt-2">
-            All modes shown. Click to toggle.
-          </p>
         </PanelSection>
 
+        {/* Results section — shown after compute */}
         {origin && !computing && cells.length > 0 && (
           <>
-            <PanelSection title="Reading the Map">
-              <p className="font-body text-xs text-white/50 leading-relaxed">
-                Bright inner rings = reachable quickly. Faded outer rings = takes
-                longer. Each color is a transport mode. Hover for details.
-              </p>
-            </PanelSection>
-
             <PanelSection title="Your Reach">
               <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
             </PanelSection>
-
-            <PanelSection title="Destinations">
-              <DestinationInput
-                destinations={destinations}
-                onAdd={addDestination}
-                onRemove={removeDestination}
-              />
-            </PanelSection>
-
-            <PanelSection>
-              {!showFriend ? (
-                <button
-                  onClick={() => setShowFriend(true)}
-                  disabled={computing || friendComputing}
-                  className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  + Add a Friend
-                </button>
-              ) : (
-                <>
-                  <FriendInput
-                    onSelect={handleFriendSelect}
-                    onRemove={removeFriend}
-                    initialValue={friendAddress}
-                    hasResult={friendOrigin !== null}
-                  />
-                  {friendComputing && (
-                    <p className="font-body text-xs text-accent animate-pulse mt-2">Computing friend&apos;s reach…</p>
-                  )}
-                </>
-              )}
-            </PanelSection>
-
-            {friendCells.length > 0 && (
-              <PanelSection>
-                <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
-              </PanelSection>
-            )}
 
             <PanelSection>
               <button
@@ -421,7 +421,7 @@ export default function ExplorePage() {
                   setCopyLabel("Copied!");
                   setTimeout(() => setCopyLabel("Copy Link"), 1500);
                 }}
-                className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50"
+                className="w-full border border-white/20 rounded-lg font-display italic uppercase text-xs py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/40"
               >
                 {copyLabel}
               </button>
