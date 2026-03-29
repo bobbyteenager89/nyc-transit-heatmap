@@ -42,10 +42,12 @@
 - **Resolution 10**: ~150k hex cells with spatial grid indexing for O(1) station lookups
 
 ## Design
-- Brutalist pink (#fcdde8) / red (#e21822) two-color system
-- Arial Black italic uppercase for display text
-- 3px solid borders, no border-radius
-- Spec: `docs/superpowers/specs/2026-03-12-nyc-transit-heatmap-design.md`
+- Dark glass theme: surface (#12131a), cards (#1a1b24), accent cyan (#22d3ee)
+- Landing page: dark with map background. Find page: pink/red brutalist (legacy)
+- Explore page: dark glass sidebar with rounded card sections, dark Mapbox map
+- Arial Black italic uppercase for headings, Helvetica Neue for body
+- Mode colors: subway (#118ab2), walk (#ffbe0b), bike (#06d6a0), car (#9b5de5), ferry (#00b4d8)
+- Hex fill gradient: green (0 min) → yellow (15 min) → orange (30 min) → red (60 min)
 
 ## Environment
 - Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local`

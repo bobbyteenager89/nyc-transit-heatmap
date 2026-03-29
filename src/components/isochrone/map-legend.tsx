@@ -1,3 +1,5 @@
+"use client";
+
 export function MapLegend() {
   const stops = [
     { color: "#00ff87", label: "5m" },

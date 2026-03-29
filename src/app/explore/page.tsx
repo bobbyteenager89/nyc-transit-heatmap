@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import { TimeSlider } from "@/components/isochrone/time-slider";
@@ -39,6 +39,7 @@ export default function ExplorePage() {
   const [cells, setCells] = useState<HexCell[]>([]);
   const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
   const [computing, setComputing] = useState(false);
+  const [friendComputing, setFriendComputing] = useState(false);
   const [friendOrigin, setFriendOrigin] = useState<LatLng | null>(null);
   const [friendAddress, setFriendAddress] = useState("");
   const [friendContours, setFriendContours] = useState<IsochroneContour[]>([]);
@@ -160,44 +161,51 @@ export default function ExplorePage() {
   const runFriendCompute = useCallback(
     async (loc: LatLng) => {
       if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+      setFriendComputing(true);
+      try {
+        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-      // Run hex compute AND API isochrones for friend in parallel
-      const [hexResult, contours] = await Promise.all([
-        (async () => {
-          const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
-          const hexCenters = rawCenters.map((c) => ({
-            h3Index: c.h3Index,
-            lat: c.center.lat,
-            lng: c.center.lng,
-          }));
+        // Run hex compute AND API isochrones for friend in parallel
+        const [hexResult, contours] = await Promise.all([
+          (async () => {
+            const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
+            const hexCenters = rawCenters.map((c) => ({
+              h3Index: c.h3Index,
+              lat: c.center.lat,
+              lng: c.center.lng,
+            }));
 
-          const result = await computeHexGrid(
-            {
-              hexCenters,
-              origin: loc,
-              destinations: [],
-              modes: ALL_MODES,
-              stationGraph,
-              stationMatrix,
-              citiBikeStations: citiBikeData.getAllStations(),
-              ferryTerminals: ferryData.data.terminals,
-              ferryAdjacency: ferryData.adjacency,
-            },
-            () => {} // no progress bar for friend compute
-          );
+            const result = await computeHexGrid(
+              {
+                hexCenters,
+                origin: loc,
+                destinations: [],
+                modes: ALL_MODES,
+                stationGraph,
+                stationMatrix,
+                citiBikeStations: citiBikeData.getAllStations(),
+                ferryTerminals: ferryData.data.terminals,
+                ferryAdjacency: ferryData.adjacency,
+              },
+              () => {} // no progress bar for friend compute
+            );
 
-          const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-          return result.cells.map((cell) => {
-            const geo = geoLookup.get(cell.h3Index)!;
-            return { ...cell, center: geo.center, boundary: geo.boundary };
-          });
-        })(),
-        fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b"),
-      ]);
+            const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+            return result.cells.map((cell) => {
+              const geo = geoLookup.get(cell.h3Index)!;
+              return { ...cell, center: geo.center, boundary: geo.boundary };
+            });
+          })(),
+          fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b"),
+        ]);
 
-      setFriendCells(hexResult);
-      setFriendContours(contours);
+        setFriendCells(hexResult);
+        setFriendContours(contours);
+      } catch (err) {
+        console.error("Friend compute failed:", err);
+      } finally {
+        setFriendComputing(false);
+      }
     },
     [stationGraph, stationMatrix, citiBikeData, ferryData]
   );
@@ -283,7 +291,10 @@ export default function ExplorePage() {
     });
   }, [updateURL, origin, activeModes]);
 
-  const allContours = [...apiContours, ...friendContours];
+  const allContours = useMemo(
+    () => [...apiContours, ...friendContours],
+    [apiContours, friendContours]
+  );
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
@@ -313,7 +324,7 @@ export default function ExplorePage() {
           )}
         </PanelSection>
 
-        <PanelSection title="Reach Time">
+        <PanelSection>
           <div className="flex items-center gap-3">
             <PlayButton
               currentValue={maxMinutes}
@@ -350,17 +361,23 @@ export default function ExplorePage() {
               {!showFriend ? (
                 <button
                   onClick={() => setShowFriend(true)}
-                  className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50"
+                  disabled={computing || friendComputing}
+                  className="w-full border border-white/20 font-display italic uppercase text-sm py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   + Add a Friend
                 </button>
               ) : (
-                <FriendInput
-                  onSelect={handleFriendSelect}
-                  onRemove={removeFriend}
-                  initialValue={friendAddress}
-                  hasResult={friendOrigin !== null}
-                />
+                <>
+                  <FriendInput
+                    onSelect={handleFriendSelect}
+                    onRemove={removeFriend}
+                    initialValue={friendAddress}
+                    hasResult={friendOrigin !== null}
+                  />
+                  {friendComputing && (
+                    <p className="font-body text-xs text-accent animate-pulse mt-2">Computing friend&apos;s reach…</p>
+                  )}
+                </>
               )}
             </PanelSection>
 

@@ -24,11 +24,12 @@ interface IsochroneMapProps {
 /**
  * Build hex fill GeoJSON colored by fastest time across ALL active modes.
  * Uses the worker-computed times for every mode (walk, bike, car included).
+ * Loads ALL reachable cells (no maxMinutes filter) — visibility is controlled
+ * via GL setFilter on the slider side to eliminate per-tick JS iteration.
  */
 function cellsToHexGeoJSON(
   cells: HexCell[],
-  activeModes: TransportMode[],
-  maxMinutes: number
+  activeModes: TransportMode[]
 ): GeoJSON.FeatureCollection {
   if (activeModes.length === 0) return { type: "FeatureCollection", features: [] };
 
@@ -43,7 +44,7 @@ function cellsToHexGeoJSON(
         fastestMode = mode;
       }
     }
-    if (fastest === Infinity || fastest > maxMinutes) continue;
+    if (fastest === Infinity) continue;
 
     features.push({
       type: "Feature",
@@ -67,16 +68,16 @@ function cellsToHexGeoJSON(
 }
 
 /**
- * Build GeoJSON for the fairness zone — cells where both people can reach
- * and the time difference is within the fairness range.
+ * Build GeoJSON for the fairness zone — cells where both people can reach.
+ * Includes ALL cells reachable by both (no fairnessRange filter here).
+ * Visibility is controlled via GL setFilter on the slider side.
  * Colored by how "fair" the spot is: green = equal, fading as diff increases.
  */
 function buildFairnessGeoJSON(
   cellsA: HexCell[],
   cellsB: HexCell[],
   activeModes: TransportMode[],
-  maxMinutes: number,
-  fairnessRange: number
+  maxMinutes: number
 ): GeoJSON.FeatureCollection {
   if (cellsA.length === 0 || cellsB.length === 0) {
     return { type: "FeatureCollection", features: [] };
@@ -109,10 +110,9 @@ function buildFairnessGeoJSON(
     if (fastA === Infinity || fastB === Infinity) continue;
 
     const diff = Math.abs(fastA - fastB);
-    if (diff > fairnessRange) continue;
 
-    // Ratio: 0 = perfectly equal, 1 = at edge of fairness range
-    const ratio = diff / fairnessRange;
+    // Ratio used for color interpolation — capped at 1 (beyond fairness range still rendered, filtered by GL)
+    const ratio = Math.min(diff / 60, 1);
 
     features.push({
       type: "Feature",
@@ -165,6 +165,11 @@ export function IsochroneMap({
   const friendMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const animationRef = useRef<number>(0);
   const prevCellCountRef = useRef(0);
+
+  const activeModesRef = useRef(activeModes);
+  activeModesRef.current = activeModes;
+  const maxMinutesRef = useRef(maxMinutes);
+  maxMinutesRef.current = maxMinutes;
 
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -383,10 +388,10 @@ export function IsochroneMap({
           walk: "Walk", bike: "Bike", subway: "Subway",
           car: "Car", bikeSubway: "Bike+Sub", ferry: "Ferry",
         };
-        const lines = activeModes
+        const lines = activeModesRef.current
           .map((mode) => {
             const t = props[mode] as number;
-            if (t < 0 || t > maxMinutes) return null;
+            if (t < 0 || t > maxMinutesRef.current) return null;
             const isFastest = mode === props.fastest_mode;
             const label = modeLabels[mode] ?? mode;
             return isFastest ? `**${label}: ${Math.round(t)}m**` : `${label}: ${Math.round(t)}m`;
@@ -532,12 +537,12 @@ export function IsochroneMap({
     }
   }, [apiContours, activeModes, maxMinutes, mapReady]);
 
-  // Update hex data (subway, ferry, bikeSubway)
+  // Load hex data when cells or active modes change (not on slider tick)
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
 
-    const geojson = cellsToHexGeoJSON(cells, activeModes, maxMinutes);
+    const geojson = cellsToHexGeoJSON(cells, activeModes);
     const source = m.getSource("iso-hexes") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
@@ -563,13 +568,19 @@ export function IsochroneMap({
       }
       animationRef.current = requestAnimationFrame(animate);
     }
-  }, [cells, activeModes, maxMinutes, mapReady]);
+  }, [cells, activeModes, mapReady]);
 
-  // Update fairness zone (when both people have data)
+  // Filter hex visibility by maxMinutes (GL-side, no JS iteration — eliminates INP on slider tick)
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
+    m.setFilter("iso-fill", ["<=", ["get", "time"], maxMinutes]);
+  }, [maxMinutes, mapReady]);
 
+  // Load fairness data when cells/activeModes/maxMinutes change
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
     const source = m.getSource("fairness-zone") as mapboxgl.GeoJSONSource | undefined;
     if (!source) return;
 
@@ -578,9 +589,21 @@ export function IsochroneMap({
       return;
     }
 
-    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes, maxMinutes, fairnessRange);
+    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes, maxMinutes);
     source.setData(geojson);
-  }, [cells, friendCells, activeModes, maxMinutes, fairnessRange, mapReady]);
+  }, [cells, friendCells, activeModes, maxMinutes, mapReady]);
+
+  // Filter fairness zone by fairnessRange (GL-side, no JS iteration)
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+    if (m.getLayer("fairness-fill")) {
+      m.setFilter("fairness-fill", ["<=", ["get", "diff"], fairnessRange]);
+    }
+    if (m.getLayer("fairness-line")) {
+      m.setFilter("fairness-line", ["<=", ["get", "diff"], fairnessRange]);
+    }
+  }, [fairnessRange, mapReady]);
 
   return (
     <div className="relative flex-1 h-full">

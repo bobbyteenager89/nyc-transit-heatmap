@@ -15,15 +15,19 @@ const DURATION_MS = 4000;
 export function PlayButton({ currentValue, onChange, disabled }: PlayButtonProps) {
   const [playing, setPlaying] = useState(false);
   const animRef = useRef<number>(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(0 as unknown as ReturnType<typeof setTimeout>);
   const startTimeRef = useRef(0);
 
   const stop = useCallback(() => {
     setPlaying(false);
     cancelAnimationFrame(animRef.current);
+    clearTimeout(timeoutRef.current);
   }, []);
 
   const play = useCallback(() => {
     if (disabled) return;
+    cancelAnimationFrame(animRef.current);
+    clearTimeout(timeoutRef.current);
     setPlaying(true);
     startTimeRef.current = performance.now();
     onChange(MIN_TIME);
@@ -41,7 +45,7 @@ export function PlayButton({ currentValue, onChange, disabled }: PlayButtonProps
       if (progress < 1) {
         animRef.current = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => setPlaying(false), 500);
+        timeoutRef.current = setTimeout(() => setPlaying(false), 500);
       }
     }
 
@@ -49,7 +53,10 @@ export function PlayButton({ currentValue, onChange, disabled }: PlayButtonProps
   }, [disabled, onChange]);
 
   useEffect(() => {
-    return () => cancelAnimationFrame(animRef.current);
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   return (

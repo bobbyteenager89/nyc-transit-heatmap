@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { HexCell, TransportMode } from "@/lib/types";
 import { MODE_COLORS } from "@/lib/isochrone";
 
@@ -21,24 +22,25 @@ const MODE_LABELS: Record<TransportMode, string> = {
 export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) {
   if (cells.length === 0) return null;
 
-  // Count reachable cells per mode
-  const counts: { mode: TransportMode; count: number; color: string }[] = [];
-
-  for (const mode of activeModes) {
-    let count = 0;
-    for (const cell of cells) {
-      const t = cell.times[mode];
-      if (t !== null && t !== undefined && t <= maxMinutes) {
-        count++;
+  // Count reachable cells per mode — memoized to avoid 150k cell iteration on every render
+  const counts = useMemo(() => {
+    const result: { mode: TransportMode; count: number; color: string }[] = [];
+    for (const mode of activeModes) {
+      let count = 0;
+      for (const cell of cells) {
+        const t = cell.times[mode];
+        if (t !== null && t !== undefined && t <= maxMinutes) {
+          count++;
+        }
+      }
+      if (count > 0) {
+        result.push({ mode, count, color: MODE_COLORS[mode] });
       }
     }
-    if (count > 0) {
-      counts.push({ mode, count, color: MODE_COLORS[mode] });
-    }
-  }
+    result.sort((a, b) => b.count - a.count);
+    return result;
+  }, [cells, activeModes, maxMinutes]);
 
-  // Sort by count descending
-  counts.sort((a, b) => b.count - a.count);
   const maxCount = counts[0]?.count ?? 1;
 
   if (counts.length === 0) return null;
