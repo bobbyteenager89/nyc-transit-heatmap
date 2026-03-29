@@ -14,10 +14,10 @@ export default function LandingPage() {
 
       <div className="relative z-10 max-w-2xl w-full px-6">
         <h1 className="text-5xl md:text-6xl text-center mb-2 text-white font-display italic uppercase">
-          Transit<br />Heatmap
+          Isochrone<br /><span className="text-accent">NYC</span>
         </h1>
         <p className="text-center font-body text-sm text-white/40 mb-12">
-          See how far you can go in NYC — by subway, bike, or foot
+          See how far you can go — by subway, bike, or foot
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

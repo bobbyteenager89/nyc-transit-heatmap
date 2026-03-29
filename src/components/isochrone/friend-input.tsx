@@ -13,19 +13,16 @@ interface FriendInputProps {
 export function FriendInput({ onSelect, onRemove, initialValue, hasResult }: FriendInputProps) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="font-display italic uppercase text-xs text-amber-500">
-          Friend's Location
-        </span>
-        {hasResult && (
+      {hasResult && (
+        <div className="flex justify-end">
           <button
             onClick={onRemove}
             className="text-xs font-body text-white/40 hover:text-white cursor-pointer"
           >
             Remove
           </button>
-        )}
-      </div>
+        </div>
+      )}
       <AddressAutocomplete
         label=""
         placeholder="Their address…"

@@ -51,8 +51,8 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
         Area reachable within {maxMinutes} min by mode
       </p>
       {counts.map(({ mode, count, color }) => {
-        // Each H3 res-10 hex ≈ 0.0000115 sq mi
-        const sqMi = (count * 0.0000115).toFixed(1);
+        // Each H3 res-10 hex ≈ 0.00581 sq mi (15,047 sq m)
+        const sqMi = (count * 0.00581).toFixed(1);
         return (
           <div key={mode} className="flex items-center gap-2">
             <span className="font-display italic uppercase text-[10px] w-14 text-white/60 flex-shrink-0">

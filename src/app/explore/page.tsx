@@ -14,6 +14,7 @@ import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import { computeHexGrid } from "@/lib/grid";
+import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
 import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
@@ -236,6 +237,10 @@ export default function ExplorePage() {
       const loc = { lat: Number(lat), lng: Number(lng) };
       setOrigin(loc);
       runCompute(loc);
+      // Reverse geocode to show address in input
+      reverseGeocode(loc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
+        .then((addr) => setOriginAddress(addr))
+        .catch(() => setOriginAddress(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`));
     }
   }, [dataReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
