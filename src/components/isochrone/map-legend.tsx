@@ -10,7 +10,7 @@ export function MapLegend() {
   ];
 
   return (
-    <div className="absolute bottom-6 right-6 z-10 bg-surface-card/90 border border-white/10 rounded-lg px-4 py-2.5 backdrop-blur-sm">
+    <div className="absolute bottom-32 md:bottom-6 right-4 md:right-6 z-10 bg-surface-card/90 border border-white/10 rounded-lg px-4 py-2.5 backdrop-blur-sm">
       <p className="font-display italic uppercase text-[10px] text-white/50 tracking-wider mb-2">Travel Time</p>
       <div className="flex items-center gap-0.5 mb-1">
         {stops.map((s, i) => (

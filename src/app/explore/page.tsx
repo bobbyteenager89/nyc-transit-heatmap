@@ -9,6 +9,7 @@ import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
+import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -63,6 +64,7 @@ export default function ExplorePage() {
   } | null>(null);
   const [dataReady, setDataReady] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [mobileExpanded, setMobileExpanded] = useState(true);
 
   // Load transit data on mount
   useEffect(() => {
@@ -98,7 +100,7 @@ export default function ExplorePage() {
   }, []);
 
   // Sync state to URL
-  const updateURL = useCallback((loc: LatLng | null, mins: number, modes: TransportMode[]) => {
+  const updateURL = useCallback((loc: LatLng | null, mins: number, modes: TransportMode[], addr?: string) => {
     const params = new URLSearchParams();
     if (loc) {
       params.set("lat", loc.lat.toFixed(4));
@@ -106,6 +108,7 @@ export default function ExplorePage() {
     }
     params.set("t", String(mins));
     params.set("m", modes.join(","));
+    if (addr) params.set("address", addr);
     const url = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", url);
   }, []);
@@ -160,6 +163,7 @@ export default function ExplorePage() {
         console.error("Compute failed:", err);
       } finally {
         setComputing(false);
+        setMobileExpanded(false);
       }
     },
     [stationGraph, stationMatrix, citiBikeData, ferryData, destinations]
@@ -249,7 +253,7 @@ export default function ExplorePage() {
       setOriginAddress(address);
       setOrigin(location);
       runCompute(location);
-      updateURL(location, maxMinutes, activeModes);
+      updateURL(location, maxMinutes, activeModes, address);
     },
     [runCompute, updateURL, maxMinutes, activeModes]
   );
@@ -305,18 +309,18 @@ export default function ExplorePage() {
         const next = prev.includes(mode)
           ? prev.length > 1 ? prev.filter((m) => m !== mode) : prev
           : [...prev, mode];
-        updateURL(origin, maxMinutes, next);
+        updateURL(origin, maxMinutes, next, originAddress || undefined);
         return next;
       });
     });
-  }, [updateURL, origin, maxMinutes]);
+  }, [updateURL, origin, maxMinutes, originAddress]);
 
   const handleMaxMinutesChange = useCallback((mins: number) => {
     startTransition(() => {
       setMaxMinutes(mins);
-      updateURL(origin, mins, activeModes);
+      updateURL(origin, mins, activeModes, originAddress || undefined);
     });
-  }, [updateURL, origin, activeModes]);
+  }, [updateURL, origin, activeModes, originAddress]);
 
   const allContours = useMemo(
     () => [...apiContours, ...friendContours],
@@ -325,118 +329,138 @@ export default function ExplorePage() {
 
   const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
 
-  return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <aside className="w-[420px] flex-shrink-0 flex flex-col bg-surface overflow-y-auto gap-3 p-4">
-        {/* Header + Mode Tabs */}
-        <div className="px-1 pt-2 pb-1">
-          <h1 className="text-2xl leading-none text-white">
-            Isochrone<br /><span className="text-accent">NYC</span>
-          </h1>
-          <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
-        </div>
+  const sidebarControls = (
+    <>
+      {/* Header + Mode Tabs */}
+      <div className="px-1 pt-2 pb-1 hidden md:block">
+        <h1 className="text-2xl leading-none text-white">
+          Isochrone<br /><span className="text-accent">NYC</span>
+        </h1>
+        <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
+      </div>
 
-        <ModeTabs active={exploreMode} onChange={setExploreMode} />
+      <ModeTabs active={exploreMode} onChange={setExploreMode} />
 
-        {/* Mode description */}
-        <p className="font-body text-xs text-white/30 px-1">
-          {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
-          {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
-          {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
-        </p>
+      {/* Mode description */}
+      <p className="font-body text-xs text-white/30 px-1">
+        {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
+        {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
+        {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
+      </p>
 
-        {/* Shared: Address input */}
-        <PanelSection title={exploreMode === "meet" ? "Your Location" : "Location"}>
-          <AddressAutocomplete
-            label="Address"
-            placeholder="Start typing an address…"
-            onSelect={handleAddressSelect}
-            initialValue={originAddress}
-            autoFocus
+      {/* Shared: Address input */}
+      <PanelSection title={exploreMode === "meet" ? "Your Location" : "Location"}>
+        <AddressAutocomplete
+          label="Address"
+          placeholder="Start typing an address…"
+          onSelect={handleAddressSelect}
+          initialValue={originAddress}
+          autoFocus
+        />
+        {!dataReady && (
+          <p className="font-body text-xs text-white/40 animate-pulse">
+            Loading transit data…
+          </p>
+        )}
+      </PanelSection>
+
+      {/* MEET mode: Friend input right after your location */}
+      {exploreMode === "meet" && (
+        <PanelSection title="Friend's Location">
+          <FriendInput
+            onSelect={handleFriendSelect}
+            onRemove={removeFriend}
+            initialValue={friendAddress}
+            hasResult={friendOrigin !== null}
           />
-          {!dataReady && (
-            <p className="font-body text-xs text-white/40 animate-pulse">
-              Loading transit data…
-            </p>
+          {friendComputing && (
+            <p className="font-body text-xs text-accent animate-pulse mt-1">Computing friend&apos;s reach…</p>
+          )}
+          {friendCells.length > 0 && (
+            <div className="mt-2">
+              <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
+            </div>
           )}
         </PanelSection>
+      )}
 
-        {/* MEET mode: Friend input right after your location */}
-        {exploreMode === "meet" && (
-          <PanelSection title="Friend's Location">
-            <FriendInput
-              onSelect={handleFriendSelect}
-              onRemove={removeFriend}
-              initialValue={friendAddress}
-              hasResult={friendOrigin !== null}
-            />
-            {friendComputing && (
-              <p className="font-body text-xs text-accent animate-pulse mt-1">Computing friend&apos;s reach…</p>
-            )}
-            {friendCells.length > 0 && (
-              <div className="mt-2">
-                <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
-              </div>
-            )}
-          </PanelSection>
-        )}
+      {/* LIVE mode: Destinations */}
+      {exploreMode === "live" && origin && !computing && cells.length > 0 && (
+        <PanelSection title="Your Destinations">
+          <DestinationInput
+            destinations={destinations}
+            onAdd={addDestination}
+            onRemove={removeDestination}
+          />
+        </PanelSection>
+      )}
 
-        {/* LIVE mode: Destinations */}
-        {exploreMode === "live" && origin && !computing && cells.length > 0 && (
-          <PanelSection title="Your Destinations">
-            <DestinationInput
-              destinations={destinations}
-              onAdd={addDestination}
-              onRemove={removeDestination}
-            />
-          </PanelSection>
-        )}
-
-        {/* Shared: Time slider + play */}
-        <PanelSection>
-          <div className="flex items-center gap-3">
-            <PlayButton
-              currentValue={maxMinutes}
-              onChange={handleMaxMinutesChange}
-              disabled={!origin || computing || cells.length === 0}
-            />
-            <div className="flex-1">
-              <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
-            </div>
+      {/* Shared: Time slider + play */}
+      <PanelSection>
+        <div className="flex items-center gap-3">
+          <PlayButton
+            currentValue={maxMinutes}
+            onChange={handleMaxMinutesChange}
+            disabled={!origin || computing || cells.length === 0}
+          />
+          <div className="flex-1">
+            <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
           </div>
-        </PanelSection>
+        </div>
+      </PanelSection>
 
-        {/* Shared: Transport modes */}
-        <PanelSection title="Transport Modes">
-          <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
-        </PanelSection>
+      {/* Shared: Transport modes */}
+      <PanelSection title="Transport Modes">
+        <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
+      </PanelSection>
 
-        {/* Results section — shown after compute */}
-        {origin && !computing && cells.length > 0 && (
-          <>
-            <PanelSection title="Your Reach">
-              <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
-            </PanelSection>
+      {/* Results section — shown after compute */}
+      {origin && !computing && cells.length > 0 && (
+        <>
+          <PanelSection title="Your Reach">
+            <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
+          </PanelSection>
 
-            <PanelSection>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  setCopyLabel("Copied!");
-                  setTimeout(() => setCopyLabel("Copy Link"), 1500);
-                }}
-                className="w-full border border-white/20 rounded-lg font-display italic uppercase text-xs py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/40"
-              >
-                {copyLabel}
-              </button>
-            </PanelSection>
-          </>
-        )}
+          <PanelSection>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setCopyLabel("Copied!");
+                setTimeout(() => setCopyLabel("Copy Link"), 1500);
+              }}
+              className="w-full border border-white/20 rounded-lg font-display italic uppercase text-xs py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/40"
+            >
+              {copyLabel}
+            </button>
+          </PanelSection>
+        </>
+      )}
+    </>
+  );
+
+  const mobileSummary = (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="font-display italic text-sm text-white truncate max-w-[200px]">
+          {originAddress || "Drop a pin"}
+        </p>
+        <p className="font-body text-xs text-white/40">
+          {maxMinutes} min · {activeModes.length} mode{activeModes.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+      <span className="text-accent text-xs font-display italic uppercase">Details ↑</span>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col md:flex-row h-full">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-[420px] flex-shrink-0 flex-col bg-surface overflow-y-auto gap-3 p-4">
+        {sidebarControls}
       </aside>
 
       {/* Map */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative w-full">
         {computing && (
           <div className="absolute inset-0 bg-surface/90 z-50 flex items-center justify-center">
             <span className="font-display italic uppercase text-2xl text-accent animate-pulse">
@@ -472,6 +496,17 @@ export default function ExplorePage() {
           friendOrigin={friendOrigin}
         />
       </main>
+
+      {/* Mobile bottom sheet */}
+      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
+        <MobileBottomSheet
+          expanded={mobileExpanded}
+          onToggle={() => setMobileExpanded((p) => !p)}
+          summary={mobileSummary}
+        >
+          {sidebarControls}
+        </MobileBottomSheet>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { WizardShell } from "@/components/wizard/wizard-shell";
 import { HexMap } from "@/components/results/hex-map";
 import { ResultsSidebar } from "@/components/results/results-sidebar";
+import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -49,6 +50,7 @@ export default function FindPage() {
   // Pin drop mode (for adding destinations on map)
   const [pinDropMode, setPinDropMode] = useState(false);
   const [pendingPin, setPendingPin] = useState<LatLng | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   // Reverse geocode cache for best cell
   const geocodeCacheRef = useRef<Map<string, string>>(new Map());
@@ -274,7 +276,7 @@ export default function FindPage() {
 
   if (phase === "wizard") {
     return (
-      <div className="flex flex-col h-full p-3">
+      <div className="flex flex-col h-full p-1.5 md:p-3">
         <WizardShell onComplete={handleWizardComplete} />
       </div>
     );
@@ -283,24 +285,41 @@ export default function FindPage() {
   // Results phase
   const mapCenter = bestCell?.center ?? DEFAULT_CENTER;
 
-  return (
-    <div className="flex h-full p-3">
-      <ResultsSidebar
-        destinations={destinations}
-        modes={modes}
-        onModesChange={handleModesChange}
-        onEditDestinations={handleEditDestinations}
-        onDropPin={() => setPinDropMode((p) => !p)}
-        pinDropMode={pinDropMode}
-        selectedDestId={selectedDestId}
-        onSelectDest={setSelectedDestId}
-        bestCell={bestCell}
-        bestAddress={bestAddress}
-        totalHours={totalHours}
-        shareUrl={shareUrl}
-      />
+  const mobileFindSummary = (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="font-display italic text-sm text-white truncate max-w-[200px]">
+          {bestAddress || "Computing…"}
+        </p>
+        <p className="font-body text-xs text-white/40">
+          {destinations.length} destination{destinations.length !== 1 ? "s" : ""} · {modes.length} mode{modes.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+      <span className="text-accent text-xs font-display italic uppercase">Details ↑</span>
+    </div>
+  );
 
-      <main className="flex-1 relative">
+  return (
+    <div className="flex flex-col md:flex-row h-full p-0 md:p-3">
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <ResultsSidebar
+          destinations={destinations}
+          modes={modes}
+          onModesChange={handleModesChange}
+          onEditDestinations={handleEditDestinations}
+          onDropPin={() => setPinDropMode((p) => !p)}
+          pinDropMode={pinDropMode}
+          selectedDestId={selectedDestId}
+          onSelectDest={setSelectedDestId}
+          bestCell={bestCell}
+          bestAddress={bestAddress}
+          totalHours={totalHours}
+          shareUrl={shareUrl}
+        />
+      </div>
+
+      <main className="flex-1 relative w-full">
         {computing && (
           <div className="absolute inset-0 bg-pink/80 z-50 flex items-center justify-center">
             <span className="font-display italic uppercase text-2xl animate-pulse">
@@ -329,6 +348,30 @@ export default function FindPage() {
           onPinCancel={handlePinCancel}
         />
       </main>
+
+      {/* Mobile bottom sheet */}
+      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
+        <MobileBottomSheet
+          expanded={mobileExpanded}
+          onToggle={() => setMobileExpanded((p) => !p)}
+          summary={mobileFindSummary}
+        >
+          <ResultsSidebar
+            destinations={destinations}
+            modes={modes}
+            onModesChange={handleModesChange}
+            onEditDestinations={handleEditDestinations}
+            onDropPin={() => setPinDropMode((p) => !p)}
+            pinDropMode={pinDropMode}
+            selectedDestId={selectedDestId}
+            onSelectDest={setSelectedDestId}
+            bestCell={bestCell}
+            bestAddress={bestAddress}
+            totalHours={totalHours}
+            shareUrl={shareUrl}
+          />
+        </MobileBottomSheet>
+      </div>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export default function LandingPage() {
           See how far you can go — by subway, bike, or foot
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ModeCard
             href="/explore"
             title="Isochrone NYC"
@@ -33,6 +33,12 @@ export default function LandingPage() {
             title="Find My Neighborhood"
             description="Tell us where you go. We'll show you where to live to minimize your commute."
             cta="Get Started"
+          />
+          <ModeCard
+            href="/rankings"
+            title="Rankings"
+            description="See which NYC neighborhoods have the best transit access. Ranked by average commute time."
+            cta="View Rankings"
           />
         </div>
       </div>

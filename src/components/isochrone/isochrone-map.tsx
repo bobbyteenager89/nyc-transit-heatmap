@@ -137,10 +137,10 @@ const COLOR_RAMP: mapboxgl.Expression = [
   "interpolate", ["linear"], ["get", "time"],
   0,  "#00ff87",   // 0 min — bright green (origin)
   5,  "#39ff14",   // 5 min — neon green
-  10, "#b8ff00",   // 10 min — lime
-  15, "#ffdd00",   // 15 min — yellow
-  20, "#ffaa00",   // 20 min — amber
-  30, "#ff6600",   // 30 min — orange
+  10, "#c8ff00",   // 10 min — vivid lime
+  15, "#ffd000",   // 15 min — golden yellow
+  20, "#ff8800",   // 20 min — vivid amber
+  30, "#ff4400",   // 30 min — vivid orange
   45, "#e21822",   // 45 min — red
   60, "#8b0000",   // 60 min — dark red
 ];
@@ -295,6 +295,18 @@ export function IsochroneMap({
           "fill-color": COLOR_RAMP,
           "fill-opacity": 0,
         },
+      }, firstSymbol);
+
+      m.addLayer({
+        id: "iso-outline",
+        type: "line",
+        source: "iso-hexes",
+        paint: {
+          "line-color": COLOR_RAMP,
+          "line-width": 0.5,
+          "line-opacity": 0.3,
+        },
+        filter: ["<=", ["get", "time"], 60],
       }, firstSymbol);
 
       // --- Overlay layers ---
@@ -555,13 +567,15 @@ export function IsochroneMap({
     if (isNewCompute) {
       cancelAnimationFrame(animationRef.current);
       m.setPaintProperty("iso-fill", "fill-opacity", 0);
+      m.setPaintProperty("iso-outline", "line-opacity", 0);
 
       const start = performance.now();
       const duration = 800;
       function animate(now: number) {
         const progress = Math.max(0, Math.min((now - start) / duration, 1));
         const eased = 1 - Math.pow(1 - progress, 3);
-        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.55);
+        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.65);
+        m!.setPaintProperty("iso-outline", "line-opacity", eased * 0.3);
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
         }
@@ -575,6 +589,7 @@ export function IsochroneMap({
     const m = mapRef.current;
     if (!m || !mapReady) return;
     m.setFilter("iso-fill", ["<=", ["get", "time"], maxMinutes]);
+    m.setFilter("iso-outline", ["<=", ["get", "time"], maxMinutes]);
   }, [maxMinutes, mapReady]);
 
   // Load fairness data when cells/activeModes/maxMinutes change
