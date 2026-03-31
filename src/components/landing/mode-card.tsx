@@ -12,7 +12,7 @@ export function ModeCard({ href, title, description, cta, primary }: ModeCardPro
   return (
     <Link
       href={href}
-      className={`border-2 p-8 flex flex-col gap-4 transition-all group ${
+      className={`border-2 p-8 flex flex-col gap-4 transition-all group overflow-hidden ${
         primary
           ? "border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50"
           : "border-white/15 bg-white/[0.02] hover:bg-white/5 hover:border-white/30"

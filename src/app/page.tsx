@@ -12,7 +12,7 @@ export default function LandingPage() {
         }}
       />
 
-      <div className="relative z-10 max-w-2xl w-full px-6">
+      <div className="relative z-10 max-w-4xl w-full px-6">
         <h1 className="text-5xl md:text-6xl text-center mb-2 text-white font-display italic uppercase">
           Isochrone<br /><span className="text-accent">NYC</span>
         </h1>
