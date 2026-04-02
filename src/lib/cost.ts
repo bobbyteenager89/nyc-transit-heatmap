@@ -55,6 +55,8 @@ export function computeCostComparison(
 
     switch (mode) {
       case "subway":
+      case "bus":
+      case "ferry":
         subwayTripsPerMonth += monthlyTrips;
         break;
       case "car":
@@ -162,6 +164,8 @@ export function computeMonthlyCost(
 
     switch (mode) {
       case "subway":
+      case "bus":
+      case "ferry":
         totalSubwayTrips += monthlyTrips;
         break;
       case "car":

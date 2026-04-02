@@ -144,7 +144,7 @@ export function HexMap({
         }
 
         // Build tooltip lines
-        const modes = ["subway", "car", "bike", "walk", "ferry"];
+        const modes = ["subway", "bus", "car", "bike", "walk", "ferry"];
         const modeLines = modes
           .filter((mode) => props[mode] !== null && props[mode] !== undefined)
           .map((mode) => {
