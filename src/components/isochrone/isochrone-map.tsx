@@ -56,7 +56,6 @@ function cellsToHexGeoJSON(
         time: Math.round(fastest * 10) / 10,
         fastest_mode: fastestMode,
         subway: cell.times.subway ?? -1,
-        bikeSubway: cell.times.bikeSubway ?? -1,
         ferry: cell.times.ferry ?? -1,
         walk: cell.times.walk ?? -1,
         bike: cell.times.bike ?? -1,
@@ -171,7 +170,11 @@ export function IsochroneMap({
   const maxMinutesRef = useRef(maxMinutes);
   maxMinutesRef.current = maxMinutes;
 
-  const [tooltipContent, setTooltipContent] = useState<string | null>(null);
+  type TooltipData =
+    | { type: "reach"; address: string; modes: { mode: string; label: string; time: number; color: string; isFastest: boolean }[] }
+    | { type: "fairness"; address: string; timeA: number; timeB: number; diff: number };
+
+  const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const geocodeCache = useRef<Map<string, string>>(new Map());
 
@@ -281,7 +284,7 @@ export function IsochroneMap({
         },
       }, firstSymbol);
 
-      // --- Hex fill source (subway, ferry, bikeSubway) ---
+      // --- Hex fill source (subway, ferry) ---
       m.addSource("iso-hexes", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
@@ -398,26 +401,33 @@ export function IsochroneMap({
 
         const modeLabels: Record<string, string> = {
           walk: "Walk", bike: "Bike", subway: "Subway",
-          car: "Car", bikeSubway: "Bike+Sub", ferry: "Ferry",
+          car: "Car", ferry: "Ferry",
         };
-        const lines = activeModesRef.current
+        const modeRows = activeModesRef.current
           .map((mode) => {
             const t = props[mode] as number;
             if (t < 0 || t > maxMinutesRef.current) return null;
-            const isFastest = mode === props.fastest_mode;
-            const label = modeLabels[mode] ?? mode;
-            return isFastest ? `**${label}: ${Math.round(t)}m**` : `${label}: ${Math.round(t)}m`;
+            return {
+              mode,
+              label: modeLabels[mode] ?? mode,
+              time: Math.round(t),
+              color: MODE_COLORS[mode],
+              isFastest: mode === props.fastest_mode,
+            };
           })
-          .filter(Boolean)
-          .join(" · ");
+          .filter((r): r is NonNullable<typeof r> => r !== null);
 
-        setTooltipContent(`${address}\n${lines}`);
+        if (modeRows.length > 0) {
+          setTooltipData({ type: "reach", address, modes: modeRows });
+        } else {
+          setTooltipData(null);
+        }
         setTooltipPos({ x: e.point.x, y: e.point.y });
       });
 
       m.on("mouseleave", "iso-fill", () => {
         m.getCanvas().style.cursor = "";
-        setTooltipContent(null);
+        setTooltipData(null);
       });
 
       m.on("mousemove", "fairness-fill", async (e) => {
@@ -440,13 +450,13 @@ export function IsochroneMap({
         const timeA = props.timeA as number;
         const timeB = props.timeB as number;
 
-        setTooltipContent(`${address}\nYou: ${timeA}m · Friend: ${timeB}m · Diff: ${diff}m`);
+        setTooltipData({ type: "fairness", address, timeA, timeB, diff });
         setTooltipPos({ x: e.point.x, y: e.point.y });
       });
 
       m.on("mouseleave", "fairness-fill", () => {
         m.getCanvas().style.cursor = "";
-        setTooltipContent(null);
+        setTooltipData(null);
       });
 
       setMapReady(true);
@@ -623,14 +633,55 @@ export function IsochroneMap({
   return (
     <div className="relative flex-1 h-full">
       <div ref={mapContainer} className="w-full h-full cursor-crosshair" />
-      {tooltipContent && (
+      {tooltipData && (
         <div
-          className="absolute pointer-events-none bg-red text-pink p-2 text-xs font-body z-50 max-w-xs"
-          style={{ left: tooltipPos.x + 16, top: tooltipPos.y - 16 }}
+          className="absolute pointer-events-none z-50"
+          style={{
+            left: Math.min(tooltipPos.x + 16, (typeof window !== "undefined" ? window.innerWidth : 1200) - 220),
+            top: tooltipPos.y - 16,
+          }}
         >
-          {tooltipContent.split("\n").map((line, i) => (
-            <div key={i}>{line}</div>
-          ))}
+          <div className="bg-[#1a1b24]/95 border border-white/10 rounded-xl px-4 py-3 backdrop-blur-sm shadow-xl min-w-[180px]">
+            <p className="font-display italic text-xs text-white/70 mb-2 truncate max-w-[200px]">
+              {tooltipData.address}
+            </p>
+            {tooltipData.type === "reach" ? (
+              <div className="flex flex-col gap-1.5">
+                {tooltipData.modes.map((m) => (
+                  <div key={m.mode} className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: m.color }}
+                    />
+                    <span className={`text-xs flex-1 ${m.isFastest ? "text-white font-bold" : "text-white/50"}`}>
+                      {m.label}
+                    </span>
+                    <span className={`text-xs tabular-nums ${m.isFastest ? "text-white font-bold" : "text-white/40"}`}>
+                      {m.time} min
+                    </span>
+                    {m.isFastest && (
+                      <span className="text-cyan-400 text-[10px]">&#9733;</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">You</span>
+                  <span className="text-white tabular-nums">{tooltipData.timeA} min</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-amber-400/60">Friend</span>
+                  <span className="text-amber-400 tabular-nums">{tooltipData.timeB} min</span>
+                </div>
+                <div className="mt-1 pt-1 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-white/40">Diff</span>
+                  <span className="text-emerald-400 font-bold tabular-nums">{tooltipData.diff} min</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

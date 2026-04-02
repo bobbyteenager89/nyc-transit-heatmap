@@ -1,5 +1,5 @@
 import type { LatLng, TransportMode, CitiBikeStation, Destination, StationGraph, StationMatrix } from "../lib/types";
-import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, BIKE_SUBWAY_DOCK_RANGE_MI, BIKE_SAVINGS_PERCENT, BIKE_SAVINGS_MIN, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI } from "../lib/constants";
+import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI } from "../lib/constants";
 
 // Ferry types (inlined — can't import from lib in worker)
 interface FerryTerminalData {
@@ -160,53 +160,6 @@ function computeSubwayTime(
   return best === Infinity ? null : Math.round(best * 10) / 10;
 }
 
-function computeBikeSubwayTime(
-  from: LatLng, to: LatLng,
-  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
-  stations: Record<string, { lat: number; lng: number }>,
-  matrix: number[][], idxMap: Map<string, number>,
-  dockGrid: SpatialGrid<CitiBikeStation>
-): number | null {
-  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 3);
-  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 3);
-  if (nearFrom.length === 0 || nearTo.length === 0) return null;
-  const plainSubway = computeSubwayTime(from, to, stationGrid, matrix, idxMap);
-  if (plainSubway === null) return null;
-  let best = plainSubway;
-  for (const f of nearFrom) {
-    const fi = idxMap.get(f.id);
-    if (fi === undefined) continue;
-    const stationLoc = stations[f.id];
-    const dockNearStation = findNearestDockIndexed(stationLoc, dockGrid, BIKE_SUBWAY_DOCK_RANGE_MI);
-    if (!dockNearStation) continue;
-    const bikeToStation = bikeMin(from, { lat: dockNearStation.lat, lng: dockNearStation.lng });
-    const walkToStation = walkMin(from, stationLoc);
-    const useBikeIn = (walkToStation - bikeToStation) >= BIKE_SAVINGS_MIN ||
-      (walkToStation > 0 && (walkToStation - bikeToStation) / walkToStation >= BIKE_SAVINGS_PERCENT);
-    const legIn = useBikeIn ? bikeToStation : walkToStation;
-    for (const t of nearTo) {
-      const ti = idxMap.get(t.id);
-      if (ti === undefined) continue;
-      const stationTime = cachedMatrixLookup(matrix, fi, ti);
-      if (stationTime >= 999) continue;
-      const destStationLoc = stations[t.id];
-      const walkOut = (t.dist / WALK_SPEED) * 60;
-      const v1 = legIn + stationTime + walkOut;
-      if (v1 < best) best = v1;
-      const dockNearDest = findNearestDockIndexed(destStationLoc, dockGrid, BIKE_SUBWAY_DOCK_RANGE_MI);
-      if (dockNearDest) {
-        const bikeFromStation = bikeMin({ lat: dockNearDest.lat, lng: dockNearDest.lng }, to);
-        const useBikeOut = (walkOut - bikeFromStation) >= BIKE_SAVINGS_MIN ||
-          (walkOut > 0 && (walkOut - bikeFromStation) / walkOut >= BIKE_SAVINGS_PERCENT);
-        const legOut = useBikeOut ? bikeFromStation : walkOut;
-        const v2 = legIn + stationTime + legOut;
-        if (v2 < best) best = v2;
-      }
-    }
-  }
-  return Math.round(best * 10) / 10;
-}
-
 // --- Ferry helpers ---
 
 function computeFerryTime(
@@ -250,7 +203,7 @@ function computeTimesForLocation(
   const times: Record<TransportMode, number | null> = {
     walk: modes.includes("walk") ? walkMin(point, destLoc) : null,
     car: modes.includes("car") ? driveMin(point, destLoc) : null,
-    bike: null, subway: null, bikeSubway: null, ferry: null,
+    bike: null, subway: null, ferry: null,
   };
   if (modes.includes("bike")) {
     const hasDockOrigin = findNearestDockIndexed(point, dockGrid, BIKE_DOCK_RANGE_MI);
@@ -259,9 +212,6 @@ function computeTimesForLocation(
   }
   if (modes.includes("subway")) {
     times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);
-  }
-  if (modes.includes("bikeSubway")) {
-    times.bikeSubway = computeBikeSubwayTime(point, destLoc, stationGrid, stationGraph.stations, stationMatrix.times, idxMap, dockGrid);
   }
   if (modes.includes("ferry")) {
     times.ferry = computeFerryTime(point, destLoc, terminalGrid, ferryAdjacency);
@@ -344,13 +294,13 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
         let totalMonthlyMinutes = 0;
-        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null, ferry: null };
+        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, ferry: null };
         const destBreakdown: Record<string, number> = {};
 
         for (const dest of destinations) {
           const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
           let bestTime = Infinity;
-          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bikeSubway: null, ferry: null };
+          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, ferry: null };
 
           for (const destLoc of destLocations) {
             const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency);

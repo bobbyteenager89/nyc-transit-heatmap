@@ -8,7 +8,6 @@ const MODES: { key: TransportMode; label: string; wide?: boolean }[] = [
   { key: "walk", label: "Walking" },
   { key: "car", label: "Car" },
   { key: "bike", label: "Citi Bike" },
-  { key: "bikeSubway", label: "Bike + Subway", wide: true },
   { key: "ferry", label: "Ferry" },
 ];
 

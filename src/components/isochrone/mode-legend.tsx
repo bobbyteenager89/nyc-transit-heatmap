@@ -51,19 +51,6 @@ function CarIcon({ className }: { className?: string }) {
   );
 }
 
-function BikeSubIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="5" cy="17" r="2.5" />
-      <path d="M5 17l2-5h3" />
-      <path d="M8 12l2-3" />
-      <line x1="13" y1="9" x2="13" y2="17" />
-      <rect x="13" y="9" width="8" height="8" rx="2" />
-      <circle cx="17" cy="14" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
 function FerryIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -82,7 +69,6 @@ const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
   walk: WalkIcon,
   bike: BikeIcon,
   car: CarIcon,
-  bikeSubway: BikeSubIcon,
   ferry: FerryIcon,
 };
 
@@ -91,7 +77,6 @@ const MODE_LABELS: { key: TransportMode; label: string }[] = [
   { key: "walk", label: "Walk" },
   { key: "bike", label: "Bike" },
   { key: "car", label: "Car" },
-  { key: "bikeSubway", label: "Bike+Sub" },
   { key: "ferry", label: "Ferry" },
 ];
 

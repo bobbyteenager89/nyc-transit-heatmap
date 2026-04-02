@@ -55,12 +55,7 @@ export function computeCostComparison(
 
     switch (mode) {
       case "subway":
-      case "bikeSubway":
         subwayTripsPerMonth += monthlyTrips;
-        if (mode === "bikeSubway") {
-          usesBike = true;
-          bikeTripsPerMonth += monthlyTrips;
-        }
         break;
       case "car":
         carCost += monthlyTrips * COST_CAR_RIDE;
@@ -167,9 +162,7 @@ export function computeMonthlyCost(
 
     switch (mode) {
       case "subway":
-      case "bikeSubway":
         totalSubwayTrips += monthlyTrips;
-        if (mode === "bikeSubway") usesBike = true;
         break;
       case "car":
         totalCost += monthlyTrips * COST_CAR_RIDE;

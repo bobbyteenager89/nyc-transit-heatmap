@@ -1,6 +1,6 @@
 import type { CitiBikeStation, LatLng } from "./types";
 import { manhattanDistanceMi } from "./travel-time";
-import { CITIBIKE_STATION_INFO_URL, BIKE_DOCK_RANGE_MI, BIKE_SUBWAY_DOCK_RANGE_MI } from "./constants";
+import { CITIBIKE_STATION_INFO_URL, BIKE_DOCK_RANGE_MI } from "./constants";
 
 export class CitiBikeData {
   private stations: CitiBikeStation[];
@@ -38,10 +38,6 @@ export class CitiBikeData {
 
   hasDockNearby(point: LatLng, maxDistMi: number = BIKE_DOCK_RANGE_MI): boolean {
     return this.findNearestDock(point, maxDistMi) !== null;
-  }
-
-  findDockNearSubway(stationLat: number, stationLng: number): CitiBikeStation | null {
-    return this.findNearestDock({ lat: stationLat, lng: stationLng }, BIKE_SUBWAY_DOCK_RANGE_MI);
   }
 
   getAllStations(): CitiBikeStation[] {

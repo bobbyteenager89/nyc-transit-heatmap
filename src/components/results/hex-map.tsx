@@ -144,11 +144,11 @@ export function HexMap({
         }
 
         // Build tooltip lines
-        const modes = ["subway", "car", "bike", "bikeSubway", "walk", "ferry"];
+        const modes = ["subway", "car", "bike", "walk", "ferry"];
         const modeLines = modes
           .filter((mode) => props[mode] !== null && props[mode] !== undefined)
           .map((mode) => {
-            const label = mode === "bikeSubway" ? "Bike+Sub" : mode.charAt(0).toUpperCase() + mode.slice(1);
+            const label = mode.charAt(0).toUpperCase() + mode.slice(1);
             const val = Math.round(props[mode]);
             const isFastest = mode === props.fastest;
             return isFastest ? `**${label}: ${val}m**` : `${label}: ${val}m`;

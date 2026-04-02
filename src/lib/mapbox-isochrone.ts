@@ -11,7 +11,7 @@ const MODE_TO_PROFILE: Partial<Record<TransportMode, string>> = {
 export const API_MODES: TransportMode[] = ["walk", "bike", "car"];
 
 /** Modes that use our hex grid compute (subway/ferry routing) */
-export const HEX_MODES: TransportMode[] = ["subway", "bikeSubway", "ferry"];
+export const HEX_MODES: TransportMode[] = ["subway", "ferry"];
 
 export interface IsochroneContour {
   mode: TransportMode;

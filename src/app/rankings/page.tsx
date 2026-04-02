@@ -101,7 +101,7 @@ export default function RankingsPage() {
               return (
                 <Link
                   key={r.neighborhood.name}
-                  href={`/explore?lat=${r.neighborhood.center.lat}&lng=${r.neighborhood.center.lng}&t=30&m=subway,walk,bike,bikeSubway,ferry`}
+                  href={`/explore?lat=${r.neighborhood.center.lat}&lng=${r.neighborhood.center.lng}&t=30&m=subway,walk,bike,ferry`}
                   className="border border-white/10 rounded-xl bg-surface-card p-5 flex items-start gap-4 group hover:border-white/20 hover:bg-white/[0.04] transition-all"
                 >
                   <span className="text-2xl font-display italic text-white/20 w-8 shrink-0 text-right leading-none pt-0.5">

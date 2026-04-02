@@ -12,10 +12,7 @@ export const FERRY_MAX_WALK_MI = 1.0; // max walk to/from terminal
 // Thresholds
 export const BIKE_DOCK_RANGE_MI = 0.25; // 5-min walk
 export const SUBWAY_MAX_WALK_MI = 1.5;
-export const BIKE_SUBWAY_DOCK_RANGE_MI = 0.5;
 export const BIKE_DOCK_TIME_MIN = 2; // dock/undock time
-export const BIKE_SAVINGS_PERCENT = 0.2; // 20% threshold
-export const BIKE_SAVINGS_MIN = 5; // 5-min threshold
 
 // Manhattan boundary (approx 96th St)
 export const MANHATTAN_BOUNDARY_LAT = 40.7831;

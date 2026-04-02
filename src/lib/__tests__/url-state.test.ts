@@ -21,7 +21,7 @@ const SAMPLE_DESTINATIONS: Destination[] = [
   },
 ];
 
-const SAMPLE_MODES: TransportMode[] = ["subway", "bike", "bikeSubway"];
+const SAMPLE_MODES: TransportMode[] = ["subway", "bike"];
 
 describe("URL state round-trip", () => {
   it("encodes and decodes destinations + modes losslessly", () => {

@@ -8,7 +8,6 @@ const MODE_COLORS: Record<string, string> = {
   walk: "#ffbe0b",
   bike: "#06d6a0",
   car: "#9b5de5",
-  bikeSubway: "#0ead69",
   ferry: "#00b4d8",
 };
 
@@ -17,7 +16,6 @@ const MODE_LABELS: Record<string, string> = {
   walk: "Walk",
   bike: "Citi Bike",
   car: "Car",
-  bikeSubway: "Bike+Sub",
   ferry: "Ferry",
 };
 

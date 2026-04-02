@@ -142,21 +142,6 @@ describe("computeCostComparison", () => {
     expect(cheapest.label).toBe("Unlimited");
   });
 
-  it("adds bike cost to all options when bikeSubway is used", () => {
-    const result = computeCostComparison(
-      [workDest],
-      [{ destId: "1", mode: "bikeSubway" as TransportMode }]
-    );
-
-    // All options should include COST_CITIBIKE_MONTHLY
-    expect(result.options[0].monthlyCost).toBeGreaterThan(
-      workDest.frequency * 2 * WEEKS_PER_MONTH * COST_SUBWAY_RIDE
-    );
-    expect(result.options[2].monthlyCost).toBe(
-      COST_METROCARD_UNLIMITED + COST_CITIBIKE_MONTHLY
-    );
-  });
-
   it("returns bike-only option for bike mode", () => {
     const result = computeCostComparison(
       [workDest],

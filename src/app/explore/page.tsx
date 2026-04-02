@@ -34,12 +34,12 @@ import type {
 } from "@/lib/types";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
-const ALL_MODES: TransportMode[] = ["subway", "walk", "car", "bike", "bikeSubway", "ferry"];
+const ALL_MODES: TransportMode[] = ["subway", "walk", "car", "bike", "ferry"];
 
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "walk", "bike", "bikeSubway", "ferry"]);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "walk", "bike", "ferry"]);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
@@ -122,7 +122,7 @@ export default function ExplorePage() {
       try {
         const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-        // Run hex compute (for subway/ferry/bikeSubway) and API isochrones (walk/bike/car) in parallel
+        // Run hex compute (for subway/ferry) and API isochrones (walk/bike/car) in parallel
         const [hexResult, contours] = await Promise.all([
           (async () => {
             const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);

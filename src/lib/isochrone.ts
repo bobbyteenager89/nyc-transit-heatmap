@@ -18,7 +18,6 @@ export const MODE_COLORS: Record<TransportMode, string> = {
   bike: "#06d6a0",
   subway: "#118ab2",
   car: "#9b5de5",
-  bikeSubway: "#0ead69",
   ferry: "#00b4d8",
 };
 

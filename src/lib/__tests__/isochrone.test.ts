@@ -4,7 +4,7 @@ import type { HexCell, TransportMode } from "../types";
 
 function makeCell(h3Index: string, times: Partial<Record<TransportMode, number | null>>): HexCell {
   const full: Record<TransportMode, number | null> = {
-    walk: null, bike: null, subway: null, car: null, bikeSubway: null, ferry: null,
+    walk: null, bike: null, subway: null, car: null, ferry: null,
     ...times,
   };
   return {
