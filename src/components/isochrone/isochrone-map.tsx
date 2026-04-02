@@ -349,7 +349,7 @@ export function IsochroneMap({
         }, firstSymbol);
       } catch { /* skip */ }
 
-      // Street grid
+      // Street grid — rendered ON TOP of hex fill so streets cut through the color
       try {
         m.addLayer({
           id: "street-overlay",
@@ -358,13 +358,13 @@ export function IsochroneMap({
           "source-layer": "road",
           filter: ["in", "class", "street", "primary", "secondary", "tertiary", "motorway", "trunk"],
           paint: {
-            "line-color": "rgba(255,255,255,0.12)",
-            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.3, 13, 0.8, 16, 1.5],
+            "line-color": "rgba(255,255,255,0.25)",
+            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 1, 16, 2],
           },
-        }, firstSymbol);
+        }); // no "before" — renders on top
       } catch { /* skip */ }
 
-      // Neighborhood lines
+      // Neighborhood lines — on top of everything
       try {
         m.addLayer({
           id: "neighborhood-lines",
@@ -372,8 +372,8 @@ export function IsochroneMap({
           source: "composite",
           "source-layer": "admin",
           filter: [">=", "admin_level", 2],
-          paint: { "line-color": "rgba(255,255,255,0.2)", "line-width": 1, "line-dasharray": [3, 2] },
-        }, firstSymbol);
+          paint: { "line-color": "rgba(255,255,255,0.25)", "line-width": 1.5, "line-dasharray": [3, 2] },
+        }); // no "before" — renders on top
       } catch { /* skip */ }
 
       // Click handler
