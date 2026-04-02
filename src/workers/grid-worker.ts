@@ -1,5 +1,5 @@
 import type { LatLng, TransportMode, CitiBikeStation, Destination, StationGraph, StationMatrix } from "../lib/types";
-import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI } from "../lib/constants";
+import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI, BUS_SPEED_MPH, BUS_MAX_WALK_MI, BUS_WAIT_MIN } from "../lib/constants";
 
 // Ferry types (inlined — can't import from lib in worker)
 interface FerryTerminalData {
@@ -11,6 +11,15 @@ interface FerryTerminalData {
 }
 /** Pre-computed all-pairs shortest ferry times: terminalId → { terminalId → minutes } */
 type FerryAdjacencyData = Record<string, Record<string, number>>;
+
+// Bus types (inlined — can't import from lib in worker)
+interface BusStopData {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  routes: string[];
+}
 
 // --- Inline distance/travel calculations (can't import lib in worker) ---
 
@@ -189,6 +198,35 @@ function computeFerryTime(
   return best === Infinity ? null : Math.round(best * 10) / 10;
 }
 
+// --- Bus helpers ---
+
+function computeBusTime(
+  from: LatLng, to: LatLng,
+  busGrid: SpatialGrid<BusStopData>
+): number | null {
+  // Find nearest bus stop to origin
+  const nearFrom = searchGrid(from, busGrid, BUS_MAX_WALK_MI);
+  if (nearFrom.length === 0) return null;
+  nearFrom.sort((a, b) => a.dist - b.dist);
+  const stopFrom = nearFrom[0];
+
+  // Find nearest bus stop to destination
+  const nearTo = searchGrid(to, busGrid, BUS_MAX_WALK_MI);
+  if (nearTo.length === 0) return null;
+  nearTo.sort((a, b) => a.dist - b.dist);
+  const stopTo = nearTo[0];
+
+  // If same stop, just walk
+  if (stopFrom.item.id === stopTo.item.id) return null;
+
+  const walkToStop = (stopFrom.dist / WALK_SPEED) * 60;
+  const busRideDist = manhattanDist(stopFrom.item, stopTo.item);
+  const busRideTime = (busRideDist / BUS_SPEED_MPH) * 60;
+  const walkFromStop = (stopTo.dist / WALK_SPEED) * 60;
+
+  return Math.round((walkToStop + BUS_WAIT_MIN + busRideTime + walkFromStop) * 10) / 10;
+}
+
 // --- Compute travel times from a point to a destination ---
 
 function computeTimesForLocation(
@@ -198,12 +236,13 @@ function computeTimesForLocation(
   idxMap: Map<string, number>,
   dockGrid: SpatialGrid<CitiBikeStation>,
   terminalGrid: SpatialGrid<FerryTerminalData>,
-  ferryAdjacency: FerryAdjacencyData
+  ferryAdjacency: FerryAdjacencyData,
+  busStopGrid: SpatialGrid<BusStopData>
 ): Record<TransportMode, number | null> {
   const times: Record<TransportMode, number | null> = {
     walk: modes.includes("walk") ? walkMin(point, destLoc) : null,
     car: modes.includes("car") ? driveMin(point, destLoc) : null,
-    bike: null, subway: null, ferry: null,
+    bike: null, subway: null, bus: null, ferry: null,
   };
   if (modes.includes("bike")) {
     const hasDockOrigin = findNearestDockIndexed(point, dockGrid, BIKE_DOCK_RANGE_MI);
@@ -212,6 +251,9 @@ function computeTimesForLocation(
   }
   if (modes.includes("subway")) {
     times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);
+  }
+  if (modes.includes("bus")) {
+    times.bus = computeBusTime(point, destLoc, busStopGrid);
   }
   if (modes.includes("ferry")) {
     times.ferry = computeFerryTime(point, destLoc, terminalGrid, ferryAdjacency);
@@ -240,6 +282,7 @@ interface WorkerInput {
   citiBikeStations: CitiBikeStation[];
   ferryTerminals: FerryTerminalData[];
   ferryAdjacency: FerryAdjacencyData;
+  busStops: BusStopData[];
 }
 
 const CHUNK_SIZE = 5000;
@@ -253,10 +296,11 @@ type CellResult = {
 };
 
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
-  const { hexCenters, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations, ferryTerminals, ferryAdjacency } = e.data;
+  const { hexCenters, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations, ferryTerminals, ferryAdjacency, busStops } = e.data;
   const idxMap = buildStationIdxMap(stationMatrix.stationIds);
   const fTerminals = ferryTerminals ?? [];
   const fAdjacency = ferryAdjacency ?? {};
+  const bStops = busStops ?? [];
 
   // Clear caches for fresh computation
   subwayTimeCache.clear();
@@ -265,6 +309,7 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
   const stationGrid = buildStationSpatialGrid(stationGraph.stations);
   const dockGrid = buildSpatialGrid(citiBikeStations);
   const terminalGrid = buildSpatialGrid(fTerminals);
+  const busStopGrid = buildSpatialGrid(bStops);
 
   const total = hexCenters.length;
   const cells: CellResult[] = new Array(total);
@@ -278,7 +323,7 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
       for (let i = processed; i < end; i++) {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
-        const times = computeTimesForLocation(point, origin, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency);
+        const times = computeTimesForLocation(point, origin, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency, busStopGrid);
         const { fastest, time } = getFastestTime(times);
         cells[i] = {
           h3Index: hex.h3Index,
@@ -294,16 +339,16 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
         let totalMonthlyMinutes = 0;
-        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, ferry: null };
+        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bus: null, ferry: null };
         const destBreakdown: Record<string, number> = {};
 
         for (const dest of destinations) {
           const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
           let bestTime = Infinity;
-          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, ferry: null };
+          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bus: null, ferry: null };
 
           for (const destLoc of destLocations) {
-            const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency);
+            const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency, busStopGrid);
             const { time } = getFastestTime(locTimes);
             if (time < bestTime) { bestTime = time; bestTimes = locTimes; }
           }

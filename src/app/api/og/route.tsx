@@ -5,6 +5,7 @@ export const runtime = "edge";
 
 const MODE_COLORS: Record<string, string> = {
   subway: "#118ab2",
+  bus: "#f97316",
   walk: "#ffbe0b",
   bike: "#06d6a0",
   car: "#9b5de5",
@@ -13,6 +14,7 @@ const MODE_COLORS: Record<string, string> = {
 
 const MODE_LABELS: Record<string, string> = {
   subway: "Subway",
+  bus: "Bus",
   walk: "Walk",
   bike: "Citi Bike",
   car: "Car",

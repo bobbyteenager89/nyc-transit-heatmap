@@ -14,6 +14,7 @@ export interface HexWorkerInput {
   citiBikeStations: CitiBikeStation[];
   ferryTerminals?: { id: string; name: string; lat: number; lng: number; routes: string[] }[];
   ferryAdjacency?: Record<string, Record<string, number>>;
+  busStops?: { id: string; name: string; lat: number; lng: number; routes: string[] }[];
 }
 
 export function computeHexGrid(

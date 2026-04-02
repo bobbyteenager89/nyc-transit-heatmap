@@ -51,6 +51,19 @@ function CarIcon({ className }: { className?: string }) {
   );
 }
 
+function BusIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="3" width="16" height="14" rx="2" />
+      <line x1="4" y1="10" x2="20" y2="10" />
+      <circle cx="8" cy="20" r="1.5" fill="currentColor" />
+      <circle cx="16" cy="20" r="1.5" fill="currentColor" />
+      <line x1="8" y1="17" x2="8" y2="18.5" />
+      <line x1="16" y1="17" x2="16" y2="18.5" />
+    </svg>
+  );
+}
+
 function FerryIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -66,6 +79,7 @@ function FerryIcon({ className }: { className?: string }) {
 
 const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
   subway: SubwayIcon,
+  bus: BusIcon,
   walk: WalkIcon,
   bike: BikeIcon,
   car: CarIcon,
@@ -74,6 +88,7 @@ const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
 
 const MODE_LABELS: { key: TransportMode; label: string }[] = [
   { key: "subway", label: "Subway" },
+  { key: "bus", label: "Bus" },
   { key: "walk", label: "Walk" },
   { key: "bike", label: "Bike" },
   { key: "car", label: "Car" },

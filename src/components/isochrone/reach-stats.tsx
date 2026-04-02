@@ -12,6 +12,7 @@ interface ReachStatsProps {
 
 const MODE_LABELS: Record<TransportMode, string> = {
   subway: "Subway",
+  bus: "Bus",
   walk: "Walk",
   car: "Car",
   bike: "Citi Bike",

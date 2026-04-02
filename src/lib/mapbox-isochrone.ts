@@ -10,8 +10,8 @@ const MODE_TO_PROFILE: Partial<Record<TransportMode, string>> = {
 /** Modes that use the Mapbox Isochrone API (smooth street-following shapes) */
 export const API_MODES: TransportMode[] = ["walk", "bike", "car"];
 
-/** Modes that use our hex grid compute (subway/ferry routing) */
-export const HEX_MODES: TransportMode[] = ["subway", "ferry"];
+/** Modes that use our hex grid compute (subway/bus/ferry routing) */
+export const HEX_MODES: TransportMode[] = ["subway", "bus", "ferry"];
 
 export interface IsochroneContour {
   mode: TransportMode;

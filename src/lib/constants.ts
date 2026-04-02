@@ -9,6 +9,10 @@ export const DRIVE_SPEED_OUTER = 20;
 export const FERRY_SPEED_MPH = 15;
 export const FERRY_MAX_WALK_MI = 1.0; // max walk to/from terminal
 
+export const BUS_SPEED_MPH = 8; // NYC average bus speed
+export const BUS_MAX_WALK_MI = 0.3; // max walk to bus stop (~6 min)
+export const BUS_WAIT_MIN = 7; // average wait time
+
 // Thresholds
 export const BIKE_DOCK_RANGE_MI = 0.25; // 5-min walk
 export const SUBWAY_MAX_WALK_MI = 1.5;

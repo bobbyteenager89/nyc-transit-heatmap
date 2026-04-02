@@ -9,6 +9,8 @@ import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
+import { loadBusData } from "@/lib/bus";
+import type { BusData } from "@/lib/bus";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { reverseGeocode } from "@/lib/geocode";
@@ -40,6 +42,7 @@ export default function FindPage() {
   const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
   const [citiBikeData, setCitiBikeData] = useState<CitiBikeData | null>(null);
   const [ferryData, setFerryData] = useState<{ data: FerryData; adjacency: FerryAdjacency } | null>(null);
+  const [busData, setBusData] = useState<BusData | null>(null);
   const [dataReady, setDataReady] = useState(false);
 
   // Results UI state
@@ -74,6 +77,9 @@ export default function FindPage() {
         const ferry = await loadFerryData();
         setFerryData(ferry);
 
+        const bus = await loadBusData();
+        setBusData(bus);
+
         setDataReady(true);
       } catch (err) {
         console.error("Failed to load transit data:", err);
@@ -98,7 +104,7 @@ export default function FindPage() {
 
   const runCompute = useCallback(
     async (dests: Destination[], selectedModes: TransportMode[]) => {
-      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
+      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
 
       setComputing(true);
       setComputeProgress(0);
@@ -119,6 +125,7 @@ export default function FindPage() {
           citiBikeStations: citiBikeData.getAllStations(),
           ferryTerminals: ferryData.data.terminals,
           ferryAdjacency: ferryData.adjacency,
+          busStops: busData.stops,
         }, (percent) => setComputeProgress(percent));
 
         // Worker returns cells without geometry — merge center + boundary from rawCenters
@@ -158,7 +165,7 @@ export default function FindPage() {
         setComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData]
   );
 
   const handleWizardComplete = useCallback(

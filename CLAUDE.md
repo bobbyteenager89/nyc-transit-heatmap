@@ -29,7 +29,8 @@
 - `src/lib/ferry.ts` — ferry terminal data loader + Floyd-Warshall adjacency
 - `src/lib/isochrone.ts` — time band grouping, mode colors, isochrone layer generation
 - `src/components/isochrone/` — isochrone-map (dark Mapbox heatmap), time-slider, mode-legend, reach-stats
-- `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry)
+- `src/lib/bus.ts` — bus stop data loader
+- `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry, bus)
 - `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
 - `public/data/` — pre-built subway data (committed)
@@ -38,6 +39,7 @@
 - **Isochrone NYC** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
 - **Find My Neighborhood** (`/find`): score heatmap showing total monthly transit hours (green=low, red=high)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
+- **Bus**: walk to stop → wait (7 min avg) → ride (8 mph avg) → walk from stop. ~200 curated stops across Manhattan, Brooklyn, Queens
 - **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
 - **Resolution 10**: ~150k hex cells with spatial grid indexing for O(1) station lookups
 
@@ -46,7 +48,7 @@
 - Landing page: dark with map background. Find page: pink/red brutalist (legacy)
 - Explore page: dark glass sidebar with rounded card sections, dark Mapbox map
 - Arial Black italic uppercase for headings, Helvetica Neue for body
-- Mode colors: subway (#118ab2), walk (#ffbe0b), bike (#06d6a0), car (#9b5de5), ferry (#00b4d8)
+- Mode colors: subway (#118ab2), bus (#f97316), walk (#ffbe0b), bike (#06d6a0), car (#9b5de5), ferry (#00b4d8)
 - Hex fill gradient: green (0 min) → yellow (15 min) → orange (30 min) → red (60 min)
 
 ## Environment

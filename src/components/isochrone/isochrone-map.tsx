@@ -56,6 +56,7 @@ function cellsToHexGeoJSON(
         time: Math.round(fastest * 10) / 10,
         fastest_mode: fastestMode,
         subway: cell.times.subway ?? -1,
+        bus: cell.times.bus ?? -1,
         ferry: cell.times.ferry ?? -1,
         walk: cell.times.walk ?? -1,
         bike: cell.times.bike ?? -1,
@@ -401,7 +402,7 @@ export function IsochroneMap({
 
         const modeLabels: Record<string, string> = {
           walk: "Walk", bike: "Bike", subway: "Subway",
-          car: "Car", ferry: "Ferry",
+          bus: "Bus", car: "Car", ferry: "Ferry",
         };
         const modeRows = activeModesRef.current
           .map((mode) => {

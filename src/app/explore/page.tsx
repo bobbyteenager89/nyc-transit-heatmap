@@ -14,6 +14,8 @@ import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
+import { loadBusData } from "@/lib/bus";
+import type { BusData } from "@/lib/bus";
 import { computeHexGrid } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
@@ -34,12 +36,12 @@ import type {
 } from "@/lib/types";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
-const ALL_MODES: TransportMode[] = ["subway", "walk", "car", "bike", "ferry"];
+const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "walk", "bike", "ferry"]);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "bus", "walk", "bike", "ferry"]);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
@@ -62,6 +64,7 @@ export default function ExplorePage() {
     data: FerryData;
     adjacency: FerryAdjacency;
   } | null>(null);
+  const [busData, setBusData] = useState<BusData | null>(null);
   const [dataReady, setDataReady] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [mobileExpanded, setMobileExpanded] = useState(true);
@@ -90,6 +93,9 @@ export default function ExplorePage() {
         const ferry = await loadFerryData();
         setFerryData(ferry);
 
+        const bus = await loadBusData();
+        setBusData(bus);
+
         setDataReady(true);
       } catch (err) {
         console.error("Failed to load transit data:", err);
@@ -115,14 +121,14 @@ export default function ExplorePage() {
 
   const runCompute = useCallback(
     async (loc: LatLng) => {
-      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
+      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
 
       setComputing(true);
       setComputeProgress(0);
       try {
         const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-        // Run hex compute (for subway/ferry) and API isochrones (walk/bike/car) in parallel
+        // Run hex compute (for subway/bus/ferry) and API isochrones (walk/bike/car) in parallel
         const [hexResult, contours] = await Promise.all([
           (async () => {
             const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
@@ -143,6 +149,7 @@ export default function ExplorePage() {
                 citiBikeStations: citiBikeData.getAllStations(),
                 ferryTerminals: ferryData.data.terminals,
                 ferryAdjacency: ferryData.adjacency,
+                busStops: busData.stops,
               },
               (percent) => setComputeProgress(percent)
             );
@@ -166,12 +173,12 @@ export default function ExplorePage() {
         setMobileExpanded(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData, destinations]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations]
   );
 
   const runFriendCompute = useCallback(
     async (loc: LatLng) => {
-      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData) return;
+      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
       setFriendComputing(true);
       try {
         const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
@@ -197,6 +204,7 @@ export default function ExplorePage() {
                 citiBikeStations: citiBikeData.getAllStations(),
                 ferryTerminals: ferryData.data.terminals,
                 ferryAdjacency: ferryData.adjacency,
+                busStops: busData.stops,
               },
               () => {} // no progress bar for friend compute
             );
@@ -218,7 +226,7 @@ export default function ExplorePage() {
         setFriendComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData]
   );
 
   // Restore state from URL on mount

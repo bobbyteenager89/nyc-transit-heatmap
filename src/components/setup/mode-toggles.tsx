@@ -5,6 +5,7 @@ import type { TransportMode } from "@/lib/types";
 
 const MODES: { key: TransportMode; label: string; wide?: boolean }[] = [
   { key: "subway", label: "Subway" },
+  { key: "bus", label: "Bus" },
   { key: "walk", label: "Walking" },
   { key: "car", label: "Car" },
   { key: "bike", label: "Citi Bike" },
