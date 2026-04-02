@@ -10,9 +10,9 @@ export async function generateMetadata({
   const params = await searchParams;
   const lat = params?.lat;
   const lng = params?.lng;
-  const t = params.t ?? "30";
-  const m = params.m ?? "subway,walk,bike";
-  const address = params.address;
+  const t = params?.t ?? "30";
+  const m = params?.m ?? "subway,walk,bike";
+  const address = params?.address;
 
   if (!lat || !lng) {
     return {

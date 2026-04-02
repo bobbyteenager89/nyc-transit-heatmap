@@ -10,27 +10,20 @@ import type { StationGraph, StationMatrix } from "@/lib/types";
 interface RankedNeighborhood {
   neighborhood: Neighborhood;
   avgMinutes: number;
-  /** Per-landmark travel times */
-  landmarkTimes: { name: string; minutes: number | null }[];
 }
 
 function scoreNeighborhoods(subway: SubwayData): RankedNeighborhood[] {
   return NYC_NEIGHBORHOODS.map((hood) => {
-    const landmarkTimes = LANDMARKS.map((lm) => {
-      const time = computeSubwayTime(subway, hood.center, { lat: lm.lat, lng: lm.lng });
-      return { name: lm.name, minutes: time };
-    });
-
-    const validTimes = landmarkTimes
-      .map((lt) => lt.minutes)
-      .filter((t): t is number => t !== null);
+    const times = LANDMARKS.map((lm) =>
+      computeSubwayTime(subway, hood.center, { lat: lm.lat, lng: lm.lng })
+    ).filter((t): t is number => t !== null);
 
     const avgMinutes =
-      validTimes.length > 0
-        ? validTimes.reduce((sum, t) => sum + t, 0) / validTimes.length
+      times.length > 0
+        ? times.reduce((sum, t) => sum + t, 0) / times.length
         : Infinity;
 
-    return { neighborhood: hood, avgMinutes, landmarkTimes };
+    return { neighborhood: hood, avgMinutes };
   })
     .filter((r) => r.avgMinutes < Infinity)
     .sort((a, b) => a.avgMinutes - b.avgMinutes);
@@ -39,19 +32,26 @@ function scoreNeighborhoods(subway: SubwayData): RankedNeighborhood[] {
 export default function RankingsPage() {
   const [rankings, setRankings] = useState<RankedNeighborhood[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const [graphRes, matrixRes] = await Promise.all([
-        fetch("/data/station-graph.json"),
-        fetch("/data/station-matrix.json"),
-      ]);
-      const graph: StationGraph = await graphRes.json();
-      const matrix: StationMatrix = await matrixRes.json();
-      const subway = new SubwayData(graph, matrix);
-      const ranked = scoreNeighborhoods(subway);
-      setRankings(ranked);
-      setLoading(false);
+      try {
+        const [graphRes, matrixRes] = await Promise.all([
+          fetch("/data/station-graph.json"),
+          fetch("/data/station-matrix.json"),
+        ]);
+        const graph: StationGraph = await graphRes.json();
+        const matrix: StationMatrix = await matrixRes.json();
+        const subway = new SubwayData(graph, matrix);
+        const ranked = scoreNeighborhoods(subway);
+        setRankings(ranked);
+      } catch (err) {
+        console.error("Failed to load transit data:", err);
+        setError("Failed to load transit data. Please refresh.");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -78,7 +78,11 @@ export default function RankingsPage() {
           average subway travel time to 5 major hubs.
         </p>
 
-        {loading ? (
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <p className="font-body text-sm text-red">{error}</p>
+          </div>
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
             <p className="font-body text-sm text-white/50">

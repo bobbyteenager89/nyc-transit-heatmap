@@ -299,24 +299,28 @@ export default function FindPage() {
     </div>
   );
 
+  const sidebarContent = (
+    <ResultsSidebar
+      destinations={destinations}
+      modes={modes}
+      onModesChange={handleModesChange}
+      onEditDestinations={handleEditDestinations}
+      onDropPin={() => setPinDropMode((p) => !p)}
+      pinDropMode={pinDropMode}
+      selectedDestId={selectedDestId}
+      onSelectDest={setSelectedDestId}
+      bestCell={bestCell}
+      bestAddress={bestAddress}
+      totalHours={totalHours}
+      shareUrl={shareUrl}
+    />
+  );
+
   return (
     <div className="flex flex-col md:flex-row h-full p-0 md:p-3">
       {/* Desktop sidebar */}
       <div className="hidden md:block">
-        <ResultsSidebar
-          destinations={destinations}
-          modes={modes}
-          onModesChange={handleModesChange}
-          onEditDestinations={handleEditDestinations}
-          onDropPin={() => setPinDropMode((p) => !p)}
-          pinDropMode={pinDropMode}
-          selectedDestId={selectedDestId}
-          onSelectDest={setSelectedDestId}
-          bestCell={bestCell}
-          bestAddress={bestAddress}
-          totalHours={totalHours}
-          shareUrl={shareUrl}
-        />
+        {sidebarContent}
       </div>
 
       <main className="flex-1 relative w-full">
@@ -356,20 +360,7 @@ export default function FindPage() {
           onToggle={() => setMobileExpanded((p) => !p)}
           summary={mobileFindSummary}
         >
-          <ResultsSidebar
-            destinations={destinations}
-            modes={modes}
-            onModesChange={handleModesChange}
-            onEditDestinations={handleEditDestinations}
-            onDropPin={() => setPinDropMode((p) => !p)}
-            pinDropMode={pinDropMode}
-            selectedDestId={selectedDestId}
-            onSelectDest={setSelectedDestId}
-            bestCell={bestCell}
-            bestAddress={bestAddress}
-            totalHours={totalHours}
-            shareUrl={shareUrl}
-          />
+          {sidebarContent}
         </MobileBottomSheet>
       </div>
     </div>

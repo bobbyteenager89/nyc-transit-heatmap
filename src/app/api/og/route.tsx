@@ -21,18 +21,24 @@ const MODE_LABELS: Record<string, string> = {
   ferry: "Ferry",
 };
 
+const VALID_MODES = new Set(Object.keys(MODE_LABELS));
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const lat = searchParams.get("lat") ?? "40.728";
-  const lng = searchParams.get("lng") ?? "-73.958";
-  const time = searchParams.get("t") ?? "30";
-  const modes = (searchParams.get("m") ?? "subway,walk,bike").split(",");
-  const address =
-    searchParams.get("address") ??
-    `${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`;
+  const safeLat = Math.max(-90, Math.min(90, Number(searchParams.get("lat")) || 40.728));
+  const safeLng = Math.max(-180, Math.min(180, Number(searchParams.get("lng")) || -73.958));
+  const time = String(Math.max(1, Math.min(60, Number(searchParams.get("t")) || 30)));
+  const modes = (searchParams.get("m") ?? "subway,walk,bike")
+    .split(",")
+    .filter((m) => VALID_MODES.has(m));
+  const rawAddress = searchParams.get("address") ?? `${safeLat.toFixed(4)}, ${safeLng.toFixed(4)}`;
+  const address = rawAddress.slice(0, 100);
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${lng},${lat},12,0/1200x630@2x?access_token=${mapboxToken}`;
+  if (!mapboxToken) {
+    return new Response("Missing Mapbox token", { status: 500 });
+  }
+  const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${safeLng},${safeLat},12,0/1200x630@2x?access_token=${mapboxToken}`;
 
   return new ImageResponse(
     (
@@ -188,6 +194,9 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
+      headers: {
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      },
     }
   );
 }
