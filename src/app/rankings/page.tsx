@@ -62,12 +62,20 @@ export default function RankingsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a12] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm font-body text-white/40 hover:text-white/70 transition-colors mb-8"
-        >
-          &larr; Back to Isochrone NYC
-        </Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-body text-white/40 hover:text-white/70 transition-colors"
+          >
+            &larr; Back to Isochrone NYC
+          </Link>
+          <Link
+            href="/compare"
+            className="text-sm font-body text-accent hover:text-accent/80 transition-colors"
+          >
+            Compare neighborhoods &rarr;
+          </Link>
+        </div>
 
         <h1 className="text-4xl md:text-5xl font-display italic uppercase text-white mb-2">
           Neighborhood<br />

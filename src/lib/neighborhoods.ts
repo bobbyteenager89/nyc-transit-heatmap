@@ -32,6 +32,14 @@ export const NYC_NEIGHBORHOODS: Neighborhood[] = [
   { name: "Gramercy", borough: "Manhattan", center: { lat: 40.7368, lng: -73.9845 } },
 ];
 
+export function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+export function findBySlug(slug: string): Neighborhood | undefined {
+  return NYC_NEIGHBORHOODS.find((n) => slugify(n.name) === slug);
+}
+
 export const LANDMARKS = [
   { name: "Times Square", lat: 40.7580, lng: -73.9855 },
   { name: "Union Square", lat: 40.7359, lng: -73.9911 },
