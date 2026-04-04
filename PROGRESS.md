@@ -183,7 +183,64 @@
 | `src/app/page.tsx` | Updated Explore card to "Isochrone Explorer" with new copy |
 
 ### Next Steps
-- [ ] Tune heatmap intensity/radius if glow is too strong or too faint on live site
-- [ ] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
-- [ ] Mobile responsive layout for sidebar + map
-- [ ] Shareable isochrone screenshot cards for social sharing
+- [x] Tune heatmap intensity/radius if glow is too strong or too faint on live site
+- [x] Neighborhood rankings page (top 10 neighborhoods for a given lifestyle)
+- [x] Mobile responsive layout for sidebar + map
+- [x] Shareable isochrone screenshot cards for social sharing
+
+---
+
+## 2026-04-04 — Session 6: Multi-Page Platform — Rankings, Compare, Bus, Tooltip, Mobile
+
+### Accomplished
+- Built neighborhood rankings page (`/rankings`) — 25 NYC neighborhoods scored by avg subway time to 5 landmark hubs, cyan score bars, click-to-explore
+- Built neighborhood comparison page (`/compare`) — pick 2-3 neighborhoods side-by-side with avg commute, subway lines, Citi Bike docks, bus stops, winner highlighting
+- Added MTA bus as 6th transport mode — 200 curated bus stops, walk-to-stop + wait + ride computation, orange (#f97316) icon/color
+- Removed bikeSubway combo mode — simplified to 5 clean single-mode routes (subway, bus, walk, bike, car, ferry)
+- Redesigned hover tooltip as dark glass card with colored dots per mode, fastest-mode star, edge clamping, structured TooltipData union type
+- Built mobile responsive layout — bottom sheet on <768px, collapsible panels, full-screen map
+- Built OG image route (`/api/og`) — dynamic 1200x630 cards via @vercel/og with Mapbox static map + mode chips, 24h CDN cache
+- Added dynamic OpenGraph metadata on `/explore` for social sharing
+- Tuned heatmap visuals — boosted hex fill opacity (0.55→0.65), added hex outlines, vivid color ramp
+- Rendered street grid on top of hex fill for better city grid visibility
+- Fixed home page card overflow (max-w-2xl→max-w-4xl, overflow-hidden)
+- Fixed review findings: OG input validation (address cap, modes allowlist, lat/lng clamping), rankings error handling, sidebar dedup
+- Fixed bus missing from hex-map tooltip, bus/ferry counted in cost calculations
+- Added slugify/findBySlug helpers to neighborhoods.ts
+- Ran full review suite (code, security, performance) + CEO product review + preflight
+- 9 commits, 34 files changed, +1917/-291 lines, 62 tests passing
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/app/rankings/page.tsx` | Neighborhood rankings by subway access |
+| `src/app/compare/page.tsx` | Side-by-side neighborhood comparison (2-3 hoods) |
+| `src/app/api/og/route.tsx` | Dynamic OG image generation (edge) |
+| `src/app/explore/layout.tsx` | Dynamic OpenGraph metadata for shared links |
+| `src/lib/neighborhoods.ts` | 25 neighborhoods + 5 landmarks + slug helpers |
+| `src/lib/bus.ts` | Bus data loader with caching |
+| `public/data/bus-stops.json` | ~200 curated MTA bus stops across NYC |
+| `src/components/isochrone/mobile-bottom-sheet.tsx` | Collapsible bottom sheet for mobile |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/explore/page.tsx` | Mobile layout, bus mode, URL address encoding, sidebarControls extraction |
+| `src/app/find/page.tsx` | Mobile bottom sheet, bus data loading, sidebar dedup |
+| `src/app/page.tsx` | 3-column grid, Rankings card, max-w-4xl |
+| `src/components/isochrone/isochrone-map.tsx` | Glass tooltip, hex outlines, vivid colors, street overlay on top, bus in properties |
+| `src/components/isochrone/mode-legend.tsx` | Removed BikeSubIcon, added BusIcon |
+| `src/lib/types.ts` | Removed bikeSubway, added bus to TransportMode |
+| `src/workers/grid-worker.ts` | Removed computeBikeSubwayTime, added computeBusTime with spatial grid |
+| `src/lib/cost.ts` | Bus/ferry counted as subway-equivalent trips |
+| `src/lib/isochrone.ts` | Removed bikeSubway color, added bus orange |
+| `src/components/landing/mode-card.tsx` | Added overflow-hidden |
+
+### Next Steps
+- [ ] Fix Mapbox Isochrone API 401 — walk/bike/car contours broken (check token scope)
+- [ ] Add Vercel Analytics for usage tracking
+- [ ] Pre-select from rankings → compare flow (checkboxes on ranking cards)
+- [ ] Pre-compute rankings as static JSON at build time (perf optimization)
+- [ ] Clarify compare page "Avg Commute" label (currently subway-only)
+- [ ] Add error handling to bus.ts fetch
+- [ ] Investigate street-following heatmap colors (paint road segments by travel time)

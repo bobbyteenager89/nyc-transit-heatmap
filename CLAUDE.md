@@ -1,7 +1,7 @@
 # NYC Transit Heatmap
 
 ## Tech Stack
-- Next.js 15 (App Router), TypeScript, Tailwind CSS v4
+- Next.js 16 (App Router), TypeScript, Tailwind CSS v4
 - Mapbox GL JS for map rendering
 - Web Worker for grid computation
 - MTA GTFS data (pre-parsed at build time)
@@ -14,9 +14,12 @@
 - `npm run build:subway` — rebuild subway graph from GTFS data
 
 ## Structure
-- `src/app/page.tsx` — landing page with Find/Explore choice
+- `src/app/page.tsx` — landing page with 3 cards (Explore, Find, Rankings)
+- `src/app/explore/page.tsx` — Isochrone Explorer (address → accessibility heatmap, 6 modes)
 - `src/app/find/page.tsx` — Find My Neighborhood (wizard → results with hex heatmap)
-- `src/app/explore/page.tsx` — Explore the Map (address → accessibility heatmap)
+- `src/app/rankings/page.tsx` — Neighborhood rankings (25 hoods scored by subway access)
+- `src/app/compare/page.tsx` — Side-by-side comparison (2-3 neighborhoods, shareable URL)
+- `src/app/api/og/route.tsx` — Dynamic OG image generation (edge, @vercel/og)
 - `src/components/results/hex-map.tsx` — Mapbox hex map with H3 fill layer, water mask, animated reveal
 - `src/components/results/results-sidebar.tsx` — results panel with destinations, modes, sharing
 - `src/components/wizard/wizard-shell.tsx` — 4-step wizard (Work → Gym → Social → Extras)
