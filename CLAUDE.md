@@ -9,7 +9,8 @@
 
 ## Commands
 - `npm run dev` — local dev server
-- `npm run build` — production build
+- `npm run build` — production build (runs build:rankings first)
+- `npm run build:rankings` — regenerate public/data/rankings.json from station data
 - `npm test` — run vitest tests
 - `npm run build:subway` — rebuild subway graph from GTFS data
 
@@ -36,7 +37,8 @@
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry, bus)
 - `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
-- `public/data/` — pre-built subway data (committed)
+- `scripts/build-rankings.ts` — pre-compute neighborhood rankings at build time
+- `public/data/` — pre-built subway data + rankings.json (committed)
 
 ## Heatmap Modes
 - **Isochrone NYC** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs

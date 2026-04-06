@@ -237,10 +237,46 @@
 | `src/components/landing/mode-card.tsx` | Added overflow-hidden |
 
 ### Next Steps
-- [ ] Fix Mapbox Isochrone API 401 — walk/bike/car contours broken (check token scope)
-- [ ] Add Vercel Analytics for usage tracking
-- [ ] Pre-select from rankings → compare flow (checkboxes on ranking cards)
-- [ ] Pre-compute rankings as static JSON at build time (perf optimization)
-- [ ] Clarify compare page "Avg Commute" label (currently subway-only)
-- [ ] Add error handling to bus.ts fetch
+- [x] Fix Mapbox Isochrone API 401 — walk/bike/car contours broken (check token scope)
+- [x] Add Vercel Analytics for usage tracking
+- [x] Pre-select from rankings → compare flow (checkboxes on ranking cards)
+- [x] Pre-compute rankings as static JSON at build time (perf optimization)
+- [x] Clarify compare page "Avg Commute" label (currently subway-only)
+- [x] Add error handling to bus.ts fetch
 - [ ] Investigate street-following heatmap colors (paint road segments by travel time)
+
+---
+
+## 2026-04-06 — Session 7: Analytics, Rankings Flow, Pre-Computation, Cleanup
+
+### Accomplished
+- Verified Mapbox Isochrone API 401 resolved — token scope now valid, walk/bike/car contours working
+- Added `@vercel/analytics` to root layout for usage tracking
+- Built rankings → compare flow: checkbox selection (up to 3) on ranking cards, cyan highlight, "Compare N neighborhoods" button that navigates to `/compare?n=slug1,slug2`
+- Pre-computed rankings as static JSON at build time — new `scripts/build-rankings.ts` generates `public/data/rankings.json` (4KB vs 1MB+ client fetch). Rankings page rewritten to fetch static data.
+- Fixed critical review finding: build script had divergent constants (WALK_SPEED=3.1, SUBWAY_MAX_WALK_MI=0.75 vs canonical 3.0/1.5) — Astoria was incorrectly dropped from rankings
+- Changed "Avg Commute" → "Avg Subway Commute" on compare page for accuracy
+- Added error handling to `bus.ts` `loadBusData` with graceful fallback to empty stops
+- Ran full review suite (code, security, performance) — 1 critical found and fixed
+- 62 tests passing, clean build, 1 commit, deployed to Vercel
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `scripts/build-rankings.ts` | Build-time neighborhood ranking computation |
+| `public/data/rankings.json` | Pre-computed rankings (25 neighborhoods, 4KB) |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/layout.tsx` | Added `@vercel/analytics` Analytics component |
+| `src/app/rankings/page.tsx` | Rewritten — static JSON fetch, checkbox selection, compare button |
+| `src/app/compare/page.tsx` | "Avg Commute" → "Avg Subway Commute" label |
+| `src/lib/bus.ts` | Added `res.ok` check with fallback to empty stops |
+| `package.json` | Added `@vercel/analytics`, `build:rankings` script, pre-build step |
+
+### Next Steps
+- [ ] Investigate street-following heatmap colors (paint road segments by travel time)
+- [ ] Server-render rankings page (eliminate client fetch waterfall for static data)
+- [ ] Fix Mapbox token exposure in landing page server-rendered HTML (pre-existing P1)
+- [ ] Fix find page ResultsSidebar double-mount (desktop + mobile both render)
