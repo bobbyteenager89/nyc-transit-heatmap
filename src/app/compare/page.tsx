@@ -422,10 +422,10 @@ function CompareContent() {
                     </p>
                   </div>
 
-                  {/* Avg Commute */}
+                  {/* Avg Subway Commute */}
                   <div>
                     <p className="font-body text-[10px] uppercase tracking-widest text-white/40 mb-1">
-                      Avg Commute
+                      Avg Subway Commute
                     </p>
                     <p
                       className={`font-body text-2xl tabular-nums ${

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx tsx scripts/build-rankings.ts && next build",
+    "build:rankings": "npx tsx scripts/build-rankings.ts",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^5.1.2",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/og": "^0.11.1",
     "h3-js": "^4.4.0",
     "mapbox-gl": "^3.20.0",
