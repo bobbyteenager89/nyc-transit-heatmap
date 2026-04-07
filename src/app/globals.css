@@ -36,8 +36,8 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Landing page animations */
-@keyframes fade-up {
+/* Landing card entrance */
+@keyframes card-enter {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -48,41 +48,36 @@ html {
   }
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.card-enter {
+  animation: card-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes map-breathe {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.35; }
+/* Isochrone ring pulse (Explore card) */
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50%       { transform: scale(1.08); opacity: 1; }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.6s ease-out both;
+/* Hex shimmer (Find card) */
+@keyframes hex-shimmer {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 0.9; }
+  100% { opacity: 0.3; }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out both;
+/* Bar grow (Rankings card) */
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
 }
 
-.animate-map-breathe {
-  animation: map-breathe 8s ease-in-out infinite;
-}
-
-/* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .animate-fade-in {
-    animation: none;
-    opacity: 1;
-  }
-  .animate-map-breathe {
-    animation: none;
-    opacity: 0.25;
+  .card-enter,
+  .card-enter * {
+    animation: none !important;
+    transition: none !important;
   }
   .animate-ping {
     animation: none;
   }
 }
-

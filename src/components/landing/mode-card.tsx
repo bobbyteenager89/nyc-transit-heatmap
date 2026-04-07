@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 interface ModeCardProps {
   href: string;
@@ -6,46 +7,79 @@ interface ModeCardProps {
   description: string;
   cta: string;
   primary?: boolean;
-  icon?: React.ReactNode;
-  delay?: number;
+  preview?: ReactNode;
+  /** Tailwind arbitrary animation-delay class e.g. "[animation-delay:100ms]" */
+  enterDelay?: string;
 }
 
-export function ModeCard({ href, title, description, cta, primary, icon, delay = 0 }: ModeCardProps) {
+export function ModeCard({
+  href,
+  title,
+  description,
+  cta,
+  primary,
+  preview,
+  enterDelay = "",
+}: ModeCardProps) {
   return (
     <Link
       href={href}
-      className={`relative border-2 p-8 flex flex-col gap-4 transition-all duration-300 group overflow-hidden animate-fade-up ${
+      className={[
+        "card-enter",
+        enterDelay,
+        "relative border-2 p-8 flex flex-col gap-4 overflow-hidden",
+        "transition-all duration-300 ease-out group",
+        "hover:-translate-y-1",
         primary
-          ? "border-white/30 bg-white/5 hover:bg-white/10 hover:border-accent/50 hover:shadow-[0_0_30px_rgba(34,211,238,0.1)]"
-          : "border-white/15 bg-white/[0.02] hover:bg-white/5 hover:border-white/30 hover:shadow-[0_0_20px_rgba(255,255,255,0.03)]"
-      }`}
-      style={{ animationDelay: `${delay}ms` }}
+          ? "border-white/30 bg-white/5 hover:bg-white/10 hover:border-accent hover:shadow-[0_0_32px_rgba(34,211,238,0.15)]"
+          : "border-white/15 bg-white/[0.02] hover:bg-white/5 hover:border-white/25 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      {/* Hover glow accent line at top */}
-      <div className={`absolute inset-x-0 top-0 h-[2px] transition-opacity duration-300 ${
-        primary ? "bg-accent opacity-0 group-hover:opacity-100" : "bg-white/30 opacity-0 group-hover:opacity-50"
-      }`} />
-
-      {/* Icon */}
-      {icon && (
-        <div className="text-white/20 group-hover:text-accent/60 transition-colors duration-300 group-hover:scale-110 origin-left transform">
-          {icon}
+      {/* Animated preview area */}
+      {preview && (
+        <div className="w-full h-24 flex items-center justify-center mb-2 overflow-hidden">
+          {preview}
         </div>
       )}
 
       <h2 className="text-2xl leading-tight text-white font-display italic uppercase">
         {title}
       </h2>
-      <p className="font-body text-sm leading-relaxed text-white/50 group-hover:text-white/70 transition-colors duration-300">
+
+      <p className="font-body text-sm leading-relaxed text-white/50 transition-colors duration-300 group-hover:text-white/70">
         {description}
       </p>
-      <span className={`font-display italic uppercase text-lg mt-auto transition-all duration-300 ${
-        primary
-          ? "text-white/70 group-hover:text-accent group-hover:translate-x-1"
-          : "text-white/70 group-hover:text-white group-hover:translate-x-1"
-      }`}>
-        {cta} &rarr;
+
+      {/* CTA with animated arrow */}
+      <span
+        className={[
+          "font-display italic uppercase text-lg mt-auto",
+          "flex items-center gap-2",
+          "transition-colors duration-300",
+          primary
+            ? "text-accent/70 group-hover:text-accent"
+            : "text-white/70 group-hover:text-white",
+        ].join(" ")}
+      >
+        {cta}
+        <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+          &rarr;
+        </span>
       </span>
+
+      {/* Bottom edge accent line on hover */}
+      <span
+        aria-hidden
+        className={[
+          "pointer-events-none absolute bottom-0 left-0 right-0 h-px",
+          "opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+          primary
+            ? "bg-gradient-to-r from-transparent via-accent to-transparent"
+            : "bg-gradient-to-r from-transparent via-white/30 to-transparent",
+        ].join(" ")}
+      />
     </Link>
   );
 }
