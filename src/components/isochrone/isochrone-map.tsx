@@ -63,6 +63,7 @@ function cellsToHexGeoJSON(
           walk: cell.times.walk ?? -1,
           bike: cell.times.bike ?? -1,
           car: cell.times.car ?? -1,
+          "bike+subway": cell.times["bike+subway"] ?? -1,
         },
       });
     }
@@ -99,6 +100,7 @@ function cellsToHexGeoJSON(
         walk: cell.times.walk ?? -1,
         bike: cell.times.bike ?? -1,
         car: cell.times.car ?? -1,
+        "bike+subway": cell.times["bike+subway"] ?? -1,
       },
     });
   }
@@ -442,6 +444,7 @@ export function IsochroneMap({
         const modeLabels: Record<string, string> = {
           walk: "Walk", bike: "Bike", subway: "Subway",
           bus: "Bus", car: "Car", ferry: "Ferry",
+          "bike+subway": "Bike+Subway",
         };
         const modeRows = activeModesRef.current
           .map((mode) => {
@@ -513,23 +516,30 @@ export function IsochroneMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update origin marker
+  // Update origin marker — shows "A" label when friend is present, plain dot otherwise
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
     originMarkerRef.current?.remove();
     if (center) {
+      const showLabel = !!friendOrigin;
       const el = document.createElement("div");
-      el.style.cssText =
-        "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4)";
+      if (showLabel) {
+        el.style.cssText =
+          "width:22px;height:22px;background:#ffffff;border:2px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0a0a12;font-family:Arial Black,sans-serif";
+        el.textContent = "A";
+      } else {
+        el.style.cssText =
+          "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4)";
+      }
       originMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([center.lng, center.lat])
         .addTo(m);
       m.flyTo({ center: [center.lng, center.lat], zoom: 12, duration: 800 });
     }
-  }, [center, mapReady]);
+  }, [center, mapReady, friendOrigin]);
 
-  // Friend origin marker (amber)
+  // Friend origin marker (amber) — always shows "B" label
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
@@ -540,7 +550,8 @@ export function IsochroneMap({
     if (friendOrigin) {
       const el = document.createElement("div");
       el.style.cssText =
-        "width:14px;height:14px;background:#f59e0b;border:3px solid #f59e0b;border-radius:50%;box-shadow:0 0 20px rgba(245,158,11,0.9),0 0 40px rgba(245,158,11,0.4)";
+        "width:22px;height:22px;background:#f59e0b;border:2px solid #f59e0b;border-radius:50%;box-shadow:0 0 20px rgba(245,158,11,0.9),0 0 40px rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0a0a12;font-family:Arial Black,sans-serif";
+      el.textContent = "B";
       friendMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([friendOrigin.lng, friendOrigin.lat])
         .addTo(m);
