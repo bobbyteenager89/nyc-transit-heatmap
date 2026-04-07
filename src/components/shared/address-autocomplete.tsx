@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef, useEffect, startTransition } from "react";
 import type { LatLng } from "@/lib/types";
 
 interface AddressAutocompleteProps {
@@ -76,9 +76,13 @@ export function AddressAutocomplete({
       setQuery(suggestion.place_name);
       setShowDropdown(false);
       setSuggestions([]);
-      onSelect(suggestion.place_name, {
-        lat: suggestion.center[1],
-        lng: suggestion.center[0],
+      // Defer heavy parent work (isochrone compute) so the click handler
+      // returns fast and the dropdown-close paints immediately. Keeps INP low.
+      startTransition(() => {
+        onSelect(suggestion.place_name, {
+          lat: suggestion.center[1],
+          lng: suggestion.center[0],
+        });
       });
     },
     [onSelect]
