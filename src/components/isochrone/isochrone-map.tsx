@@ -19,6 +19,10 @@ interface IsochroneMapProps {
   friendOrigin?: LatLng | null;
   friendCells?: HexCell[];
   fairnessRange?: number; // max acceptable time diff in minutes (default 5)
+  /** Rendering style for subway reach:
+   *  - 'reach' (default): color by total travel time (the big blob)
+   *  - 'stops': color by walk time to nearest subway station (green islands) */
+  subwayStyle?: "reach" | "stops";
 }
 
 /**
@@ -29,9 +33,39 @@ interface IsochroneMapProps {
  */
 function cellsToHexGeoJSON(
   cells: HexCell[],
-  activeModes: TransportMode[]
+  activeModes: TransportMode[],
+  subwayStyle: "reach" | "stops" = "reach"
 ): GeoJSON.FeatureCollection {
   if (activeModes.length === 0) return { type: "FeatureCollection", features: [] };
+
+  // In "stops" view we visualize only the subway network's island structure:
+  // every cell reachable by subway is colored by its walk time to the nearest
+  // station (bright near stations, dark far from them). Other modes are ignored.
+  if (subwayStyle === "stops") {
+    const features: GeoJSON.Feature[] = [];
+    for (const cell of cells) {
+      if (cell.times.subway === null || cell.times.subway === undefined) continue;
+      if (cell.subwayWalkMin === undefined) continue;
+      // Use raw walk minutes as `time` so the maxMinutes slider filter still
+      // makes semantic sense ("hide cells more than N walk-min from a station").
+      // The color ramp's 0-15 range covers green→yellow naturally.
+      const walk = cell.subwayWalkMin;
+      features.push({
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [[...cell.boundary, cell.boundary[0]]],
+        },
+        properties: {
+          time: Math.round(walk * 10) / 10,
+          fastest_mode: "subway" as TransportMode,
+          subway: cell.times.subway,
+          bus: -1, ferry: -1, walk: -1, bike: -1, car: -1,
+        },
+      });
+    }
+    return { type: "FeatureCollection", features };
+  }
 
   const features: GeoJSON.Feature[] = [];
   for (const cell of cells) {
@@ -155,6 +189,7 @@ export function IsochroneMap({
   friendOrigin,
   friendCells = [],
   fairnessRange = 5,
+  subwayStyle = "reach",
 }: IsochroneMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -565,7 +600,7 @@ export function IsochroneMap({
     const m = mapRef.current;
     if (!m || !mapReady) return;
 
-    const geojson = cellsToHexGeoJSON(cells, activeModes);
+    const geojson = cellsToHexGeoJSON(cells, activeModes, subwayStyle);
     const source = m.getSource("iso-hexes") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
@@ -593,7 +628,7 @@ export function IsochroneMap({
       }
       animationRef.current = requestAnimationFrame(animate);
     }
-  }, [cells, activeModes, mapReady]);
+  }, [cells, activeModes, mapReady, subwayStyle]);
 
   // Filter hex visibility by maxMinutes (GL-side, no JS iteration — eliminates INP on slider tick)
   useEffect(() => {
