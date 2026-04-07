@@ -6,7 +6,7 @@
  *   Bytes 4-7  : lng  × 10_000 as Int32 (range −180 to 180 → −1_800_000 to 1_800_000)
  *   Byte  8    : t (minutes, 1–60) as Uint8
  *   Byte  9    : modes bitmask (bit per mode, ordered by VALID_MODES)
- *   Bytes 10+  : UTF-8 address (0–40 bytes), omitted when undefined
+ *   Bytes 10+  : UTF-8 address (0–60 bytes), omitted when undefined
  *
  * This keeps typical slugs well under 60 URL-safe base64url characters.
  */
@@ -29,11 +29,11 @@ const clampLng = (n: number) => Math.max(-180, Math.min(180, n));
 const clampT = (n: number) => Math.max(1, Math.min(60, Math.round(n)));
 const sanitizeModes = (m: string[]) =>
   m.filter((x): x is Mode => (VALID_MODES as readonly string[]).includes(x));
-/** Address is capped at 40 bytes so the total slug stays compact. */
+/** Address is capped at 60 bytes so the total slug stays compact. */
 const sanitizeAddress = (a?: string): string | undefined => {
   if (!a) return undefined;
-  // Truncate to 40 characters (all ASCII for NYC addresses; safe for UTF-8).
-  return a.slice(0, 40) || undefined;
+  // Truncate to 60 characters (all ASCII for NYC addresses; safe for UTF-8).
+  return a.slice(0, 60) || undefined;
 };
 
 // --- base64url helpers -------------------------------------------------------
