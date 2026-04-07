@@ -278,5 +278,25 @@
 ### Next Steps
 - [ ] Investigate street-following heatmap colors (paint road segments by travel time)
 - [ ] Server-render rankings page (eliminate client fetch waterfall for static data)
-- [ ] Fix Mapbox token exposure in landing page server-rendered HTML (pre-existing P1)
+- [x] Fix Mapbox token exposure in landing page server-rendered HTML — done S8
+- [ ] Fix find page ResultsSidebar double-mount (desktop + mobile both render)
+
+---
+
+## 2026-04-07 — Session 8: Fix P1 Mapbox token exposure
+
+### Accomplished
+- Replaced interpolated `NEXT_PUBLIC_MAPBOX_TOKEN` in landing page SSR HTML with a static `/public/landing-map.png` baked from the Mapbox Static API (1280×820@2x, 1.7MB)
+- Verified on production: token string absent from HTML (`html.includes('access_token') === false`), background resolves to `/landing-map.png`
+- Build clean, 62 tests passing, zero console errors on live deploy
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/page.tsx` | Removed Mapbox Static API URL + token interpolation; now references `/landing-map.png` |
+| `public/landing-map.png` | New — pre-rendered dark Mapbox static map for landing background |
+
+### Next Steps
+- [ ] Investigate street-following heatmap colors (paint road segments by travel time)
+- [ ] Server-render rankings page (eliminate client fetch waterfall for static data)
 - [ ] Fix find page ResultsSidebar double-mount (desktop + mobile both render)
