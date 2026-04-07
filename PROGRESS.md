@@ -96,9 +96,51 @@
 - **Custom domain** (`isonyc.app` / similar) — 1-way door, separate decision
 
 ### Next Steps
+- [x] Fix address-autocomplete INP — done S10
+- [x] Add mode render filter (Fastest + per-mode views) — done S10
+- [x] Fix bike and subway time compute bugs — done S10
 - [ ] Phase 2: Landing polish (animated card previews, hover reveals)
 - [ ] Phase 3: Explore delight (reach-race play button, line-color hover, trivia)
 - [ ] "You vs. Me" meetup mode (intersection of two isochrones, consumes `?compare=[slug]` param)
+- [ ] Bike-to-station combo mode (feature gap — would dramatically bloom subway reach)
+- [ ] Bus transfers (needs a bus network graph)
+- [ ] Investigate street-following heatmap colors (Station Bloom option still interesting as a viz)
+- [ ] Server-render rankings page
+- [ ] Fix find page ResultsSidebar double-mount
+
+---
+
+## 2026-04-07 — Session 10: INP fix + View-as selector + time compute bugs
+
+### Accomplished
+- **INP fix (address autocomplete):** clicking a suggestion was blocking the main thread for ~300ms because the parent's `onSelect` triggered Mapbox layer updates synchronously. First tried `startTransition` (insufficient — Mapbox work isn't React-scheduled), then shipped double `requestAnimationFrame` to fully yield the main thread between the click and the heavy work. Dropdown now closes instantly, compute runs on the next frame.
+- **CEO review for visualization:** Andrew asked why the subway map looks like a blob instead of station-centered islands. Initially shipped a fake "Station Islands" toggle that colored hexes by walk-distance-to-nearest-station — honest reviewer self-catch: this was inventing a visualization rather than surfacing real data. Reverted.
+- **Real root cause diagnosed:** `cellsToHexGeoJSON` colored every cell by the *fastest mode across active modes*. With bike active, bike won nearly every cell within a few miles of origin, smearing subway's lumpy reach into a smooth halo. The island structure was always in the data, just hidden by the fastest-of-all blend.
+- **Real fix — "View as" mode selector:** new `ViewMode = 'fastest' | TransportMode` in `isochrone-map.tsx`. When set to a specific mode, `cellsToHexGeoJSON` colors cells by that mode's time only and hides cells unreachable by that mode. Instant switching (render-only filter, no recompute). Renders a chip row in the explore sidebar: `[Fastest] [Subway] [Bus] [Walk] [Bike] [Ferry]`.
+- **Time compute bugs found and fixed:**
+  - **Bike had no walk legs.** `bikeMin(from, to)` was door-to-door, pretending the rider teleported to the nearest dock. Rewrote as `computeBikeTime`: `walkToDock + undock + bikeRide(dock→dock) + dock + walkFromDock`. Matches the subway/bus/ferry combo-mode shape. Bike no longer wins every close-in cell.
+  - **Subway had no boarding wait.** GTFS Floyd-Warshall matrix is pure ride time — added `SUBWAY_WAIT_MIN = 5` constant and included it in both `grid-worker.ts` AND `scripts/build-rankings.ts` (kept in sync to avoid the constant-divergence trap from S7).
+- 71 tests passing throughout, 5 commits, deployed to main incrementally
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/shared/address-autocomplete.tsx` | Double rAF yield before firing `onSelect` to unblock INP |
+| `src/components/isochrone/isochrone-map.tsx` | New `ViewMode` type + prop; `cellsToHexGeoJSON` branches on single-mode view |
+| `src/app/explore/page.tsx` | `viewMode` state + "View as" chip selector UI; wired to IsochroneMap |
+| `src/workers/grid-worker.ts` | New `computeBikeTime` with walk legs; `SUBWAY_WAIT_MIN` added to `computeSubwayTime` |
+| `src/lib/constants.ts` | New `SUBWAY_WAIT_MIN = 5` constant |
+| `scripts/build-rankings.ts` | Mirror `SUBWAY_WAIT_MIN` in ranking compute to prevent divergence |
+
+### Reverted
+- Temporary "Station Islands" fake-visualization toggle (commit 2a575b6) and its cell annotation helper. The honest answer was the bug fix above, not a new visualization.
+
+### Next Steps
+- [ ] Phase 2: Landing polish (animated card previews, hover reveals)
+- [ ] Phase 3: Explore delight (reach-race play button, line-color hover, trivia)
+- [ ] "You vs. Me" meetup mode (intersection of two isochrones)
+- [ ] Bike-to-station combo mode (feature gap — would bloom subway reach dramatically)
+- [ ] Bus transfers (needs a bus network graph)
 - [ ] Investigate street-following heatmap colors
 - [ ] Server-render rankings page
 - [ ] Fix find page ResultsSidebar double-mount
