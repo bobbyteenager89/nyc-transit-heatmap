@@ -40,37 +40,23 @@ import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
-// Average walking speed used for subway-station proximity coloring.
-// Matches the SUBWAY walk-to-station speed used in the worker (3.0 mph).
-const WALK_MPH = 3.0;
-const MILES_PER_DEG_LAT = 69;
-
-/** Populate `cell.subwayWalkMin` in place with walking minutes to the nearest
- *  subway station. Uses an equirectangular approximation — fine for NYC scale. */
-function annotateSubwayWalkMin(cells: HexCell[], stationGraph: StationGraph) {
-  const stations = Object.values(stationGraph.stations);
-  if (stations.length === 0) return;
-  for (const cell of cells) {
-    if (cell.times.subway === null || cell.times.subway === undefined) continue;
-    const { lat, lng } = cell.center;
-    const cosLat = Math.cos((lat * Math.PI) / 180);
-    let minDistMi = Infinity;
-    for (const s of stations) {
-      const dLat = (s.lat - lat) * MILES_PER_DEG_LAT;
-      const dLng = (s.lng - lng) * MILES_PER_DEG_LAT * cosLat;
-      const d = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (d < minDistMi) minDistMi = d;
-    }
-    cell.subwayWalkMin = (minDistMi / WALK_MPH) * 60;
-  }
-}
+type ViewMode = "fastest" | TransportMode;
+const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+  fastest: "Fastest",
+  subway: "Subway",
+  bus: "Bus",
+  walk: "Walk",
+  bike: "Bike",
+  car: "Car",
+  ferry: "Ferry",
+};
 
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "bus", "walk", "bike", "ferry"]);
   const [maxMinutes, setMaxMinutes] = useState(30);
-  const [subwayStyle, setSubwayStyle] = useState<"reach" | "stops">("reach");
+  const [viewMode, setViewMode] = useState<ViewMode>("fastest");
   const [cells, setCells] = useState<HexCell[]>([]);
   const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
   const [computing, setComputing] = useState(false);
@@ -190,10 +176,6 @@ export default function ExplorePage() {
           // Fetch API isochrones for walk/bike/car — max 60 min to cache all bands
           fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
         ]);
-
-        // Annotate cells with walk time to nearest subway station so the
-        // "subway stops" view can color by station proximity (island effect).
-        annotateSubwayWalkMin(hexResult, stationGraph);
 
         setCells(hexResult);
         setApiContours(contours);
@@ -453,35 +435,28 @@ export default function ExplorePage() {
         <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
       </PanelSection>
 
-      {/* Subway visualization style toggle */}
-      {activeModes.includes("subway") && cells.length > 0 && (
-        <PanelSection title="Subway View">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSubwayStyle("reach")}
-              className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                subwayStyle === "reach"
-                  ? "bg-accent/20 border-accent text-accent"
-                  : "border-white/20 text-white/60 hover:bg-white/10"
-              }`}
-            >
-              Total reach
-            </button>
-            <button
-              onClick={() => setSubwayStyle("stops")}
-              className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                subwayStyle === "stops"
-                  ? "bg-accent/20 border-accent text-accent"
-                  : "border-white/20 text-white/60 hover:bg-white/10"
-              }`}
-            >
-              Station islands
-            </button>
+      {/* View as: render filter (separate from compute toggles above) */}
+      {cells.length > 0 && (
+        <PanelSection title="View as">
+          <div className="flex flex-wrap gap-1.5">
+            {(["fastest", ...activeModes] as ViewMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                className={`px-2.5 py-1.5 text-[11px] rounded border transition-colors ${
+                  viewMode === m
+                    ? "bg-accent/20 border-accent text-accent"
+                    : "border-white/20 text-white/60 hover:bg-white/10"
+                }`}
+              >
+                {VIEW_MODE_LABELS[m]}
+              </button>
+            ))}
           </div>
           <p className="text-[10px] text-white/40 mt-2 leading-tight">
-            {subwayStyle === "reach"
-              ? "Color = total travel time (the blob)"
-              : "Color = walk time to nearest station (green near stops)"}
+            {viewMode === "fastest"
+              ? "Color = fastest of all active modes"
+              : `Color = ${VIEW_MODE_LABELS[viewMode]} only — cells unreachable by ${VIEW_MODE_LABELS[viewMode]} are hidden`}
           </p>
         </PanelSection>
       )}
@@ -574,7 +549,7 @@ export default function ExplorePage() {
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}
           friendOrigin={friendOrigin}
-          subwayStyle={subwayStyle}
+          viewMode={viewMode}
         />
       </main>
 

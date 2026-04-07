@@ -38,9 +38,6 @@ export interface HexCell {
   compositeScore: number; // total monthly minutes (0 = no destinations)
   /** Per-destination breakdown: destId → best travel time in minutes */
   destBreakdown: Record<string, number>;
-  /** Walk time in minutes from this cell to the nearest subway station.
-   *  Populated client-side after compute when the "subway stops" view is available. */
-  subwayWalkMin?: number;
 }
 
 export interface HexGridResult {

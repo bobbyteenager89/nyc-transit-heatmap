@@ -9,6 +9,12 @@ import { HEX_MODES } from "@/lib/mapbox-isochrone";
 import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
 
+/** What the color scale represents on the map.
+ *  - 'fastest': color by the fastest time across all active modes (the blend)
+ *  - a specific TransportMode: color by ONLY that mode's travel time, hiding
+ *    cells unreachable by that mode. Reveals each mode's real shape. */
+export type ViewMode = "fastest" | TransportMode;
+
 interface IsochroneMapProps {
   center: LatLng;
   cells: HexCell[];
@@ -19,10 +25,7 @@ interface IsochroneMapProps {
   friendOrigin?: LatLng | null;
   friendCells?: HexCell[];
   fairnessRange?: number; // max acceptable time diff in minutes (default 5)
-  /** Rendering style for subway reach:
-   *  - 'reach' (default): color by total travel time (the big blob)
-   *  - 'stops': color by walk time to nearest subway station (green islands) */
-  subwayStyle?: "reach" | "stops";
+  viewMode?: ViewMode;
 }
 
 /**
@@ -34,22 +37,17 @@ interface IsochroneMapProps {
 function cellsToHexGeoJSON(
   cells: HexCell[],
   activeModes: TransportMode[],
-  subwayStyle: "reach" | "stops" = "reach"
+  viewMode: ViewMode = "fastest"
 ): GeoJSON.FeatureCollection {
-  if (activeModes.length === 0) return { type: "FeatureCollection", features: [] };
-
-  // In "stops" view we visualize only the subway network's island structure:
-  // every cell reachable by subway is colored by its walk time to the nearest
-  // station (bright near stations, dark far from them). Other modes are ignored.
-  if (subwayStyle === "stops") {
+  // In single-mode view, we color each cell by only that mode's time and hide
+  // cells unreachable by that mode. This reveals the real shape of each mode
+  // (e.g. the lumpy subway island structure) that gets smeared out when bike
+  // or walk "win" under the fastest-of-all-modes blend.
+  if (viewMode !== "fastest") {
     const features: GeoJSON.Feature[] = [];
     for (const cell of cells) {
-      if (cell.times.subway === null || cell.times.subway === undefined) continue;
-      if (cell.subwayWalkMin === undefined) continue;
-      // Use raw walk minutes as `time` so the maxMinutes slider filter still
-      // makes semantic sense ("hide cells more than N walk-min from a station").
-      // The color ramp's 0-15 range covers green→yellow naturally.
-      const walk = cell.subwayWalkMin;
+      const t = cell.times[viewMode];
+      if (t === null || t === undefined) continue;
       features.push({
         type: "Feature",
         geometry: {
@@ -57,15 +55,21 @@ function cellsToHexGeoJSON(
           coordinates: [[...cell.boundary, cell.boundary[0]]],
         },
         properties: {
-          time: Math.round(walk * 10) / 10,
-          fastest_mode: "subway" as TransportMode,
-          subway: cell.times.subway,
-          bus: -1, ferry: -1, walk: -1, bike: -1, car: -1,
+          time: Math.round(t * 10) / 10,
+          fastest_mode: viewMode,
+          subway: cell.times.subway ?? -1,
+          bus: cell.times.bus ?? -1,
+          ferry: cell.times.ferry ?? -1,
+          walk: cell.times.walk ?? -1,
+          bike: cell.times.bike ?? -1,
+          car: cell.times.car ?? -1,
         },
       });
     }
     return { type: "FeatureCollection", features };
   }
+
+  if (activeModes.length === 0) return { type: "FeatureCollection", features: [] };
 
   const features: GeoJSON.Feature[] = [];
   for (const cell of cells) {
@@ -189,7 +193,7 @@ export function IsochroneMap({
   friendOrigin,
   friendCells = [],
   fairnessRange = 5,
-  subwayStyle = "reach",
+  viewMode = "fastest",
 }: IsochroneMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -600,7 +604,7 @@ export function IsochroneMap({
     const m = mapRef.current;
     if (!m || !mapReady) return;
 
-    const geojson = cellsToHexGeoJSON(cells, activeModes, subwayStyle);
+    const geojson = cellsToHexGeoJSON(cells, activeModes, viewMode);
     const source = m.getSource("iso-hexes") as mapboxgl.GeoJSONSource | undefined;
     if (source) {
       source.setData(geojson);
@@ -628,7 +632,7 @@ export function IsochroneMap({
       }
       animationRef.current = requestAnimationFrame(animate);
     }
-  }, [cells, activeModes, mapReady, subwayStyle]);
+  }, [cells, activeModes, mapReady, viewMode]);
 
   // Filter hex visibility by maxMinutes (GL-side, no JS iteration — eliminates INP on slider tick)
   useEffect(() => {
