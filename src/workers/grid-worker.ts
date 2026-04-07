@@ -1,5 +1,5 @@
 import type { LatLng, TransportMode, CitiBikeStation, Destination, StationGraph, StationMatrix } from "../lib/types";
-import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI, BUS_SPEED_MPH, BUS_MAX_WALK_MI, BUS_WAIT_MIN } from "../lib/constants";
+import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, SUBWAY_WAIT_MIN, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI, BUS_SPEED_MPH, BUS_MAX_WALK_MI, BUS_WAIT_MIN } from "../lib/constants";
 
 // Ferry types (inlined — can't import from lib in worker)
 interface FerryTerminalData {
@@ -34,8 +34,25 @@ function walkMin(from: LatLng, to: LatLng): number {
   return (manhattanDist(from, to) / WALK_SPEED) * 60;
 }
 
-function bikeMin(from: LatLng, to: LatLng): number {
-  return (manhattanDist(from, to) / BIKE_SPEED) * 60 + BIKE_DOCK_TIME_MIN * 2;
+function bikeRideMin(from: LatLng, to: LatLng): number {
+  return (manhattanDist(from, to) / BIKE_SPEED) * 60;
+}
+
+/** Realistic Citi Bike commute: walk to nearest dock, undock, ride dock→dock,
+ *  dock, walk to destination. Returns null if either end has no dock in range. */
+function computeBikeTime(
+  from: LatLng,
+  to: LatLng,
+  dockGrid: SpatialGrid<CitiBikeStation>
+): number | null {
+  const fromDock = findNearestDockWithDist(from, dockGrid, BIKE_DOCK_RANGE_MI);
+  if (!fromDock) return null;
+  const toDock = findNearestDockWithDist(to, dockGrid, BIKE_DOCK_RANGE_MI);
+  if (!toDock) return null;
+  const walkToDock = (fromDock.dist / WALK_SPEED) * 60;
+  const walkFromDock = (toDock.dist / WALK_SPEED) * 60;
+  const ride = bikeRideMin(fromDock.station, toDock.station);
+  return Math.round((walkToDock + BIKE_DOCK_TIME_MIN + ride + BIKE_DOCK_TIME_MIN + walkFromDock) * 10) / 10;
 }
 
 function driveMin(from: LatLng, to: LatLng): number {
@@ -113,13 +130,17 @@ function findNearestStationsIndexed(
   return results.slice(0, count);
 }
 
-function findNearestDockIndexed(point: LatLng, grid: SpatialGrid<CitiBikeStation>, maxDist: number): CitiBikeStation | null {
-  let best: CitiBikeStation | null = null;
+function findNearestDockWithDist(
+  point: LatLng,
+  grid: SpatialGrid<CitiBikeStation>,
+  maxDist: number
+): { station: CitiBikeStation; dist: number } | null {
+  let bestStation: CitiBikeStation | null = null;
   let bestDist = maxDist;
   for (const { item, dist } of searchGrid(point, grid, maxDist)) {
-    if (dist < bestDist) { bestDist = dist; best = item; }
+    if (dist < bestDist) { bestDist = dist; bestStation = item; }
   }
-  return best;
+  return bestStation ? { station: bestStation, dist: bestDist } : null;
 }
 
 function findNearestTerminalsIndexed(
@@ -162,7 +183,8 @@ function computeSubwayTime(
       const stationTime = cachedMatrixLookup(matrix, fi, ti);
       if (stationTime >= 999) continue;
       const walkFromStation = (t.dist / WALK_SPEED) * 60;
-      const total = walkToStation + stationTime + walkFromStation;
+      // Add average boarding wait — the GTFS matrix is pure ride time.
+      const total = walkToStation + SUBWAY_WAIT_MIN + stationTime + walkFromStation;
       if (total < best) best = total;
     }
   }
@@ -245,9 +267,7 @@ function computeTimesForLocation(
     bike: null, subway: null, bus: null, ferry: null,
   };
   if (modes.includes("bike")) {
-    const hasDockOrigin = findNearestDockIndexed(point, dockGrid, BIKE_DOCK_RANGE_MI);
-    const hasDockDest = findNearestDockIndexed(destLoc, dockGrid, BIKE_DOCK_RANGE_MI);
-    if (hasDockOrigin && hasDockDest) times.bike = bikeMin(point, destLoc);
+    times.bike = computeBikeTime(point, destLoc, dockGrid);
   }
   if (modes.includes("subway")) {
     times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);

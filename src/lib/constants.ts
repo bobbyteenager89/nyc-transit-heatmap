@@ -17,6 +17,7 @@ export const BUS_WAIT_MIN = 7; // average wait time
 export const BIKE_DOCK_RANGE_MI = 0.25; // 5-min walk
 export const SUBWAY_MAX_WALK_MI = 1.5;
 export const BIKE_DOCK_TIME_MIN = 2; // dock/undock time
+export const SUBWAY_WAIT_MIN = 5; // average wait for next train (off-peak realistic default)
 
 // Manhattan boundary (approx 96th St)
 export const MANHATTAN_BOUNDARY_LAT = 40.7831;

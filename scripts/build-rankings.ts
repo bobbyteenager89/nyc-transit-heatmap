@@ -18,6 +18,7 @@ interface StationMatrix {
 // Must match src/lib/constants.ts
 const WALK_SPEED = 3; // mph
 const SUBWAY_MAX_WALK_MI = 1.5;
+const SUBWAY_WAIT_MIN = 5;
 
 // Must match src/lib/neighborhoods.ts
 const NYC_NEIGHBORHOODS = [
@@ -90,7 +91,7 @@ function computeSubwayTime(
       if (stationTime >= 999) continue;
       const walkO = (o.dist / WALK_SPEED) * 60;
       const walkD = (d.dist / WALK_SPEED) * 60;
-      const total = walkO + stationTime + walkD;
+      const total = walkO + SUBWAY_WAIT_MIN + stationTime + walkD;
       if (total < best) best = total;
     }
   }
