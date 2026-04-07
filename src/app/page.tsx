@@ -6,7 +6,7 @@ export default function LandingPage() {
       <div
         className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `url(https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-73.97,40.75,11,0/1400x900@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN})`,
+          backgroundImage: `url(/landing-map.png)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
