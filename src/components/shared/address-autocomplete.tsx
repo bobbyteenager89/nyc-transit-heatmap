@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect, startTransition } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import type { LatLng } from "@/lib/types";
 
 interface AddressAutocompleteProps {
@@ -76,12 +76,16 @@ export function AddressAutocomplete({
       setQuery(suggestion.place_name);
       setShowDropdown(false);
       setSuggestions([]);
-      // Defer heavy parent work (isochrone compute) so the click handler
-      // returns fast and the dropdown-close paints immediately. Keeps INP low.
-      startTransition(() => {
-        onSelect(suggestion.place_name, {
-          lat: suggestion.center[1],
-          lng: suggestion.center[0],
+      // Yield the main thread so the dropdown close paints BEFORE the heavy
+      // parent work (Mapbox layer updates, isochrone fetch) runs. Double rAF
+      // guarantees the browser has committed a frame before onSelect fires.
+      // Fixes INP: click → ~300ms blocking.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onSelect(suggestion.place_name, {
+            lat: suggestion.center[1],
+            lng: suggestion.center[0],
+          });
         });
       });
     },
