@@ -5,8 +5,7 @@ import { ModeToggles } from "@/components/setup/mode-toggles";
 import { MonthlyFooter } from "./monthly-footer";
 import { BestNeighborhood } from "./best-neighborhood";
 import { SurpriseInsight } from "./surprise-insight";
-import { encodeShareSlug } from "@/lib/share-slug";
-import { ShareSheet } from "@/components/share/share-sheet";
+import { ShareButton } from "./share-button";
 import type { Destination, TransportMode, HexCell } from "@/lib/types";
 
 interface ResultsSidebarProps {
@@ -21,6 +20,7 @@ interface ResultsSidebarProps {
   bestCell: HexCell | null;
   bestAddress: string | null;
   totalHours: number;
+  shareUrl: string;
 }
 
 export function ResultsSidebar({
@@ -35,6 +35,7 @@ export function ResultsSidebar({
   bestCell,
   bestAddress,
   totalHours,
+  shareUrl,
 }: ResultsSidebarProps) {
   return (
     <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
@@ -122,27 +123,9 @@ export function ResultsSidebar({
       </PanelSection>
 
       {/* Share */}
-      {bestCell && (
-        <PanelSection>
-          {(() => {
-            const lat = bestCell.center.lat;
-            const lng = bestCell.center.lng;
-            const t = Math.min(60, Math.max(1, Math.round(totalHours * 60)));
-            const m = modes as string[];
-            const address = bestAddress ?? undefined;
-            const slug = encodeShareSlug({ lat, lng, t, m, address });
-            const url = `/p/${slug}`;
-            const label = address ?? "this spot";
-            return (
-              <ShareSheet
-                url={url}
-                title={`${t}-minute reach from ${label}`}
-                text={`See how far you can go in ${t} minutes by ${m.join(", ")} from ${label}.`}
-              />
-            );
-          })()}
-        </PanelSection>
-      )}
+      <PanelSection>
+        <ShareButton url={shareUrl} />
+      </PanelSection>
 
       {/* Monthly footer */}
       <MonthlyFooter

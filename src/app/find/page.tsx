@@ -260,6 +260,11 @@ export default function FindPage() {
   // Compute summary metrics from best cell
   const totalHours = bestCell ? bestCell.compositeScore / 60 : 0;
 
+  const shareUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : `https://nyc-transit-heatmap.vercel.app/find?${encodeShareableState(destinations, modes)}`;
+
   // Visible cells depend on view mode
   const showPerPin = selectedDestId !== null;
   const visibleCells = (() => {
@@ -314,6 +319,7 @@ export default function FindPage() {
       bestCell={bestCell}
       bestAddress={bestAddress}
       totalHours={totalHours}
+      shareUrl={shareUrl}
     />
   );
 
