@@ -34,6 +34,8 @@ import type {
   StationMatrix,
   Destination,
 } from "@/lib/types";
+import { encodeShareSlug } from "@/lib/share-slug";
+import { ShareSheet } from "@/components/share/share-sheet";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
@@ -43,7 +45,6 @@ export default function ExplorePage() {
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "bus", "walk", "bike", "ferry"]);
   const [maxMinutes, setMaxMinutes] = useState(30);
-  const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [cells, setCells] = useState<HexCell[]>([]);
   const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
   const [computing, setComputing] = useState(false);
@@ -430,16 +431,24 @@ export default function ExplorePage() {
           </PanelSection>
 
           <PanelSection>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                setCopyLabel("Copied!");
-                setTimeout(() => setCopyLabel("Copy Link"), 1500);
-              }}
-              className="w-full border border-white/20 rounded-lg font-display italic uppercase text-xs py-2 cursor-pointer hover:bg-white/10 transition-colors text-white/40"
-            >
-              {copyLabel}
-            </button>
+            {origin && (() => {
+              const slug = encodeShareSlug({
+                lat: origin.lat,
+                lng: origin.lng,
+                t: maxMinutes,
+                m: activeModes,
+                address: originAddress || undefined,
+              });
+              const url = `/p/${slug}`;
+              const label = originAddress || "this spot";
+              return (
+                <ShareSheet
+                  url={url}
+                  title={`${maxMinutes}-minute reach from ${label}`}
+                  text={`See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`}
+                />
+              );
+            })()}
           </PanelSection>
         </>
       )}
