@@ -1,5 +1,7 @@
 "use client";
 
+import { startTransition } from "react";
+
 export type ExploreMode = "reach" | "live" | "meet";
 
 interface ModeTabsProps {
@@ -19,7 +21,7 @@ export function ModeTabs({ active, onChange }: ModeTabsProps) {
       {TABS.map(({ key, label, desc }) => (
         <button
           key={key}
-          onClick={() => onChange(key)}
+          onClick={() => startTransition(() => onChange(key))}
           title={desc}
           className={`flex-1 py-2 px-3 rounded-md font-display italic uppercase text-xs cursor-pointer transition-all ${
             active === key
