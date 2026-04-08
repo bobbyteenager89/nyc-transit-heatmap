@@ -41,7 +41,7 @@ import { ReachRaceButton } from "@/components/isochrone/reach-race-button";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
-const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry", "bike+subway"];
+const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
 type ViewMode = "fastest" | TransportMode;
 const VIEW_MODE_LABELS: Record<ViewMode, string> = {
@@ -52,7 +52,6 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   bike: "Bike",
   car: "Car",
   ferry: "Ferry",
-  "bike+subway": "Bike+Subway",
 };
 
 export default function ExplorePage() {

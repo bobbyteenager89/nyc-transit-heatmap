@@ -9,6 +9,24 @@ import { HEX_MODES } from "@/lib/mapbox-isochrone";
 import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
 
+/**
+ * MTA official brand colors by subway line.
+ * Source: MTA brand standards / NYC Open Data.
+ */
+export const MTA_LINE_COLORS: Record<string, string> = {
+  "1": "#EE352E", "2": "#EE352E", "3": "#EE352E",
+  "4": "#00933C", "5": "#00933C", "6": "#00933C", "6X": "#00933C",
+  "7": "#B933AD", "7X": "#B933AD",
+  "A": "#0039A6", "C": "#0039A6", "E": "#0039A6",
+  "B": "#FF6319", "D": "#FF6319", "F": "#FF6319", "FX": "#FF6319", "M": "#FF6319",
+  "G": "#6CBE45",
+  "J": "#996633", "Z": "#996633",
+  "L": "#A7A9AC",
+  "N": "#FCCC0A", "Q": "#FCCC0A", "R": "#FCCC0A", "W": "#FCCC0A",
+  "FS": "#808183", "GS": "#808183", "H": "#808183",
+  "SI": "#0039A6",
+};
+
 /** What the color scale represents on the map.
  *  - 'fastest': color by the fastest time across all active modes (the blend)
  *  - a specific TransportMode: color by ONLY that mode's travel time, hiding
@@ -63,7 +81,6 @@ function cellsToHexGeoJSON(
           walk: cell.times.walk ?? -1,
           bike: cell.times.bike ?? -1,
           car: cell.times.car ?? -1,
-          "bike+subway": cell.times["bike+subway"] ?? -1,
         },
       });
     }
@@ -100,7 +117,6 @@ function cellsToHexGeoJSON(
         walk: cell.times.walk ?? -1,
         bike: cell.times.bike ?? -1,
         car: cell.times.car ?? -1,
-        "bike+subway": cell.times["bike+subway"] ?? -1,
       },
     });
   }
@@ -444,7 +460,6 @@ export function IsochroneMap({
         const modeLabels: Record<string, string> = {
           walk: "Walk", bike: "Bike", subway: "Subway",
           bus: "Bus", car: "Car", ferry: "Ferry",
-          "bike+subway": "Bike+Subway",
         };
         const modeRows = activeModesRef.current
           .map((mode) => {
@@ -501,6 +516,85 @@ export function IsochroneMap({
         m.getCanvas().style.cursor = "";
         setTooltipData(null);
       });
+
+      // --- Subway station circles with MTA line colors ---
+      // Loaded async so map init is not blocked. Enables line-color hover.
+      fetch("/data/station-graph.json")
+        .then((res) => res.json())
+        .then((graph) => {
+          if (!m.getCanvas()) return; // map may have been removed
+          const stationFeatures: GeoJSON.Feature<GeoJSON.Point>[] = Object.values(
+            graph.stations as Record<string, { name: string; lat: number; lng: number; lines: string[] }>
+          ).map((s) => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [s.lng, s.lat] },
+            properties: {
+              name: s.name,
+              lines: s.lines.join(", "),
+              lineColor: MTA_LINE_COLORS[s.lines[0]] ?? "#ffffff",
+            },
+          }));
+
+          if (m.getSource("subway-stations")) return; // StrictMode double-run guard
+          m.addSource("subway-stations", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: stationFeatures },
+          });
+
+          // Dim circles always visible
+          m.addLayer({
+            id: "subway-stations-circle",
+            type: "circle",
+            source: "subway-stations",
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.5, 14, 5],
+              "circle-color": ["get", "lineColor"],
+              "circle-opacity": 0.5,
+              "circle-stroke-width": 0.5,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-opacity": 0.2,
+            },
+          });
+
+          // Hover highlight layer — empty filter until mousemove
+          m.addLayer({
+            id: "subway-stations-hover",
+            type: "circle",
+            source: "subway-stations",
+            filter: ["==", ["get", "lines"], ""],
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 9],
+              "circle-color": ["get", "lineColor"],
+              "circle-opacity": 1,
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-opacity": 0.9,
+            },
+          });
+
+          // Hover: highlight all stations sharing the hovered station line
+          m.on("mousemove", "subway-stations-circle", (e) => {
+            if (!e.features?.[0]) return;
+            m.getCanvas().style.cursor = "pointer";
+            const props = e.features[0].properties!;
+            const firstLine = (props.lines as string).split(", ")[0];
+            m.setFilter("subway-stations-hover", [
+              "in", firstLine, ["get", "lines"],
+            ]);
+            m.setPaintProperty("subway-stations-circle", "circle-opacity", [
+              "case",
+              ["in", firstLine, ["get", "lines"]], 1,
+              0.25,
+            ]);
+          });
+
+          m.on("mouseleave", "subway-stations-circle", () => {
+            m.getCanvas().style.cursor = "";
+            m.setFilter("subway-stations-hover", ["==", ["get", "lines"], ""]);
+            m.setPaintProperty("subway-stations-circle", "circle-opacity", 0.5);
+          });
+        })
+        .catch(() => {/* station hover is non-critical */});
 
       setMapReady(true);
     });
