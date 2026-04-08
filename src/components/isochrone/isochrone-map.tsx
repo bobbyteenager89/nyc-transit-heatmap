@@ -188,17 +188,20 @@ function buildFairnessGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
-/** Color ramp expression — keyed on absolute time in minutes (0-60) */
+/**
+ * Color ramp — stepped contours in 10-min bands.
+ * Each band is a flat color (no interpolation), so subway-powered "veins"
+ * of faster time show up as crisp finger-shaped intrusions of the lower
+ * band into the slower band around it.
+ */
 const COLOR_RAMP: mapboxgl.Expression = [
-  "interpolate", ["linear"], ["get", "time"],
-  0,  "#00ff87",   // 0 min — bright green (origin)
-  5,  "#39ff14",   // 5 min — neon green
-  10, "#c8ff00",   // 10 min — vivid lime
-  15, "#ffd000",   // 15 min — golden yellow
-  20, "#ff8800",   // 20 min — vivid amber
-  30, "#ff4400",   // 30 min — vivid orange
-  45, "#e21822",   // 45 min — red
-  60, "#8b0000",   // 60 min — dark red
+  "step", ["get", "time"],
+  "#39ff14",          // 0-10 min — neon green
+  10, "#ffd000",      // 10-20 min — golden yellow
+  20, "#ff8800",      // 20-30 min — vivid amber
+  30, "#ff4400",      // 30-40 min — vivid orange
+  40, "#e21822",      // 40-50 min — red
+  50, "#8b0000",      // 50+ min — dark red
 ];
 
 export function IsochroneMap({

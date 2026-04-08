@@ -37,7 +37,6 @@ import type {
 import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { MeetupSummary } from "@/components/isochrone/meetup-summary";
-import { ReachRaceButton } from "@/components/isochrone/reach-race-button";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
@@ -493,18 +492,12 @@ export default function ExplorePage() {
         </PanelSection>
       )}
 
-      {/* Shared: Time slider + play + reach-race */}
+      {/* Shared: Time slider + play */}
       <PanelSection>
         <div className="flex items-center gap-2">
           <PlayButton
             currentValue={maxMinutes}
             onChange={handleMaxMinutesChange}
-            disabled={!origin || computing || cells.length === 0}
-          />
-          <ReachRaceButton
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onMaxMinutesChange={handleMaxMinutesChange}
             disabled={!origin || computing || cells.length === 0}
           />
           <div className="flex-1">

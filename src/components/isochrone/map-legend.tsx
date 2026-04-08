@@ -1,12 +1,14 @@
 "use client";
 
 export function MapLegend() {
+  // Stepped 10-min bands — must match COLOR_RAMP in isochrone-map.tsx
   const stops = [
-    { color: "#00ff87", label: "5m" },
-    { color: "#ffdd00", label: "15m" },
-    { color: "#ff6600", label: "30m" },
-    { color: "#e21822", label: "45m" },
-    { color: "#8b0000", label: "60m" },
+    { color: "#39ff14", label: "<10" },
+    { color: "#ffd000", label: "20" },
+    { color: "#ff8800", label: "30" },
+    { color: "#ff4400", label: "40" },
+    { color: "#e21822", label: "50" },
+    { color: "#8b0000", label: "50+" },
   ];
 
   return (
