@@ -9,6 +9,24 @@ import { HEX_MODES } from "@/lib/mapbox-isochrone";
 import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
 
+/**
+ * MTA official brand colors by subway line.
+ * Source: MTA brand standards / NYC Open Data.
+ */
+export const MTA_LINE_COLORS: Record<string, string> = {
+  "1": "#EE352E", "2": "#EE352E", "3": "#EE352E",
+  "4": "#00933C", "5": "#00933C", "6": "#00933C", "6X": "#00933C",
+  "7": "#B933AD", "7X": "#B933AD",
+  "A": "#0039A6", "C": "#0039A6", "E": "#0039A6",
+  "B": "#FF6319", "D": "#FF6319", "F": "#FF6319", "FX": "#FF6319", "M": "#FF6319",
+  "G": "#6CBE45",
+  "J": "#996633", "Z": "#996633",
+  "L": "#A7A9AC",
+  "N": "#FCCC0A", "Q": "#FCCC0A", "R": "#FCCC0A", "W": "#FCCC0A",
+  "FS": "#808183", "GS": "#808183", "H": "#808183",
+  "SI": "#0039A6",
+};
+
 /** What the color scale represents on the map.
  *  - 'fastest': color by the fastest time across all active modes (the blend)
  *  - a specific TransportMode: color by ONLY that mode's travel time, hiding
@@ -499,6 +517,85 @@ export function IsochroneMap({
         setTooltipData(null);
       });
 
+      // --- Subway station circles with MTA line colors ---
+      // Loaded async so map init is not blocked. Enables line-color hover.
+      fetch("/data/station-graph.json")
+        .then((res) => res.json())
+        .then((graph) => {
+          if (!m.getCanvas()) return; // map may have been removed
+          const stationFeatures: GeoJSON.Feature<GeoJSON.Point>[] = Object.values(
+            graph.stations as Record<string, { name: string; lat: number; lng: number; lines: string[] }>
+          ).map((s) => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [s.lng, s.lat] },
+            properties: {
+              name: s.name,
+              lines: s.lines.join(", "),
+              lineColor: MTA_LINE_COLORS[s.lines[0]] ?? "#ffffff",
+            },
+          }));
+
+          if (m.getSource("subway-stations")) return; // StrictMode double-run guard
+          m.addSource("subway-stations", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: stationFeatures },
+          });
+
+          // Dim circles always visible
+          m.addLayer({
+            id: "subway-stations-circle",
+            type: "circle",
+            source: "subway-stations",
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.5, 14, 5],
+              "circle-color": ["get", "lineColor"],
+              "circle-opacity": 0.5,
+              "circle-stroke-width": 0.5,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-opacity": 0.2,
+            },
+          });
+
+          // Hover highlight layer — empty filter until mousemove
+          m.addLayer({
+            id: "subway-stations-hover",
+            type: "circle",
+            source: "subway-stations",
+            filter: ["==", ["get", "lines"], ""],
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 9],
+              "circle-color": ["get", "lineColor"],
+              "circle-opacity": 1,
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-opacity": 0.9,
+            },
+          });
+
+          // Hover: highlight all stations sharing the hovered station line
+          m.on("mousemove", "subway-stations-circle", (e) => {
+            if (!e.features?.[0]) return;
+            m.getCanvas().style.cursor = "pointer";
+            const props = e.features[0].properties!;
+            const firstLine = (props.lines as string).split(", ")[0];
+            m.setFilter("subway-stations-hover", [
+              "in", firstLine, ["get", "lines"],
+            ]);
+            m.setPaintProperty("subway-stations-circle", "circle-opacity", [
+              "case",
+              ["in", firstLine, ["get", "lines"]], 1,
+              0.25,
+            ]);
+          });
+
+          m.on("mouseleave", "subway-stations-circle", () => {
+            m.getCanvas().style.cursor = "";
+            m.setFilter("subway-stations-hover", ["==", ["get", "lines"], ""]);
+            m.setPaintProperty("subway-stations-circle", "circle-opacity", 0.5);
+          });
+        })
+        .catch(() => {/* station hover is non-critical */});
+
       setMapReady(true);
     });
 
@@ -513,23 +610,30 @@ export function IsochroneMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update origin marker
+  // Update origin marker — shows "A" label when friend is present, plain dot otherwise
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
     originMarkerRef.current?.remove();
     if (center) {
+      const showLabel = !!friendOrigin;
       const el = document.createElement("div");
-      el.style.cssText =
-        "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4)";
+      if (showLabel) {
+        el.style.cssText =
+          "width:22px;height:22px;background:#ffffff;border:2px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0a0a12;font-family:Arial Black,sans-serif";
+        el.textContent = "A";
+      } else {
+        el.style.cssText =
+          "width:14px;height:14px;background:#ffffff;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.4)";
+      }
       originMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([center.lng, center.lat])
         .addTo(m);
       m.flyTo({ center: [center.lng, center.lat], zoom: 12, duration: 800 });
     }
-  }, [center, mapReady]);
+  }, [center, mapReady, friendOrigin]);
 
-  // Friend origin marker (amber)
+  // Friend origin marker (amber) — always shows "B" label
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
@@ -540,7 +644,8 @@ export function IsochroneMap({
     if (friendOrigin) {
       const el = document.createElement("div");
       el.style.cssText =
-        "width:14px;height:14px;background:#f59e0b;border:3px solid #f59e0b;border-radius:50%;box-shadow:0 0 20px rgba(245,158,11,0.9),0 0 40px rgba(245,158,11,0.4)";
+        "width:22px;height:22px;background:#f59e0b;border:2px solid #f59e0b;border-radius:50%;box-shadow:0 0 20px rgba(245,158,11,0.9),0 0 40px rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0a0a12;font-family:Arial Black,sans-serif";
+      el.textContent = "B";
       friendMarkerRef.current = new mapboxgl.Marker({ element: el })
         .setLngLat([friendOrigin.lng, friendOrigin.lat])
         .addTo(m);

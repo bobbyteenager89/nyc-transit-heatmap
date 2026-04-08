@@ -5,6 +5,7 @@ import { WizardShell } from "@/components/wizard/wizard-shell";
 import { HexMap } from "@/components/results/hex-map";
 import { ResultsSidebar } from "@/components/results/results-sidebar";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { SubwayData } from "@/lib/subway";
 import { CitiBikeData } from "@/lib/citibike";
 import { loadFerryData } from "@/lib/ferry";
@@ -57,6 +58,11 @@ export default function FindPage() {
 
   // Reverse geocode cache for best cell
   const geocodeCacheRef = useRef<Map<string, string>>(new Map());
+
+  // Viewport detection: render ResultsSidebar in exactly ONE location to
+  // eliminate the double-mount that occurred when sidebarContent was placed in
+  // both the desktop div and MobileBottomSheet simultaneously.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   // Load subway + Citi Bike data on mount
   useEffect(() => {
@@ -325,10 +331,12 @@ export default function FindPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-full p-0 md:p-3">
-      {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        {sidebarContent}
-      </div>
+      {/* Desktop sidebar — only mounted on >=md. Eliminates double-mount. */}
+      {isDesktop && (
+        <div>
+          {sidebarContent}
+        </div>
+      )}
 
       <main className="flex-1 relative w-full">
         {computing && (
@@ -360,16 +368,18 @@ export default function FindPage() {
         />
       </main>
 
-      {/* Mobile bottom sheet */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
-        <MobileBottomSheet
-          expanded={mobileExpanded}
-          onToggle={() => setMobileExpanded((p) => !p)}
-          summary={mobileFindSummary}
-        >
-          {sidebarContent}
-        </MobileBottomSheet>
-      </div>
+      {/* Mobile bottom sheet — only mounted on <md viewports */}
+      {!isDesktop && (
+        <div className="fixed inset-x-0 bottom-0 z-40">
+          <MobileBottomSheet
+            expanded={mobileExpanded}
+            onToggle={() => setMobileExpanded((p) => !p)}
+            summary={mobileFindSummary}
+          >
+            {sidebarContent}
+          </MobileBottomSheet>
+        </div>
+      )}
     </div>
   );
 }

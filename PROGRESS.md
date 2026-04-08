@@ -138,9 +138,52 @@
 ### Next Steps
 - [ ] Phase 2: Landing polish (animated card previews, hover reveals)
 - [ ] Phase 3: Explore delight (reach-race play button, line-color hover, trivia)
-- [ ] "You vs. Me" meetup mode (intersection of two isochrones)
+- [x] "You vs. Me" meetup mode (intersection of two isochrones) — done S11
 - [ ] Bike-to-station combo mode (feature gap — would bloom subway reach dramatically)
 - [ ] Bus transfers (needs a bus network graph)
 - [ ] Investigate street-following heatmap colors
+- [ ] Server-render rankings page
+- [ ] Fix find page ResultsSidebar double-mount
+
+---
+
+## 2026-04-07 — Session 11: "You vs. Me" meetup mode (?compare= URL param)
+
+### Accomplished
+- Wired `?compare=[slug]` param in `explore/page.tsx`: decodes the slug on mount,
+  pre-loads friend's location, auto-switches to "Meet" mode tab, triggers runFriendCompute
+- Added `MeetupSummary` component: shows "X areas reachable by both in Y min" (or
+  "No overlap — try a longer time budget"), plus a "Share meetup link" button
+- `handleShareMeetup` encodes friend's location as ?compare=slug and also includes
+  the user's own lat/lng so both isochrones load when recipient opens the link
+- Upgraded A/B marker labels: origin shows "A" and friend shows "B" (amber) when
+  in meet mode; reverts to plain dot when no friend is set
+- Added `countOverlapCells` utility in `src/lib/meetup-overlap.ts` with 5 unit tests
+- 76 tests passing, clean build
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/lib/meetup-overlap.ts` | `countOverlapCells` — H3 intersection count for sidebar summary |
+| `src/lib/__tests__/meetup-overlap.test.ts` | 5 unit tests |
+| `src/components/isochrone/meetup-summary.tsx` | Overlap count + share button UI |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/explore/page.tsx` | Parse ?compare= param, handleShareMeetup, MeetupSummary render, meetupCopied state |
+| `src/components/isochrone/isochrone-map.tsx` | A/B labeled markers in meet mode |
+
+### Example URL
+`https://nyc-transit-heatmap.vercel.app/explore?compare=<slug>&lat=40.7282&lng=-73.9942&t=30&m=subway,bus,walk,bike,ferry`
+
+Visiting this URL pre-loads friend's isochrone (from slug) and auto-switches to Meet mode.
+The recipient then drops their own pin to see the intersection.
+
+### Next Steps
+- [ ] Phase 2: Landing polish (animated card previews, hover reveals)
+- [ ] Phase 3: Explore delight (reach-race play button, line-color hover, trivia)
+- [ ] Bike-to-station combo mode
+- [ ] Bus transfers
 - [ ] Server-render rankings page
 - [ ] Fix find page ResultsSidebar double-mount

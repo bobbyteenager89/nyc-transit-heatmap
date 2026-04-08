@@ -34,8 +34,11 @@ import type {
   StationMatrix,
   Destination,
 } from "@/lib/types";
-import { encodeShareSlug } from "@/lib/share-slug";
+import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
 import { ShareSheet } from "@/components/share/share-sheet";
+import { MeetupSummary } from "@/components/isochrone/meetup-summary";
+import { ReachRaceButton } from "@/components/isochrone/reach-race-button";
+import { TransitTrivia } from "@/components/isochrone/transit-trivia";
 import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
@@ -81,6 +84,7 @@ export default function ExplorePage() {
   const [dataReady, setDataReady] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [mobileExpanded, setMobileExpanded] = useState(true);
+  const [meetupCopied, setMeetupCopied] = useState(false);
 
   // Load transit data on mount
   useEffect(() => {
@@ -267,6 +271,26 @@ export default function ExplorePage() {
         .then((addr) => setOriginAddress(addr))
         .catch(() => setOriginAddress(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`));
     }
+
+    // If a ?compare=[slug] param is present, decode it and pre-load the friend's location.
+    // Entry point from the recipient page ("Drop your pin →" CTA) and the "Share meetup link" button.
+    const compareSlug = params.get("compare");
+    if (compareSlug) {
+      const decoded = decodeShareSlug(compareSlug);
+      if (decoded) {
+        const friendLoc = { lat: decoded.lat, lng: decoded.lng };
+        setFriendOrigin(friendLoc);
+        setExploreMode("meet");
+        runFriendCompute(friendLoc);
+        if (decoded.address) {
+          setFriendAddress(decoded.address);
+        } else {
+          reverseGeocode(friendLoc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
+            .then((addr) => setFriendAddress(addr))
+            .catch(() => setFriendAddress(`${decoded.lat.toFixed(4)}, ${decoded.lng.toFixed(4)}`));
+        }
+      }
+    }
   }, [dataReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddressSelect = useCallback(
@@ -305,6 +329,45 @@ export default function ExplorePage() {
     setFriendCells([]);
     setShowFriend(false);
   }, []);
+
+  /**
+   * Build a shareable meetup URL. The friend's location is encoded as a slug
+   * in ?compare= so the recipient opens /explore pre-loaded with person B's
+   * isochrone and can add their own pin as person A to see the intersection.
+   */
+  const handleShareMeetup = useCallback(() => {
+    if (!friendOrigin) return;
+    const slug = encodeShareSlug({
+      lat: friendOrigin.lat,
+      lng: friendOrigin.lng,
+      t: maxMinutes,
+      m: activeModes,
+      address: friendAddress || undefined,
+    });
+    const base = `${window.location.origin}/explore`;
+    const qp = new URLSearchParams({ compare: slug });
+    if (origin) {
+      qp.set("lat", origin.lat.toFixed(4));
+      qp.set("lng", origin.lng.toFixed(4));
+    }
+    if (originAddress) qp.set("address", originAddress);
+    qp.set("t", String(maxMinutes));
+    qp.set("m", activeModes.join(","));
+    const url = `${base}?${qp.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setMeetupCopied(true);
+      setTimeout(() => setMeetupCopied(false), 2500);
+    }).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setMeetupCopied(true);
+      setTimeout(() => setMeetupCopied(false), 2500);
+    });
+  }, [friendOrigin, friendAddress, origin, originAddress, maxMinutes, activeModes]);
 
   const addDestination = useCallback((dest: Destination) => {
     setDestinations((prev) => [...prev, dest]);
@@ -405,6 +468,20 @@ export default function ExplorePage() {
         </PanelSection>
       )}
 
+      {/* MEET mode: Overlap summary + share button */}
+      {exploreMode === "meet" && cells.length > 0 && friendCells.length > 0 && (
+        <PanelSection title="Meetup">
+          <MeetupSummary
+            cellsA={cells}
+            cellsB={friendCells}
+            activeModes={activeModes}
+            maxMinutes={maxMinutes}
+            onShare={handleShareMeetup}
+            copied={meetupCopied}
+          />
+        </PanelSection>
+      )}
+
       {/* LIVE mode: Destinations */}
       {exploreMode === "live" && origin && !computing && cells.length > 0 && (
         <PanelSection title="Your Destinations">
@@ -416,12 +493,18 @@ export default function ExplorePage() {
         </PanelSection>
       )}
 
-      {/* Shared: Time slider + play */}
+      {/* Shared: Time slider + play + reach-race */}
       <PanelSection>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <PlayButton
             currentValue={maxMinutes}
             onChange={handleMaxMinutesChange}
+            disabled={!origin || computing || cells.length === 0}
+          />
+          <ReachRaceButton
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onMaxMinutesChange={handleMaxMinutesChange}
             disabled={!origin || computing || cells.length === 0}
           />
           <div className="flex-1">
@@ -429,6 +512,9 @@ export default function ExplorePage() {
           </div>
         </div>
       </PanelSection>
+
+      {/* Transit trivia */}
+      <TransitTrivia />
 
       {/* Shared: Transport modes */}
       <PanelSection title="Transport Modes">
