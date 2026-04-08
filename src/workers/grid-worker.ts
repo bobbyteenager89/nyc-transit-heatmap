@@ -169,8 +169,14 @@ function computeSubwayTime(
   stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
   matrix: number[][], idxMap: Map<string, number>
 ): number | null {
-  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 3);
-  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 3);
+  // Consider top 8 stations at each end, not 3. In dense Manhattan the top 3
+  // nearest stations to an origin may all be on the same trunk (e.g. 6th Ave
+  // B/D/F/M) and exclude the R line — which is the ONLY way to reach Bay
+  // Ridge in under 60 min. Widening the candidate pool lets the matrix pick
+  // the best end-to-end route even if one side's best line is the 4th-nearest
+  // station. 8×8 = 64 O(1) matrix lookups per hex — still trivial.
+  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 8);
+  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 8);
   if (nearFrom.length === 0 || nearTo.length === 0) return null;
   let best = Infinity;
   for (const f of nearFrom) {
