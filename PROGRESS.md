@@ -4,6 +4,51 @@
 
 ---
 
+## 2026-04-09 — Session 15: Backlog sweep — tests, station-click, own-bike, bus+subway
+
+### Accomplished
+- Knocked out 4 of 5 queued items from Session 14's "next steps" list.
+- **+11 unit tests** for `expandBoundsIfHit` in `src/hooks/__tests__/expand-bounds-if-hit.test.ts` — covers empty cells, no-hit case, unreachable sentinel, over-budget cells, each cardinal edge, multi-side hits, and MAX_NYC_BOUNDS clamping. Test suite now **87 passing** (up from 76).
+- **Click-a-station as origin:** clicking a subway dot on `/explore` re-roots the isochrone from that station, sets the address input to the station name, and updates the URL — same semantics as drop-pin. The generic map-click handler defers to the station layer via `queryRenderedFeatures` to avoid double-fire.
+- **Own-bike mode (Advanced):** added new `"ownbike"` `TransportMode` (door-to-door `bikeRideMin`, no dock overhead). Hidden behind a "+ Advanced modes" disclosure inside the Transport Modes panel. Persists in URL. Auto-reveals when a shared link includes `ownbike`. Toggling Advanced OFF strips `ownbike` from active modes to keep compute consistent. Color `#10b981`. Cost engine treats as free.
+- **Bus + subway one-side transfers** in grid worker: when both `bus` and `subway` are active, the subway access leg on the ORIGIN side can now be `walk → bus stop → bus ride (≤1 mi) → subway station` instead of a direct walk. New `buildStationAccess()` returns a `stationId → bestAccessMinutes` map that augments walking candidates with bus-assisted ones. Destination leg stays walking-only (one-sided scope). Approximation: great-circle bus ride at `BUS_SPEED_MPH` (no route graph yet).
+- Build clean, 87/87 tests, deploy `fe1fe88` live on prod, preflight + smoke-test green, all 5 routes 200, `/explore` verified in Chrome (map rendered, Advanced button present, no console errors, no broken images).
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/hooks/__tests__/expand-bounds-if-hit.test.ts` | 11 unit tests for auto-expansion logic |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/lib/types.ts` | Added `"ownbike"` to `TransportMode` union |
+| `src/workers/grid-worker.ts` | Own-bike compute branch; new `buildStationAccess()` + bus-assist plumbing in `computeSubwayTime()` |
+| `src/lib/isochrone.ts` | `ownbike: "#10b981"` in `MODE_COLORS` |
+| `src/lib/cost.ts` | `ownbike` treated as free in both cost passes |
+| `src/lib/share-slug.ts` | `ownbike` added to `VALID_MODES` |
+| `src/components/isochrone/mode-legend.tsx` | `ownbike` chip + `showAdvanced` prop to gate advanced modes |
+| `src/components/isochrone/reach-stats.tsx` | `ownbike: "Own Bike"` label |
+| `src/components/isochrone/isochrone-map.tsx` | `onStationClick` prop; station-layer exclusion in generic click handler |
+| `src/components/isochrone/hooks/use-subway-stations.ts` | `onStationClick` callback via ref; new `click` listener on station layer |
+| `src/app/explore/page.tsx` | `handleStationClick`, `showAdvanced` state + disclosure, `VIEW_MODE_LABELS.ownbike`, URL auto-reveal for advanced modes |
+| `src/hooks/use-dynamic-grid-compute.ts` | `ownbike` in `ALL_MODES` |
+
+### Commits
+- `b5464ee` — expandBoundsIfHit unit tests
+- `fcd5fce` — click-a-station as origin
+- `77b23a9` — own-bike Advanced disclosure
+- `fe1fe88` — bus+subway one-side transfers
+
+### Next Steps
+- [ ] **Mobile QA on real iPhone** (still outstanding from S12) — tap subway dot, toggle Advanced + Own Bike, verify bus+subway reach expansion
+- [ ] Bus+subway: replace great-circle ride approximation with a real bus route adjacency graph (GTFS bus data)
+- [ ] Bus+subway: consider enabling destination-side transfers too (currently one-sided)
+- [ ] Station-click-as-origin for rankings page
+- [ ] Own-bike: add an "I have my own bike" preference toggle that remembers across sessions (currently URL-only)
+
+---
+
 ## 2026-04-07 — Session 11: "You vs. Me" meetup mode (?compare= URL param)
 
 ### Accomplished
