@@ -567,12 +567,13 @@ export function IsochroneMap({
             },
           });
 
-          // Hover highlight layer — empty filter until mousemove
+          // Hover highlight layer — empty filter until mousemove.
+          // Only the single hovered station is shown (not the whole line).
           m.addLayer({
             id: "subway-stations-hover",
             type: "circle",
             source: "subway-stations",
-            filter: ["==", ["get", "lines"], ""],
+            filter: ["==", ["get", "name"], ""],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 9],
               "circle-color": ["get", "lineColor"],
@@ -583,26 +584,20 @@ export function IsochroneMap({
             },
           });
 
-          // Hover: highlight all stations sharing the hovered station line
+          // Hover: highlight ONLY the single station under the cursor.
+          // Previous version lit up the whole line and dimmed everything
+          // else, which turned the map into a strobe light when the cursor
+          // crossed the dense Midtown cluster. Now it's a quiet "dot bloom."
           m.on("mousemove", "subway-stations-circle", (e) => {
             if (!e.features?.[0]) return;
             m.getCanvas().style.cursor = "pointer";
-            const props = e.features[0].properties!;
-            const firstLine = (props.lines as string).split(", ")[0];
-            m.setFilter("subway-stations-hover", [
-              "in", firstLine, ["get", "lines"],
-            ]);
-            m.setPaintProperty("subway-stations-circle", "circle-opacity", [
-              "case",
-              ["in", firstLine, ["get", "lines"]], 1,
-              0.25,
-            ]);
+            const hoveredName = e.features[0].properties!.name as string;
+            m.setFilter("subway-stations-hover", ["==", ["get", "name"], hoveredName]);
           });
 
           m.on("mouseleave", "subway-stations-circle", () => {
             m.getCanvas().style.cursor = "";
-            m.setFilter("subway-stations-hover", ["==", ["get", "lines"], ""]);
-            m.setPaintProperty("subway-stations-circle", "circle-opacity", 0.5);
+            m.setFilter("subway-stations-hover", ["==", ["get", "name"], ""]);
           });
         })
         .catch(() => {/* station hover is non-critical */});
