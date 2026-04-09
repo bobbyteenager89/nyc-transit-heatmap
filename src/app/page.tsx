@@ -17,14 +17,14 @@ export default function LandingPage() {
           Isochrone<br /><span className="text-accent">NYC</span>
         </h1>
         <p className="text-center font-body text-sm text-white/40 mb-12">
-          See how far you can go — by subway, bike, or foot
+          Drop a pin. See how far you can get by subway, bus, ferry, Citi Bike, or car.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ModeCard
             href="/explore"
             title="Isochrone NYC"
-            description="Drop a pin and see how far you can go. Smooth contour rings show your reach by every mode."
+            description="Drop a pin and see your reach in 10-minute bands — subway, bus, ferry, Citi Bike, or car."
             cta="Explore"
             primary
           />
