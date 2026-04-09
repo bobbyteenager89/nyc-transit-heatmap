@@ -164,25 +164,64 @@ function cachedMatrixLookup(matrix: number[][], fi: number, ti: number): number 
   return val;
 }
 
+/**
+ * Builds the access-leg candidate set for a subway query from one side.
+ * Default access = walking. If `busStopGrid` is supplied, we also consider
+ * walking to a nearby bus stop, waiting, and bus-riding to any station
+ * within ~1 mi of that stop. This is a single-leg bus approximation (no
+ * transfers, no bus routing graph) — enough to catch the common case of
+ * "bus to the subway" without a full bus network.
+ *
+ * Returns a map of stationId → best access time (minutes) to reach that
+ * station from the point. Callers use this instead of the raw walking
+ * candidates when bus-assist is enabled.
+ */
+function buildStationAccess(
+  point: LatLng,
+  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
+  busStopGrid: SpatialGrid<BusStopData> | null
+): Map<string, number> {
+  const access = new Map<string, number>();
+  // Walking access (existing behavior).
+  for (const s of findNearestStationsIndexed(point, stationGrid, SUBWAY_MAX_WALK_MI, 8)) {
+    access.set(s.id, (s.dist / WALK_SPEED) * 60);
+  }
+  if (!busStopGrid) return access;
+  // Bus-assisted access: walk to a nearby stop, wait, ride ≤1 mi to a station.
+  const nearStops = searchGrid(point, busStopGrid, BUS_MAX_WALK_MI);
+  nearStops.sort((a, b) => a.dist - b.dist);
+  for (const { item: stop, dist: walkDist } of nearStops.slice(0, 3)) {
+    const walkToStop = (walkDist / WALK_SPEED) * 60;
+    const reachable = findNearestStationsIndexed(
+      { lat: stop.lat, lng: stop.lng }, stationGrid, 1.0, 5
+    );
+    for (const s of reachable) {
+      const busRide = (s.dist / BUS_SPEED_MPH) * 60;
+      const accessMin = walkToStop + BUS_WAIT_MIN + busRide;
+      const prev = access.get(s.id);
+      if (prev === undefined || accessMin < prev) access.set(s.id, accessMin);
+    }
+  }
+  return access;
+}
+
 function computeSubwayTime(
   from: LatLng, to: LatLng,
   stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>,
-  matrix: number[][], idxMap: Map<string, number>
+  matrix: number[][], idxMap: Map<string, number>,
+  busStopGrid: SpatialGrid<BusStopData> | null = null
 ): number | null {
-  // Consider top 8 stations at each end, not 3. In dense Manhattan the top 3
-  // nearest stations to an origin may all be on the same trunk (e.g. 6th Ave
-  // B/D/F/M) and exclude the R line — which is the ONLY way to reach Bay
-  // Ridge in under 60 min. Widening the candidate pool lets the matrix pick
-  // the best end-to-end route even if one side's best line is the 4th-nearest
-  // station. 8×8 = 64 O(1) matrix lookups per hex — still trivial.
-  const nearFrom = findNearestStationsIndexed(from, stationGrid, SUBWAY_MAX_WALK_MI, 8);
+  // Consider top 8 stations at each end. Widening the candidate pool lets the
+  // matrix pick the best end-to-end route even if one side's best line is the
+  // 4th-nearest station. If `busStopGrid` is provided, the origin-side access
+  // set is augmented with bus-to-station legs (one-side-only bus transfers).
+  const fromAccess = buildStationAccess(from, stationGrid, busStopGrid);
   const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 8);
-  if (nearFrom.length === 0 || nearTo.length === 0) return null;
+  if (fromAccess.size === 0 || nearTo.length === 0) return null;
   let best = Infinity;
-  for (const f of nearFrom) {
-    const fi = idxMap.get(f.id);
+  for (const [fromId, accessMin] of fromAccess) {
+    const fi = idxMap.get(fromId);
     if (fi === undefined) continue;
-    const walkToStation = (f.dist / WALK_SPEED) * 60;
     for (const t of nearTo) {
       const ti = idxMap.get(t.id);
       if (ti === undefined) continue;
@@ -190,7 +229,7 @@ function computeSubwayTime(
       if (stationTime >= 999) continue;
       const walkFromStation = (t.dist / WALK_SPEED) * 60;
       // Add average boarding wait — the GTFS matrix is pure ride time.
-      const total = walkToStation + SUBWAY_WAIT_MIN + stationTime + walkFromStation;
+      const total = accessMin + SUBWAY_WAIT_MIN + stationTime + walkFromStation;
       if (total < best) best = total;
     }
   }
@@ -280,7 +319,11 @@ function computeTimesForLocation(
     times.ownbike = Math.round(bikeRideMin(point, destLoc) * 10) / 10;
   }
   if (modes.includes("subway")) {
-    times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);
+    // When bus is also active, pass the bus stop grid so the access leg can
+    // be "walk → bus stop → bus ride → subway station" instead of a straight
+    // walk from the hex. One-sided: only the origin leg uses bus assist.
+    const busAssist = modes.includes("bus") ? busStopGrid : null;
+    times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap, busAssist);
   }
   if (modes.includes("bus")) {
     times.bus = computeBusTime(point, destLoc, busStopGrid);
