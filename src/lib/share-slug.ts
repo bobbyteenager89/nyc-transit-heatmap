@@ -11,7 +11,10 @@
  * This keeps typical slugs well under 60 URL-safe base64url characters.
  */
 
-const VALID_MODES = ["subway", "bus", "walk", "bike", "ownbike", "car", "ferry"] as const;
+// NOTE: Order is load-bearing — it defines the bitmask used by encoded share
+// slugs. Only append new modes to the end, never insert in the middle, or
+// previously shared links will decode to the wrong modes.
+const VALID_MODES = ["subway", "bus", "walk", "bike", "car", "ferry", "ownbike"] as const;
 type Mode = (typeof VALID_MODES)[number];
 
 export type ShareParams = {
