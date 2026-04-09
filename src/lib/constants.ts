@@ -48,8 +48,12 @@ export const CITIBIKE_STATION_INFO_URL =
 // H3 hex grid
 export const H3_RESOLUTION = 10; // ~66m edge length, ~150k cells over core NYC
 
-// Core NYC bounds (Manhattan + Brooklyn + nearby Queens)
+// Core NYC bounds (Manhattan + all of Brooklyn + western Queens)
+// South extends to Coney Island. East extends to cover eastern Queens to JFK.
+// Previous bound of 40.63 created a visible cliff through the middle of
+// Brooklyn — Bay Ridge, Bensonhurst, Gravesend, Coney Island, Midwood, and
+// Marine Park were all outside the grid and returned no reach at all.
 export const CORE_NYC_BOUNDS: BoundingBox = {
-  sw: { lat: 40.63, lng: -74.04 },
-  ne: { lat: 40.83, lng: -73.87 },
+  sw: { lat: 40.56, lng: -74.05 },
+  ne: { lat: 40.83, lng: -73.78 },
 };
