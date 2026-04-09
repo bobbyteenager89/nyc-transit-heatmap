@@ -236,6 +236,17 @@ export default function ExplorePage() {
     [runCompute, updateURL, maxMinutes, activeModes]
   );
 
+  const handleStationClick = useCallback(
+    (station: { name: string; lat: number; lng: number }) => {
+      const loc = { lat: station.lat, lng: station.lng };
+      setOrigin(loc);
+      setOriginAddress(station.name);
+      runCompute(loc);
+      updateURL(loc, maxMinutes, activeModes, station.name);
+    },
+    [runCompute, updateURL, maxMinutes, activeModes]
+  );
+
   const handleFriendSelect = useCallback(
     (address: string, location: LatLng) => {
       setFriendAddress(address);
@@ -628,6 +639,7 @@ export default function ExplorePage() {
           activeModes={activeModes}
           maxMinutes={maxMinutes}
           onMapClick={handleMapClick}
+          onStationClick={handleStationClick}
           friendOrigin={friendOrigin}
           viewMode={viewMode}
         />

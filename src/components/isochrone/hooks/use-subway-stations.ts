@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import mapboxgl from "mapbox-gl";
 import { MTA_LINE_COLORS } from "@/components/isochrone/isochrone-map";
 
@@ -15,8 +15,16 @@ import { MTA_LINE_COLORS } from "@/components/isochrone/isochrone-map";
  */
 export function useSubwayStations(
   mapRef: React.RefObject<mapboxgl.Map | null>,
-  mapReady: boolean
+  mapReady: boolean,
+  onStationClick?: (station: { name: string; lat: number; lng: number }) => void
 ) {
+  // Ref so the click handler always sees the latest callback without
+  // re-registering layers on every parent re-render.
+  const onStationClickRef = React.useRef(onStationClick);
+  React.useEffect(() => {
+    onStationClickRef.current = onStationClick;
+  }, [onStationClick]);
+
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
@@ -87,6 +95,14 @@ export function useSubwayStations(
         m.on("mouseleave", "subway-stations-circle", () => {
           m.getCanvas().style.cursor = "";
           m.setFilter("subway-stations-hover", ["==", ["get", "name"], ""]);
+        });
+
+        m.on("click", "subway-stations-circle", (e) => {
+          const f = e.features?.[0];
+          if (!f) return;
+          const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+          const name = f.properties!.name as string;
+          onStationClickRef.current?.({ name, lat, lng });
         });
       })
       .catch(() => {

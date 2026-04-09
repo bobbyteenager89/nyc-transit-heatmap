@@ -42,6 +42,7 @@ interface IsochroneMapProps {
   activeModes: TransportMode[];
   maxMinutes: number;
   onMapClick?: (location: LatLng) => void;
+  onStationClick?: (station: { name: string; lat: number; lng: number }) => void;
   friendOrigin?: LatLng | null;
   friendCells?: HexCell[];
   fairnessRange?: number; // max acceptable time diff in minutes (default 5)
@@ -148,6 +149,7 @@ export function IsochroneMap({
   activeModes,
   maxMinutes,
   onMapClick,
+  onStationClick,
   friendOrigin,
   friendCells = [],
   fairnessRange = 5,
@@ -385,6 +387,11 @@ export function IsochroneMap({
       m.on("click", (e) => {
         const waterFeatures = m.queryRenderedFeatures(e.point, { layers: ["water-mask"] });
         if (waterFeatures.length > 0) return;
+        // Defer to the station-specific click handler when the user clicks a station dot.
+        if (m.getLayer("subway-stations-circle")) {
+          const stationHits = m.queryRenderedFeatures(e.point, { layers: ["subway-stations-circle"] });
+          if (stationHits.length > 0) return;
+        }
         onMapClickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
       });
 
@@ -618,7 +625,7 @@ export function IsochroneMap({
     m.setFilter("iso-outline", ["<=", ["get", "time"], maxMinutes]);
   }, [maxMinutes, mapReady]);
 
-  useSubwayStations(mapRef, mapReady);
+  useSubwayStations(mapRef, mapReady, onStationClick);
 
   useFairnessLayer({
     mapRef,
