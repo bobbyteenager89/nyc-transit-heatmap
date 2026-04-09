@@ -46,7 +46,11 @@ export const CITIBIKE_STATION_INFO_URL =
   "https://gbfs.citibikenyc.com/gbfs/en/station_information.json";
 
 // H3 hex grid
-export const H3_RESOLUTION = 10; // ~66m edge length, ~150k cells over core NYC
+// Resolution 9 = ~175m edge length, ~45k cells over the expanded NYC bounds.
+// Was 10 (~66m, ~150k cells) but that scaled poorly when bounds were widened
+// to cover all of Brooklyn + Queens. 9 is still visually fine for "where can
+// I reach" shading and makes the compute ~5-7x faster.
+export const H3_RESOLUTION = 9;
 
 // Core NYC bounds (Manhattan + all of Brooklyn + western Queens)
 // South extends to Coney Island. East extends to cover eastern Queens to JFK.
