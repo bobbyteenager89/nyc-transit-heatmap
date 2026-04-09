@@ -10,12 +10,6 @@ import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
-import { SubwayData } from "@/lib/subway";
-import { CitiBikeData } from "@/lib/citibike";
-import { loadFerryData } from "@/lib/ferry";
-import type { FerryData, FerryAdjacency } from "@/lib/ferry";
-import { loadBusData } from "@/lib/bus";
-import type { BusData } from "@/lib/bus";
 import { computeHexGrid } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
@@ -26,20 +20,15 @@ import { FairnessSlider } from "@/components/isochrone/fairness-slider";
 import { DestinationInput } from "@/components/isochrone/destination-input";
 import { ModeTabs } from "@/components/isochrone/mode-tabs";
 import type { ExploreMode } from "@/components/isochrone/mode-tabs";
-import type {
-  LatLng,
-  TransportMode,
-  HexCell,
-  StationGraph,
-  StationMatrix,
-  Destination,
-} from "@/lib/types";
+import type { LatLng, TransportMode, HexCell, Destination } from "@/lib/types";
 import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { MeetupSummary } from "@/components/isochrone/meetup-summary";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
-import { CORE_NYC_BOUNDS, H3_RESOLUTION, BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS } from "@/lib/constants";
-import type { BoundingBox } from "@/lib/types";
+import { H3_RESOLUTION } from "@/lib/constants";
+import { useTransitData } from "@/hooks/use-transit-data";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useDynamicGridCompute } from "@/hooks/use-dynamic-grid-compute";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
@@ -49,6 +38,8 @@ const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "fer
 // default — a lifestyle assertion the user adds explicitly.
 const DEFAULT_MODES: TransportMode[] = ["walk", "subway", "bus", "ferry", "bike"];
 const LOCKED_MODES: TransportMode[] = ["walk"];
+
+// expandBoundsIfHit now lives in useDynamicGridCompute.
 
 type ViewMode = "fastest" | TransportMode;
 const VIEW_MODE_LABELS: Record<ViewMode, string> = {
@@ -61,67 +52,12 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   ferry: "Ferry",
 };
 
-/**
- * Detect whether the reach envelope hit a border of the current grid and,
- * if so, return expanded bounds. Returns null if the envelope is entirely
- * inside the grid or if expansion would exceed MAX_NYC_BOUNDS.
- *
- * "Border hit" = at least one cell within ~one-hex-edge of an outer edge
- * has a fastestTime <= maxMinutes. We then grow the hit side(s) by
- * BOUNDS_EXPANSION_STEP, clamped to MAX_NYC_BOUNDS.
- */
-function expandBoundsIfHit(
-  bounds: BoundingBox,
-  cells: HexCell[],
-  maxMinutes: number
-): BoundingBox | null {
-  if (cells.length === 0) return null;
-  const EDGE_PAD = 0.005; // ~500m — roughly one res-10 hex ring worth
-  let hitN = false, hitS = false, hitE = false, hitW = false;
-  for (const cell of cells) {
-    if (cell.compositeScore >= 999 || cell.compositeScore > maxMinutes) continue;
-    const { lat, lng } = cell.center;
-    if (lat >= bounds.ne.lat - EDGE_PAD) hitN = true;
-    if (lat <= bounds.sw.lat + EDGE_PAD) hitS = true;
-    if (lng >= bounds.ne.lng - EDGE_PAD) hitE = true;
-    if (lng <= bounds.sw.lng + EDGE_PAD) hitW = true;
-    if (hitN && hitS && hitE && hitW) break;
-  }
-  if (!hitN && !hitS && !hitE && !hitW) return null;
-
-  const expanded: BoundingBox = {
-    sw: {
-      lat: hitS ? Math.max(bounds.sw.lat - BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.sw.lat) : bounds.sw.lat,
-      lng: hitW ? Math.max(bounds.sw.lng - BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.sw.lng) : bounds.sw.lng,
-    },
-    ne: {
-      lat: hitN ? Math.min(bounds.ne.lat + BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.ne.lat) : bounds.ne.lat,
-      lng: hitE ? Math.min(bounds.ne.lng + BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.ne.lng) : bounds.ne.lng,
-    },
-  };
-  // If nothing actually moved (already at max), abort.
-  if (
-    expanded.sw.lat === bounds.sw.lat && expanded.sw.lng === bounds.sw.lng &&
-    expanded.ne.lat === bounds.ne.lat && expanded.ne.lng === bounds.ne.lng
-  ) {
-    return null;
-  }
-  return expanded;
-}
-
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(DEFAULT_MODES);
-  // Dynamic hex grid bounds. Starts tight, auto-expands when the reach
-  // envelope hits a border — see runCompute's border-hit detection below.
-  const [gridBounds, setGridBounds] = useState<BoundingBox>(CORE_NYC_BOUNDS);
-  const [expanding, setExpanding] = useState(false);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [viewMode, setViewMode] = useState<ViewMode>("fastest");
-  const [cells, setCells] = useState<HexCell[]>([]);
-  const [apiContours, setApiContours] = useState<IsochroneContour[]>([]);
-  const [computing, setComputing] = useState(false);
   const [friendComputing, setFriendComputing] = useState(false);
   const [friendOrigin, setFriendOrigin] = useState<LatLng | null>(null);
   const [friendAddress, setFriendAddress] = useState("");
@@ -130,149 +66,50 @@ export default function ExplorePage() {
   const [friendCells, setFriendCells] = useState<HexCell[]>([]);
   const [fairnessRange, setFairnessRange] = useState(5);
   const [exploreMode, setExploreMode] = useState<ExploreMode>("reach");
-  const [computeProgress, setComputeProgress] = useState(0);
-  const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
-  const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
-  const [subwayData, setSubwayData] = useState<SubwayData | null>(null);
-  const [citiBikeData, setCitiBikeData] = useState<CitiBikeData | null>(null);
-  const [ferryData, setFerryData] = useState<{
-    data: FerryData;
-    adjacency: FerryAdjacency;
-  } | null>(null);
-  const [busData, setBusData] = useState<BusData | null>(null);
-  const [dataReady, setDataReady] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [mobileExpanded, setMobileExpanded] = useState(true);
   const [meetupCopied, setMeetupCopied] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
-  // Load transit data on mount
-  useEffect(() => {
-    async function load() {
-      try {
-        const [graphRes, matrixRes] = await Promise.all([
-          fetch("/data/station-graph.json"),
-          fetch("/data/station-matrix.json"),
-        ]);
-        const graph: StationGraph = await graphRes.json();
-        const matrix: StationMatrix = await matrixRes.json();
-        setStationGraph(graph);
-        setStationMatrix(matrix);
-        setSubwayData(new SubwayData(graph, matrix));
+  // All transit datasets (subway, citibike, ferry, bus)
+  const {
+    stationGraph,
+    stationMatrix,
+    citiBikeData,
+    ferryData,
+    busData,
+    dataReady,
+  } = useTransitData();
 
-        try {
-          const citi = await CitiBikeData.fetch();
-          setCitiBikeData(citi);
-        } catch (err) {
-          console.warn("Citi Bike data unavailable:", err);
-        }
+  // URL param writer
+  const { updateURL } = useUrlState();
 
-        const ferry = await loadFerryData();
-        setFerryData(ferry);
+  // Primary origin compute pipeline (hexes + API contours + border expansion)
+  const {
+    cells,
+    apiContours,
+    gridBounds,
+    computing,
+    expanding,
+    computeProgress,
+    runCompute: runComputeRaw,
+  } = useDynamicGridCompute({
+    stationGraph,
+    stationMatrix,
+    citiBikeData,
+    ferryData,
+    busData,
+    destinations,
+    maxMinutes,
+  });
 
-        const bus = await loadBusData();
-        setBusData(bus);
-
-        setDataReady(true);
-      } catch (err) {
-        console.error("Failed to load transit data:", err);
-        setDataReady(true);
-      }
-    }
-    load();
-  }, []);
-
-  // Sync state to URL
-  const updateURL = useCallback((loc: LatLng | null, mins: number, modes: TransportMode[], addr?: string) => {
-    const params = new URLSearchParams();
-    if (loc) {
-      params.set("lat", loc.lat.toFixed(4));
-      params.set("lng", loc.lng.toFixed(4));
-    }
-    params.set("t", String(mins));
-    params.set("m", modes.join(","));
-    if (addr) params.set("address", addr);
-    const url = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState(null, "", url);
-  }, []);
-
+  // Wrap runCompute to collapse the mobile sheet once the compute finishes.
   const runCompute = useCallback(
     async (loc: LatLng) => {
-      if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
-
-      setComputing(true);
-      setComputeProgress(0);
-      try {
-        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
-        // Helper: compute hexes for a given bounds. Returned cells include
-        // their center so we can detect border hits without re-walking geo.
-        const computeForBounds = async (bounds: BoundingBox, onProgress?: (n: number) => void) => {
-          const rawCenters = generateHexCenters(bounds, H3_RESOLUTION);
-          const hexCenters = rawCenters.map((c) => ({
-            h3Index: c.h3Index,
-            lat: c.center.lat,
-            lng: c.center.lng,
-          }));
-          const result = await computeHexGrid(
-            {
-              hexCenters,
-              origin: loc,
-              destinations: destinations,
-              modes: ALL_MODES,
-              stationGraph,
-              stationMatrix,
-              citiBikeStations: citiBikeData.getAllStations(),
-              ferryTerminals: ferryData.data.terminals,
-              ferryAdjacency: ferryData.adjacency,
-              busStops: busData.stops,
-            },
-            onProgress ?? (() => {})
-          );
-          const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-          return result.cells.map((cell) => {
-            const geo = geoLookup.get(cell.h3Index)!;
-            return { ...cell, center: geo.center, boundary: geo.boundary };
-          });
-        };
-
-        // Initial compute with current bounds.
-        let currentBounds = gridBounds;
-        const [hexResult, contours] = await Promise.all([
-          computeForBounds(currentBounds, (p) => setComputeProgress(p)),
-          fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
-        ]);
-        setCells(hexResult);
-        setApiContours(contours);
-
-        // Border-hit detection + auto-expansion. If any outer-ring cell is
-        // reachable within the time budget, the envelope is truncated at the
-        // edge — expand the bounds and recompute. Limited to 2 extra passes
-        // per origin to prevent runaway growth.
-        let attempts = 0;
-        let workingCells = hexResult;
-        let workingBounds = currentBounds;
-        while (attempts < 2) {
-          const expanded = expandBoundsIfHit(workingBounds, workingCells, maxMinutes);
-          if (!expanded) break;
-          attempts++;
-          setExpanding(true);
-          try {
-            workingCells = await computeForBounds(expanded, (p) => setComputeProgress(p));
-            workingBounds = expanded;
-            setCells(workingCells);
-            setGridBounds(expanded);
-          } finally {
-            setExpanding(false);
-          }
-        }
-      } catch (err) {
-        console.error("Compute failed:", err);
-      } finally {
-        setComputing(false);
-        setMobileExpanded(false);
-      }
+      await runComputeRaw(loc);
+      setMobileExpanded(false);
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, gridBounds, maxMinutes]
+    [runComputeRaw]
   );
 
   const runFriendCompute = useCallback(
@@ -710,13 +547,72 @@ export default function ExplorePage() {
 
         {!origin && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div className="text-center">
+            <div className="text-center px-4">
               <p className="font-display italic uppercase text-3xl text-white/20">
                 Enter an address
               </p>
-              <p className="font-body text-sm text-white/10 mt-2">
-                or click the map to drop a pin
+              <p className="font-body text-sm text-white/20 mt-2">
+                Try <span className="text-accent/60">Times Square</span> — or click the map to drop a pin
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* How it works — info button (top-right of map) */}
+        <button
+          type="button"
+          onClick={() => setShowHowItWorks(true)}
+          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-surface-card/90 border border-white/15 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-accent hover:border-accent/50 transition-colors"
+          aria-label="How it works"
+        >
+          <span className="font-display italic text-sm">?</span>
+        </button>
+
+        {showHowItWorks && (
+          <div
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowHowItWorks(false)}
+          >
+            <div
+              className="max-w-md w-full bg-surface-card border border-white/15 rounded-xl p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="font-display italic uppercase text-xl text-white">How it works</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowHowItWorks(false)}
+                  className="text-white/40 hover:text-white text-xl leading-none"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-4 font-body text-sm text-white/70">
+                <div>
+                  <p className="font-display italic uppercase text-xs text-accent mb-1">Your reach</p>
+                  <p>
+                    The default view shows the <span className="text-white">fastest</span> way to get
+                    anywhere — walk, subway, bus, ferry, and Citi Bike are blended together. Toggle car
+                    on if that&apos;s an option for you.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-display italic uppercase text-xs text-accent mb-1">Stepped bands</p>
+                  <p>
+                    Colors are grouped into 10-minute bands (green → yellow → orange → red) so you can
+                    see &ldquo;everywhere I can reach in 20 minutes&rdquo; at a glance instead of squinting
+                    at a smooth gradient.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-display italic uppercase text-xs text-accent mb-1">View as</p>
+                  <p>
+                    Switch from &ldquo;Your reach&rdquo; to a single mode (e.g. Subway only) to see what
+                    that mode alone gets you. Cells unreachable by that mode disappear.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}

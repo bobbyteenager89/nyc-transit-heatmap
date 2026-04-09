@@ -8,6 +8,8 @@ import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { HEX_MODES } from "@/lib/mapbox-isochrone";
 import { MODE_COLORS } from "@/lib/isochrone";
 import { reverseGeocode } from "@/lib/geocode";
+import { useSubwayStations } from "@/components/isochrone/hooks/use-subway-stations";
+import { useFairnessLayer } from "@/components/isochrone/hooks/use-fairness-layer";
 
 /**
  * MTA official brand colors by subway line.
@@ -120,71 +122,6 @@ function cellsToHexGeoJSON(
       },
     });
   }
-  return { type: "FeatureCollection", features };
-}
-
-/**
- * Build GeoJSON for the fairness zone — cells where both people can reach.
- * Includes ALL cells reachable by both (no fairnessRange filter here).
- * Visibility is controlled via GL setFilter on the slider side.
- * Colored by how "fair" the spot is: green = equal, fading as diff increases.
- */
-function buildFairnessGeoJSON(
-  cellsA: HexCell[],
-  cellsB: HexCell[],
-  activeModes: TransportMode[],
-  maxMinutes: number
-): GeoJSON.FeatureCollection {
-  if (cellsA.length === 0 || cellsB.length === 0) {
-    return { type: "FeatureCollection", features: [] };
-  }
-
-  // Build lookup from h3Index to cell for Person B
-  const bLookup = new Map<string, HexCell>();
-  for (const cell of cellsB) {
-    bLookup.set(cell.h3Index, cell);
-  }
-
-  const features: GeoJSON.Feature[] = [];
-
-  for (const cellA of cellsA) {
-    const cellB = bLookup.get(cellA.h3Index);
-    if (!cellB) continue;
-
-    // Get fastest time for each person among active modes
-    let fastA = Infinity;
-    let fastB = Infinity;
-    for (const mode of activeModes) {
-      const tA = cellA.times[mode];
-      const tB = cellB.times[mode];
-      if (tA !== null && tA !== undefined && tA < fastA) fastA = tA;
-      if (tB !== null && tB !== undefined && tB < fastB) fastB = tB;
-    }
-
-    // Both must be reachable within maxMinutes
-    if (fastA > maxMinutes || fastB > maxMinutes) continue;
-    if (fastA === Infinity || fastB === Infinity) continue;
-
-    const diff = Math.abs(fastA - fastB);
-
-    // Ratio used for color interpolation — capped at 1 (beyond fairness range still rendered, filtered by GL)
-    const ratio = Math.min(diff / 60, 1);
-
-    features.push({
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [[...cellA.boundary, cellA.boundary[0]]],
-      },
-      properties: {
-        diff: Math.round(diff * 10) / 10,
-        ratio,
-        timeA: Math.round(fastA),
-        timeB: Math.round(fastB),
-      },
-    });
-  }
-
   return { type: "FeatureCollection", features };
 }
 
@@ -528,79 +465,7 @@ export function IsochroneMap({
         setTooltipData(null);
       });
 
-      // --- Subway station circles with MTA line colors ---
-      // Loaded async so map init is not blocked. Enables line-color hover.
-      fetch("/data/station-graph.json")
-        .then((res) => res.json())
-        .then((graph) => {
-          if (!m.getCanvas()) return; // map may have been removed
-          const stationFeatures: GeoJSON.Feature<GeoJSON.Point>[] = Object.values(
-            graph.stations as Record<string, { name: string; lat: number; lng: number; lines: string[] }>
-          ).map((s) => ({
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [s.lng, s.lat] },
-            properties: {
-              name: s.name,
-              lines: s.lines.join(", "),
-              lineColor: MTA_LINE_COLORS[s.lines[0]] ?? "#ffffff",
-            },
-          }));
-
-          if (m.getSource("subway-stations")) return; // StrictMode double-run guard
-          m.addSource("subway-stations", {
-            type: "geojson",
-            data: { type: "FeatureCollection", features: stationFeatures },
-          });
-
-          // Dim circles always visible
-          m.addLayer({
-            id: "subway-stations-circle",
-            type: "circle",
-            source: "subway-stations",
-            paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.5, 14, 5],
-              "circle-color": ["get", "lineColor"],
-              "circle-opacity": 0.5,
-              "circle-stroke-width": 0.5,
-              "circle-stroke-color": "#ffffff",
-              "circle-stroke-opacity": 0.2,
-            },
-          });
-
-          // Hover highlight layer — empty filter until mousemove.
-          // Only the single hovered station is shown (not the whole line).
-          m.addLayer({
-            id: "subway-stations-hover",
-            type: "circle",
-            source: "subway-stations",
-            filter: ["==", ["get", "name"], ""],
-            paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 9],
-              "circle-color": ["get", "lineColor"],
-              "circle-opacity": 1,
-              "circle-stroke-width": 2,
-              "circle-stroke-color": "#ffffff",
-              "circle-stroke-opacity": 0.9,
-            },
-          });
-
-          // Hover: highlight ONLY the single station under the cursor.
-          // Previous version lit up the whole line and dimmed everything
-          // else, which turned the map into a strobe light when the cursor
-          // crossed the dense Midtown cluster. Now it's a quiet "dot bloom."
-          m.on("mousemove", "subway-stations-circle", (e) => {
-            if (!e.features?.[0]) return;
-            m.getCanvas().style.cursor = "pointer";
-            const hoveredName = e.features[0].properties!.name as string;
-            m.setFilter("subway-stations-hover", ["==", ["get", "name"], hoveredName]);
-          });
-
-          m.on("mouseleave", "subway-stations-circle", () => {
-            m.getCanvas().style.cursor = "";
-            m.setFilter("subway-stations-hover", ["==", ["get", "name"], ""]);
-          });
-        })
-        .catch(() => {/* station hover is non-critical */});
+      // Subway stations are loaded by useSubwayStations once mapReady flips.
 
       setMapReady(true);
     });
@@ -753,33 +618,17 @@ export function IsochroneMap({
     m.setFilter("iso-outline", ["<=", ["get", "time"], maxMinutes]);
   }, [maxMinutes, mapReady]);
 
-  // Load fairness data when cells/activeModes/maxMinutes change
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m || !mapReady) return;
-    const source = m.getSource("fairness-zone") as mapboxgl.GeoJSONSource | undefined;
-    if (!source) return;
+  useSubwayStations(mapRef, mapReady);
 
-    if (friendCells.length === 0 || cells.length === 0) {
-      source.setData({ type: "FeatureCollection", features: [] });
-      return;
-    }
-
-    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes, maxMinutes);
-    source.setData(geojson);
-  }, [cells, friendCells, activeModes, maxMinutes, mapReady]);
-
-  // Filter fairness zone by fairnessRange (GL-side, no JS iteration)
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m || !mapReady) return;
-    if (m.getLayer("fairness-fill")) {
-      m.setFilter("fairness-fill", ["<=", ["get", "diff"], fairnessRange]);
-    }
-    if (m.getLayer("fairness-line")) {
-      m.setFilter("fairness-line", ["<=", ["get", "diff"], fairnessRange]);
-    }
-  }, [fairnessRange, mapReady]);
+  useFairnessLayer({
+    mapRef,
+    mapReady,
+    cells,
+    friendCells,
+    activeModes,
+    maxMinutes,
+    fairnessRange,
+  });
 
   return (
     <div className="relative flex-1 h-full">
