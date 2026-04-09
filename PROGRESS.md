@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-04-09 — Session 16: Fix share-slug bitmask shift regression
+
+### Accomplished
+- Investigated a "client-side exception" report from a friend (URL unknown). Swept all 5 routes in Chrome — no reproducible crash, but found a real regression.
+- **Bug:** S15 commit `77b23a9` inserted `"ownbike"` at index 4 in `VALID_MODES`, shifting the bitmask positions of `car` (4→5) and `ferry` (5→6). Every share link created before S15 silently decoded to the wrong modes: old `car` → `ownbike`, old `ferry` → `car`.
+- **Fix:** moved `"ownbike"` to the end of `VALID_MODES` so pre-existing bits keep their meaning. Added a load-bearing ordering comment above the array so future agents don't repeat the mistake.
+- Verified: 87/87 tests green, `npm run build` clean, new prod deploy live with fix, all 5 routes return 200, preflight + smoke-test passed.
+- Also pushed the lingering S15 PROGRESS commit (`420b688`) that hadn't made it to origin.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/lib/share-slug.ts` | Moved `"ownbike"` to end of `VALID_MODES`; added ordering comment |
+
+### Commits
+- `420b688` — (pushed) Session 15 PROGRESS update that was ahead of origin
+- `2efa89f` — fix(share-slug): append ownbike to VALID_MODES instead of inserting
+
+### Next Steps
+- [ ] If the friend can share the crashing URL, repro + pin down the actual client-side exception (bitmask fix may or may not be the cause)
+- [ ] Mobile QA on real iPhone (carried from S15/S12)
+- [ ] Replace bus great-circle approximation with GTFS bus route graph
+- [ ] Own-bike persistence toggle
+- [ ] Station-click-as-origin for rankings page
+
+---
+
 ## 2026-04-09 — Session 15: Backlog sweep — tests, station-click, own-bike, bus+subway
 
 ### Accomplished
