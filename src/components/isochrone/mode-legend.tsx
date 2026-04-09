@@ -86,20 +86,17 @@ const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
   ferry: FerryIcon,
 };
 
-// Baseline = always shown in the blend, not toggleable. These are the modes
-// a normal NYer uses without thinking: walk, train, bus when faster, ferry
-// when faster. Bike and car are opt-in overlays — lifestyle choices the user
-// has to explicitly add to the blend.
-const BASELINE_LABELS: { key: TransportMode; label: string }[] = [
-  { key: "walk", label: "Walk" },
+// All modes the user can see in the legend. Walk is locked ON — you can't
+// realistically turn off walking (you have to walk to/from everything). Every
+// other mode is toggleable. "bike" is Citi Bike under the hood (walk-to-dock,
+// ride, walk-from-dock) — relabeled for clarity.
+const MODE_CHIPS: { key: TransportMode; label: string; locked?: boolean }[] = [
+  { key: "walk", label: "Walk", locked: true },
   { key: "subway", label: "Subway" },
   { key: "bus", label: "Bus" },
   { key: "ferry", label: "Ferry" },
-];
-
-const OVERLAY_LABELS: { key: TransportMode; label: string; hint: string }[] = [
-  { key: "bike", label: "Bike", hint: "Good for trips under ~3 miles" },
-  { key: "car", label: "Car", hint: "Good for outer boroughs where transit is thin" },
+  { key: "bike", label: "Citi Bike" },
+  { key: "car", label: "Car" },
 ];
 
 interface ModeLegendProps {
@@ -109,62 +106,33 @@ interface ModeLegendProps {
 
 export function ModeLegend({ activeModes, onToggle }: ModeLegendProps) {
   return (
-    <div className="flex flex-col gap-2.5">
-      {/* Baseline row — shown as a static "your reach includes" indicator.
-          Not interactive because "turn off the subway" is never a real ask. */}
-      <div>
-        <p className="font-display italic uppercase text-[9px] text-white/40 tracking-wider mb-1.5">
-          Your reach
-        </p>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {BASELINE_LABELS.map(({ key, label }) => {
-            const Icon = ICON_MAP[key];
-            return (
-              <div
-                key={key}
-                className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 bg-white/[0.03] text-white/70"
-                title={`${label} is always included in your reach`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="font-display italic uppercase text-[10px] tracking-wider">
-                  {label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Overlays — Bike and Car as explicit toggles. Off by default. */}
-      <div>
-        <p className="font-display italic uppercase text-[9px] text-white/40 tracking-wider mb-1.5">
-          Add
-        </p>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {OVERLAY_LABELS.map(({ key, label, hint }) => {
-            const isActive = activeModes.includes(key);
-            const Icon = ICON_MAP[key];
-            return (
-              <button
-                key={key}
-                onClick={() => onToggle(key)}
-                title={hint}
-                className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer transition-all ${
-                  isActive
-                    ? "border-accent/60 bg-accent/15 text-accent"
-                    : "border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20"
-                }`}
-              >
-                <span className="text-[11px] leading-none">{isActive ? "\u2212" : "+"}</span>
-                <Icon className="w-3.5 h-3.5" />
-                <span className="font-display italic uppercase text-[10px] tracking-wider">
-                  {label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+    <div className="grid grid-cols-3 gap-2">
+      {MODE_CHIPS.map(({ key, label, locked }) => {
+        const isActive = activeModes.includes(key);
+        const Icon = ICON_MAP[key];
+        return (
+          <button
+            key={key}
+            onClick={locked ? undefined : () => onToggle(key)}
+            disabled={locked}
+            title={locked ? "Walk is always included" : isActive ? `Click to turn off ${label}` : `Click to turn on ${label}`}
+            className={`relative flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg border transition-all text-center min-h-[68px] ${
+              isActive
+                ? "border-accent/60 bg-accent/15 text-accent shadow-[0_0_0_1px_rgba(34,211,238,0.2)]"
+                : "border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/25"
+            } ${locked ? "cursor-default" : "cursor-pointer"}`}
+          >
+            {/* "On" indicator dot — top-right corner when active */}
+            {isActive && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent" />
+            )}
+            <Icon className="w-5 h-5" />
+            <span className="font-display italic uppercase text-[10px] tracking-wider leading-tight">
+              {label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

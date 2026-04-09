@@ -249,14 +249,14 @@ export function IsochroneMap({
       style: "mapbox://styles/mapbox/dark-v11",
       center: [center.lng, center.lat],
       zoom: 12,
-      // Clamp pan/zoom strictly inside the hex grid so the grid's edges can
-      // never be visible. CORE_NYC_BOUNDS is 40.56/-74.05 → 40.83/-73.78,
-      // so inset by ~0.015 lat / 0.02 lng for a visible margin.
+      // Clamp pan/zoom to MAX_NYC_BOUNDS — the hard outer limit the grid can
+      // ever expand to. The hex grid starts tight (CORE_NYC_BOUNDS) and may
+      // auto-expand up to this envelope as the reach envelope hits borders.
       maxBounds: [
-        [-74.03, 40.58],
-        [-73.80, 40.82],
+        [-74.06, 40.55],
+        [-73.72, 40.90],
       ],
-      minZoom: 11,
+      minZoom: 10,
     });
     mapRef.current = m;
 

@@ -38,15 +38,17 @@ import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { MeetupSummary } from "@/components/isochrone/meetup-summary";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
-import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
+import { CORE_NYC_BOUNDS, H3_RESOLUTION, BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS } from "@/lib/constants";
+import type { BoundingBox } from "@/lib/types";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
-// Baseline transit modes — always in the blend. Matches how a normal NYer
-// thinks about getting around ("I'll walk, probably the train, maybe bus or
-// ferry if they're faster"). Bike and car are opt-in overlays the user
-// explicitly adds via the legend. This is the core mental model of the page.
-const BASELINE_MODES: TransportMode[] = ["walk", "subway", "bus", "ferry"];
+// Default modes on page load. Walk is locked ON (can't be toggled off) — you
+// have to walk to/from everything. Subway/bus/ferry/bike (Citi Bike) default
+// on because they're "public transit" accessible to anyone. Car is off by
+// default — a lifestyle assertion the user adds explicitly.
+const DEFAULT_MODES: TransportMode[] = ["walk", "subway", "bus", "ferry", "bike"];
+const LOCKED_MODES: TransportMode[] = ["walk"];
 
 type ViewMode = "fastest" | TransportMode;
 const VIEW_MODE_LABELS: Record<ViewMode, string> = {
@@ -54,15 +56,67 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   subway: "Subway",
   bus: "Bus",
   walk: "Walk",
-  bike: "Bike",
+  bike: "Citi Bike",
   car: "Car",
   ferry: "Ferry",
 };
 
+/**
+ * Detect whether the reach envelope hit a border of the current grid and,
+ * if so, return expanded bounds. Returns null if the envelope is entirely
+ * inside the grid or if expansion would exceed MAX_NYC_BOUNDS.
+ *
+ * "Border hit" = at least one cell within ~one-hex-edge of an outer edge
+ * has a fastestTime <= maxMinutes. We then grow the hit side(s) by
+ * BOUNDS_EXPANSION_STEP, clamped to MAX_NYC_BOUNDS.
+ */
+function expandBoundsIfHit(
+  bounds: BoundingBox,
+  cells: HexCell[],
+  maxMinutes: number
+): BoundingBox | null {
+  if (cells.length === 0) return null;
+  const EDGE_PAD = 0.005; // ~500m — roughly one res-10 hex ring worth
+  let hitN = false, hitS = false, hitE = false, hitW = false;
+  for (const cell of cells) {
+    if (cell.compositeScore >= 999 || cell.compositeScore > maxMinutes) continue;
+    const { lat, lng } = cell.center;
+    if (lat >= bounds.ne.lat - EDGE_PAD) hitN = true;
+    if (lat <= bounds.sw.lat + EDGE_PAD) hitS = true;
+    if (lng >= bounds.ne.lng - EDGE_PAD) hitE = true;
+    if (lng <= bounds.sw.lng + EDGE_PAD) hitW = true;
+    if (hitN && hitS && hitE && hitW) break;
+  }
+  if (!hitN && !hitS && !hitE && !hitW) return null;
+
+  const expanded: BoundingBox = {
+    sw: {
+      lat: hitS ? Math.max(bounds.sw.lat - BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.sw.lat) : bounds.sw.lat,
+      lng: hitW ? Math.max(bounds.sw.lng - BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.sw.lng) : bounds.sw.lng,
+    },
+    ne: {
+      lat: hitN ? Math.min(bounds.ne.lat + BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.ne.lat) : bounds.ne.lat,
+      lng: hitE ? Math.min(bounds.ne.lng + BOUNDS_EXPANSION_STEP, MAX_NYC_BOUNDS.ne.lng) : bounds.ne.lng,
+    },
+  };
+  // If nothing actually moved (already at max), abort.
+  if (
+    expanded.sw.lat === bounds.sw.lat && expanded.sw.lng === bounds.sw.lng &&
+    expanded.ne.lat === bounds.ne.lat && expanded.ne.lng === bounds.ne.lng
+  ) {
+    return null;
+  }
+  return expanded;
+}
+
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [activeModes, setActiveModes] = useState<TransportMode[]>(BASELINE_MODES);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(DEFAULT_MODES);
+  // Dynamic hex grid bounds. Starts tight, auto-expands when the reach
+  // envelope hits a border — see runCompute's border-hit detection below.
+  const [gridBounds, setGridBounds] = useState<BoundingBox>(CORE_NYC_BOUNDS);
+  const [expanding, setExpanding] = useState(false);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [viewMode, setViewMode] = useState<ViewMode>("fastest");
   const [cells, setCells] = useState<HexCell[]>([]);
@@ -150,44 +204,67 @@ export default function ExplorePage() {
       try {
         const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-        // Run hex compute (for subway/bus/ferry) and API isochrones (walk/bike/car) in parallel
+        // Helper: compute hexes for a given bounds. Returned cells include
+        // their center so we can detect border hits without re-walking geo.
+        const computeForBounds = async (bounds: BoundingBox, onProgress?: (n: number) => void) => {
+          const rawCenters = generateHexCenters(bounds, H3_RESOLUTION);
+          const hexCenters = rawCenters.map((c) => ({
+            h3Index: c.h3Index,
+            lat: c.center.lat,
+            lng: c.center.lng,
+          }));
+          const result = await computeHexGrid(
+            {
+              hexCenters,
+              origin: loc,
+              destinations: destinations,
+              modes: ALL_MODES,
+              stationGraph,
+              stationMatrix,
+              citiBikeStations: citiBikeData.getAllStations(),
+              ferryTerminals: ferryData.data.terminals,
+              ferryAdjacency: ferryData.adjacency,
+              busStops: busData.stops,
+            },
+            onProgress ?? (() => {})
+          );
+          const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+          return result.cells.map((cell) => {
+            const geo = geoLookup.get(cell.h3Index)!;
+            return { ...cell, center: geo.center, boundary: geo.boundary };
+          });
+        };
+
+        // Initial compute with current bounds.
+        let currentBounds = gridBounds;
         const [hexResult, contours] = await Promise.all([
-          (async () => {
-            const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
-            const hexCenters = rawCenters.map((c) => ({
-              h3Index: c.h3Index,
-              lat: c.center.lat,
-              lng: c.center.lng,
-            }));
-
-            const result = await computeHexGrid(
-              {
-                hexCenters,
-                origin: loc,
-                destinations: destinations,
-                modes: ALL_MODES,
-                stationGraph,
-                stationMatrix,
-                citiBikeStations: citiBikeData.getAllStations(),
-                ferryTerminals: ferryData.data.terminals,
-                ferryAdjacency: ferryData.adjacency,
-                busStops: busData.stops,
-              },
-              (percent) => setComputeProgress(percent)
-            );
-
-            const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-            return result.cells.map((cell) => {
-              const geo = geoLookup.get(cell.h3Index)!;
-              return { ...cell, center: geo.center, boundary: geo.boundary };
-            });
-          })(),
-          // Fetch API isochrones for walk/bike/car — max 60 min to cache all bands
+          computeForBounds(currentBounds, (p) => setComputeProgress(p)),
           fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
         ]);
-
         setCells(hexResult);
         setApiContours(contours);
+
+        // Border-hit detection + auto-expansion. If any outer-ring cell is
+        // reachable within the time budget, the envelope is truncated at the
+        // edge — expand the bounds and recompute. Limited to 2 extra passes
+        // per origin to prevent runaway growth.
+        let attempts = 0;
+        let workingCells = hexResult;
+        let workingBounds = currentBounds;
+        while (attempts < 2) {
+          const expanded = expandBoundsIfHit(workingBounds, workingCells, maxMinutes);
+          if (!expanded) break;
+          attempts++;
+          setExpanding(true);
+          try {
+            workingCells = await computeForBounds(expanded, (p) => setComputeProgress(p));
+            workingBounds = expanded;
+            setCells(workingCells);
+            setGridBounds(expanded);
+          } finally {
+            setExpanding(false);
+          }
+        }
       } catch (err) {
         console.error("Compute failed:", err);
       } finally {
@@ -195,7 +272,7 @@ export default function ExplorePage() {
         setMobileExpanded(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, gridBounds, maxMinutes]
   );
 
   const runFriendCompute = useCallback(
@@ -208,7 +285,7 @@ export default function ExplorePage() {
         // Run hex compute AND API isochrones for friend in parallel
         const [hexResult, contours] = await Promise.all([
           (async () => {
-            const rawCenters = generateHexCenters(CORE_NYC_BOUNDS, H3_RESOLUTION);
+            const rawCenters = generateHexCenters(gridBounds, H3_RESOLUTION);
             const hexCenters = rawCenters.map((c) => ({
               h3Index: c.h3Index,
               lat: c.center.lat,
@@ -248,7 +325,7 @@ export default function ExplorePage() {
         setFriendComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData, busData]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, gridBounds]
   );
 
   // Restore state from URL on mount
@@ -268,7 +345,7 @@ export default function ExplorePage() {
       const parsed = m.split(",").filter((mode): mode is TransportMode =>
         ALL_MODES.includes(mode as TransportMode)
       ) as TransportMode[];
-      const merged = Array.from(new Set([...BASELINE_MODES, ...parsed]));
+      const merged = Array.from(new Set([...DEFAULT_MODES, ...parsed]));
       setActiveModes(merged);
     }
     if (lat && lng) {
@@ -397,6 +474,10 @@ export default function ExplorePage() {
   const [, startTransition] = useTransition();
 
   const toggleMode = useCallback((mode: TransportMode) => {
+    // Walk is locked — every trip involves walking at both ends, so turning
+    // it off would be incoherent and leave the map empty for origins with no
+    // station in range. ModeLegend also disables the Walk button.
+    if (LOCKED_MODES.includes(mode)) return;
     startTransition(() => {
       setActiveModes((prev) => {
         const next = prev.includes(mode)
@@ -605,11 +686,25 @@ export default function ExplorePage() {
 
       {/* Map */}
       <main className="flex-1 relative w-full">
-        {computing && (
+        {computing && !expanding && (
           <div className="absolute inset-0 bg-surface/90 z-50 flex items-center justify-center">
             <span className="font-display italic uppercase text-2xl text-accent animate-pulse">
               Computing… {computeProgress}%
             </span>
+          </div>
+        )}
+
+        {/* Expansion overlay — non-blocking pill at top-center with a subtle
+            spinner. We keep the current map visible so the user sees their
+            existing reach while we compute the extra area. */}
+        {expanding && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface-card/95 border border-accent/40 backdrop-blur-md shadow-lg">
+              <span className="w-3 h-3 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+              <span className="font-display italic uppercase text-[11px] tracking-wider text-accent">
+                Expanding map… {computeProgress}%
+              </span>
+            </div>
           </div>
         )}
 

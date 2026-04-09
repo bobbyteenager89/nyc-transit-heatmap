@@ -45,19 +45,24 @@ export const DEFAULT_FREQUENCY: Record<DestinationCategory, number> = {
 export const CITIBIKE_STATION_INFO_URL =
   "https://gbfs.citibikenyc.com/gbfs/en/station_information.json";
 
-// H3 hex grid
-// Resolution 9 = ~175m edge length, ~45k cells over the expanded NYC bounds.
-// Was 10 (~66m, ~150k cells) but that scaled poorly when bounds were widened
-// to cover all of Brooklyn + Queens. 9 is still visually fine for "where can
-// I reach" shading and makes the compute ~5-7x faster.
-export const H3_RESOLUTION = 9;
+// H3 hex grid resolution — 10 = ~66m edge length. Crisp visual detail.
+export const H3_RESOLUTION = 10;
 
-// Core NYC bounds (Manhattan + all of Brooklyn + western Queens)
-// South extends to Coney Island. East extends to cover eastern Queens to JFK.
-// Previous bound of 40.63 created a visible cliff through the middle of
-// Brooklyn — Bay Ridge, Bensonhurst, Gravesend, Coney Island, Midwood, and
-// Marine Park were all outside the grid and returned no reach at all.
+// Initial NYC bounds — Manhattan + inner Brooklyn + inner Queens at res 10.
+// Kept tight so the initial compute is fast. If a reach envelope hits the
+// border (any edge cell reachable within the time budget), the explore page
+// dynamically expands the bounds and recomputes with a loading state. See
+// EXPANSION_STEP / MAX_BOUNDS for the expansion bookkeeping.
 export const CORE_NYC_BOUNDS: BoundingBox = {
-  sw: { lat: 40.56, lng: -74.05 },
-  ne: { lat: 40.83, lng: -73.78 },
+  sw: { lat: 40.63, lng: -74.03 },
+  ne: { lat: 40.82, lng: -73.87 },
+};
+
+// Expansion — when the reach envelope hits a border, grow the bounds by this
+// much lat/lng in the direction(s) that hit and recompute. Bounded by
+// MAX_NYC_BOUNDS so we never wander into the ocean forever.
+export const BOUNDS_EXPANSION_STEP = 0.04; // ~3 miles
+export const MAX_NYC_BOUNDS: BoundingBox = {
+  sw: { lat: 40.55, lng: -74.06 },
+  ne: { lat: 40.90, lng: -73.72 },
 };
