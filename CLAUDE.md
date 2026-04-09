@@ -6,6 +6,7 @@
 - Web Worker for grid computation
 - MTA GTFS data (pre-parsed at build time)
 - Citi Bike GBFS (fetched at runtime)
+- `@vercel/analytics` + `@vercel/speed-insights` for usage + Core Web Vitals tracking
 
 ## Commands
 - `npm run dev` — local dev server
