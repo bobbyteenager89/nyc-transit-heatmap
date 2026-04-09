@@ -42,9 +42,15 @@ import { CORE_NYC_BOUNDS, H3_RESOLUTION } from "@/lib/constants";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
 
+// Baseline transit modes — always in the blend. Matches how a normal NYer
+// thinks about getting around ("I'll walk, probably the train, maybe bus or
+// ferry if they're faster"). Bike and car are opt-in overlays the user
+// explicitly adds via the legend. This is the core mental model of the page.
+const BASELINE_MODES: TransportMode[] = ["walk", "subway", "bus", "ferry"];
+
 type ViewMode = "fastest" | TransportMode;
 const VIEW_MODE_LABELS: Record<ViewMode, string> = {
-  fastest: "Fastest",
+  fastest: "Your reach",
   subway: "Subway",
   bus: "Bus",
   walk: "Walk",
@@ -56,7 +62,7 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
 export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
-  const [activeModes, setActiveModes] = useState<TransportMode[]>(["subway", "bus", "walk", "bike", "ferry"]);
+  const [activeModes, setActiveModes] = useState<TransportMode[]>(BASELINE_MODES);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [viewMode, setViewMode] = useState<ViewMode>("fastest");
   const [cells, setCells] = useState<HexCell[]>([]);
@@ -256,10 +262,14 @@ export default function ExplorePage() {
 
     if (t) setMaxMinutes(Number(t));
     if (m) {
-      const modes = m.split(",").filter((mode): mode is TransportMode =>
+      // Baseline transit (walk/subway/bus/ferry) is always in the blend; the
+      // URL only needs to preserve the opt-in overlays (bike, car). Parse any
+      // valid mode and union with baseline so baseline can never be dropped.
+      const parsed = m.split(",").filter((mode): mode is TransportMode =>
         ALL_MODES.includes(mode as TransportMode)
       ) as TransportMode[];
-      if (modes.length > 0) setActiveModes(modes);
+      const merged = Array.from(new Set([...BASELINE_MODES, ...parsed]));
+      setActiveModes(merged);
     }
     if (lat && lng) {
       const loc = { lat: Number(lat), lng: Number(lng) };
