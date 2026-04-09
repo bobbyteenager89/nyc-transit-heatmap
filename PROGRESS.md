@@ -147,3 +147,48 @@ This was a long, multi-phase session driven by live feedback. Eight commits on t
 
 ### Commit
 - `6dbeb30` fix(explore): subway hover highlights single station, not whole line
+
+---
+
+## 2026-04-08 — Session 14: Polish (empty-state, How it works) + hook refactor
+
+### Accomplished
+- **Polish 1 — empty state:** `/explore` empty state now suggests "Try **Times Square** — or click the map to drop a pin" (accent-colored hint replaces flat "enter an address").
+- **Polish 2 — How it works modal:** Added a `?` info button top-right of the map (works desktop + mobile). Opens a modal with three sections explaining the Your reach blend, the 10-minute stepped bands, and the "View as" single-mode filter. Closes on backdrop click or ×.
+- **Refactor — 5 hooks extracted:**
+  - `src/hooks/use-transit-data.ts` (83 LOC) — loads subway graph/matrix, Citi Bike, ferry, bus
+  - `src/hooks/use-url-state.ts` (29 LOC) — URL param writer
+  - `src/hooks/use-dynamic-grid-compute.ts` (215 LOC) — `runCompute` + border-hit expansion loop + `expandBoundsIfHit` helper
+  - `src/components/isochrone/hooks/use-subway-stations.ts` (100 LOC) — station dots + single-station hover highlight
+  - `src/components/isochrone/hooks/use-fairness-layer.ts` (118 LOC) — fairness GeoJSON build + GL range filter (setup stays inline in map init to preserve z-order under iso-hexes)
+- **LOC reduction:**
+  - `explore/page.tsx`: 753 → 648 (−105)
+  - `isochrone-map.tsx`: 840 → 689 (−151)
+- Build clean (7 routes, Turbopack 3.0s), 76/76 tests passing, no console errors on local or deployed `/explore`.
+- `/preflight` + `/smoke-test` both ran green against `https://nyc-transit-heatmap.vercel.app`.
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/hooks/use-transit-data.ts` | Loader for all transit datasets |
+| `src/hooks/use-url-state.ts` | URL param writer |
+| `src/hooks/use-dynamic-grid-compute.ts` | runCompute + expandBoundsIfHit |
+| `src/components/isochrone/hooks/use-subway-stations.ts` | Station dot layer + hover |
+| `src/components/isochrone/hooks/use-fairness-layer.ts` | Fairness data + GL filter |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/explore/page.tsx` | Wire three page-level hooks; remove inline loaders, runCompute, expandBoundsIfHit; add empty-state hint + How it works modal |
+| `src/components/isochrone/isochrone-map.tsx` | Wire useSubwayStations + useFairnessLayer; remove inline buildFairnessGeoJSON, station fetch block, and fairness update effects |
+
+### Commit
+- `d6864c0` S13: polish + refactor — empty-state hint, How it works modal, extract 5 hooks
+
+### Next Steps
+- [ ] Mobile QA on a real device (still outstanding — polish #3 from S12)
+- [ ] Own-bike mode (distinct from Citi Bike docks)
+- [ ] Station click to set as origin
+- [ ] Bus transfers
+- [ ] Server-render rankings page
+- [ ] Unit tests for `expandBoundsIfHit` (now in `use-dynamic-grid-compute.ts`, 5 branches still unprotected)
