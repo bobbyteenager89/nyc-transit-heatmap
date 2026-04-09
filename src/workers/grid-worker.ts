@@ -270,10 +270,14 @@ function computeTimesForLocation(
   const times: Record<TransportMode, number | null> = {
     walk: modes.includes("walk") ? walkMin(point, destLoc) : null,
     car: modes.includes("car") ? driveMin(point, destLoc) : null,
-    bike: null, subway: null, bus: null, ferry: null,
+    bike: null, ownbike: null, subway: null, bus: null, ferry: null,
   };
   if (modes.includes("bike")) {
     times.bike = computeBikeTime(point, destLoc, dockGrid);
+  }
+  if (modes.includes("ownbike")) {
+    // Door-to-door own bike: pure ride, no dock walk/undock overhead.
+    times.ownbike = Math.round(bikeRideMin(point, destLoc) * 10) / 10;
   }
   if (modes.includes("subway")) {
     times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap);
@@ -365,13 +369,13 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
         let totalMonthlyMinutes = 0;
-        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bus: null, ferry: null };
+        const aggTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, ownbike: null, subway: null, bus: null, ferry: null };
         const destBreakdown: Record<string, number> = {};
 
         for (const dest of destinations) {
           const destLocations = dest.locations && dest.locations.length > 0 ? dest.locations : [dest.location];
           let bestTime = Infinity;
-          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, subway: null, bus: null, ferry: null };
+          let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, ownbike: null, subway: null, bus: null, ferry: null };
 
           for (const destLoc of destLocations) {
             const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency, busStopGrid);

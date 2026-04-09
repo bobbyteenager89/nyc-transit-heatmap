@@ -8,7 +8,7 @@ function cell(lat: number, lng: number, compositeScore: number): HexCell {
     h3Index: `${lat},${lng}`,
     center: { lat, lng },
     boundary: [],
-    times: { subway: null, bus: null, walk: null, car: null, bike: null, ferry: null },
+    times: { subway: null, bus: null, walk: null, car: null, bike: null, ownbike: null, ferry: null },
     fastest: "walk",
     compositeScore,
     destBreakdown: {},

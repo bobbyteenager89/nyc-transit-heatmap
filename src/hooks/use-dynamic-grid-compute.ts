@@ -25,7 +25,7 @@ import { CitiBikeData } from "@/lib/citibike";
 import type { FerryData, FerryAdjacency } from "@/lib/ferry";
 import type { BusData } from "@/lib/bus";
 
-const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
+const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ownbike", "ferry"];
 
 /**
  * Detect whether the reach envelope hit a border of the current grid and,

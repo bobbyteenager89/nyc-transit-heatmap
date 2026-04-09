@@ -66,6 +66,7 @@ export function computeCostComparison(
         usesBike = true;
         bikeTripsPerMonth += monthlyTrips;
         break;
+      case "ownbike":
       case "walk":
         break;
     }
@@ -174,6 +175,7 @@ export function computeMonthlyCost(
       case "bike":
         usesBike = true;
         break;
+      case "ownbike":
       case "walk":
         break;
     }

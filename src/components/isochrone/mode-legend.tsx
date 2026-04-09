@@ -82,6 +82,7 @@ const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
   bus: BusIcon,
   walk: WalkIcon,
   bike: BikeIcon,
+  ownbike: BikeIcon,
   car: CarIcon,
   ferry: FerryIcon,
 };
@@ -90,24 +91,29 @@ const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
 // realistically turn off walking (you have to walk to/from everything). Every
 // other mode is toggleable. "bike" is Citi Bike under the hood (walk-to-dock,
 // ride, walk-from-dock) — relabeled for clarity.
-const MODE_CHIPS: { key: TransportMode; label: string; locked?: boolean }[] = [
+// `ownbike` is an "advanced" mode — hidden from the default legend and only
+// shown when the user opts in via the Advanced settings toggle.
+const MODE_CHIPS: { key: TransportMode; label: string; locked?: boolean; advanced?: boolean }[] = [
   { key: "walk", label: "Walk", locked: true },
   { key: "subway", label: "Subway" },
   { key: "bus", label: "Bus" },
   { key: "ferry", label: "Ferry" },
   { key: "bike", label: "Citi Bike" },
+  { key: "ownbike", label: "Own Bike", advanced: true },
   { key: "car", label: "Car" },
 ];
 
 interface ModeLegendProps {
   activeModes: TransportMode[];
   onToggle: (mode: TransportMode) => void;
+  showAdvanced?: boolean;
 }
 
-export function ModeLegend({ activeModes, onToggle }: ModeLegendProps) {
+export function ModeLegend({ activeModes, onToggle, showAdvanced = false }: ModeLegendProps) {
+  const visibleChips = MODE_CHIPS.filter((c) => showAdvanced || !c.advanced);
   return (
     <div className="grid grid-cols-3 gap-2">
-      {MODE_CHIPS.map(({ key, label, locked }) => {
+      {visibleChips.map(({ key, label, locked }) => {
         const isActive = activeModes.includes(key);
         const Icon = ICON_MAP[key];
         return (

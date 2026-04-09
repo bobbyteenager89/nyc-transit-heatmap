@@ -30,7 +30,7 @@ import { useTransitData } from "@/hooks/use-transit-data";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useDynamicGridCompute } from "@/hooks/use-dynamic-grid-compute";
 
-const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ferry"];
+const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ownbike", "ferry"];
 
 // Default modes on page load. Walk is locked ON (can't be toggled off) — you
 // have to walk to/from everything. Subway/bus/ferry/bike (Citi Bike) default
@@ -48,6 +48,7 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   bus: "Bus",
   walk: "Walk",
   bike: "Citi Bike",
+  ownbike: "Own Bike",
   car: "Car",
   ferry: "Ferry",
 };
@@ -56,6 +57,9 @@ export default function ExplorePage() {
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originAddress, setOriginAddress] = useState("");
   const [activeModes, setActiveModes] = useState<TransportMode[]>(DEFAULT_MODES);
+  // Advanced settings — hidden behind a disclosure. Currently gates `ownbike`
+  // mode. Also auto-enables whenever the URL already includes an advanced mode.
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [viewMode, setViewMode] = useState<ViewMode>("fastest");
   const [friendComputing, setFriendComputing] = useState(false);
@@ -184,6 +188,8 @@ export default function ExplorePage() {
       ) as TransportMode[];
       const merged = Array.from(new Set([...DEFAULT_MODES, ...parsed]));
       setActiveModes(merged);
+      // Auto-reveal advanced panel if the URL already carries an advanced mode.
+      if (parsed.includes("ownbike")) setShowAdvanced(true);
     }
     if (lat && lng) {
       const loc = { lat: Number(lat), lng: Number(lng) };
@@ -450,7 +456,26 @@ export default function ExplorePage() {
 
       {/* Shared: Transport modes */}
       <PanelSection title="Transport Modes">
-        <ModeLegend activeModes={activeModes} onToggle={toggleMode} />
+        <ModeLegend activeModes={activeModes} onToggle={toggleMode} showAdvanced={showAdvanced} />
+        <button
+          type="button"
+          onClick={() => {
+            setShowAdvanced((v) => {
+              const next = !v;
+              // Turning advanced OFF should also drop any advanced-only modes
+              // from the active set so the compute stays consistent with the UI.
+              if (!next && activeModes.includes("ownbike")) {
+                const cleaned = activeModes.filter((m) => m !== "ownbike");
+                setActiveModes(cleaned);
+                if (origin) updateURL(origin, maxMinutes, cleaned, originAddress);
+              }
+              return next;
+            });
+          }}
+          className="mt-2 text-[10px] uppercase tracking-wider text-white/40 hover:text-white/70 transition-colors"
+        >
+          {showAdvanced ? "− Hide advanced" : "+ Advanced modes"}
+        </button>
       </PanelSection>
 
       {/* View as: render filter (separate from compute toggles above) */}

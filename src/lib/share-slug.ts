@@ -11,7 +11,7 @@
  * This keeps typical slugs well under 60 URL-safe base64url characters.
  */
 
-const VALID_MODES = ["subway", "bus", "walk", "bike", "car", "ferry"] as const;
+const VALID_MODES = ["subway", "bus", "walk", "bike", "ownbike", "car", "ferry"] as const;
 type Mode = (typeof VALID_MODES)[number];
 
 export type ShareParams = {

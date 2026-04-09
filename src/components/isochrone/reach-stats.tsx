@@ -16,6 +16,7 @@ const MODE_LABELS: Record<TransportMode, string> = {
   walk: "Walk",
   car: "Car",
   bike: "Citi Bike",
+  ownbike: "Own Bike",
   ferry: "Ferry",
 };
 
