@@ -278,7 +278,7 @@ function CompareContent() {
 
   return (
     <div className="min-h-screen bg-[#0a0a12] text-white">
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <Link
           href="/rankings"
@@ -385,10 +385,13 @@ function CompareContent() {
         ) : (
           /* Comparison cards */
           <div
-            className="grid gap-4"
-            style={{
-              gridTemplateColumns: `repeat(${Math.min(selected.length, 3)}, minmax(0, 1fr))`,
-            }}
+            className={`grid grid-cols-1 gap-4 ${
+              selected.length === 1
+                ? "md:grid-cols-1"
+                : selected.length === 2
+                  ? "md:grid-cols-2"
+                  : "md:grid-cols-3"
+            }`}
           >
             {stats.map((s) => {
               const isCommuteWinner =

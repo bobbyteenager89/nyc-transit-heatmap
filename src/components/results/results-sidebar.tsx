@@ -38,7 +38,7 @@ export function ResultsSidebar({
   shareUrl,
 }: ResultsSidebarProps) {
   return (
-    <aside className="w-[360px] flex-shrink-0 flex flex-col border-r-3 border-red bg-pink overflow-y-auto">
+    <aside className="w-full md:w-[360px] flex-shrink-0 flex flex-col md:border-r-3 border-red bg-pink md:overflow-y-auto">
       {/* Header */}
       <PanelSection className="pb-6">
         <h1 className="text-3xl leading-none">

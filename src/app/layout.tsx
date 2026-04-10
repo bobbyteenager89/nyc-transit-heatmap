@@ -28,10 +28,16 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="h-screen overflow-hidden">
+      <body className="h-dvh overflow-hidden">
         {children}
         <Analytics />
         <SpeedInsights />

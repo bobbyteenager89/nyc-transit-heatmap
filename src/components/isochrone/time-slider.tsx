@@ -47,11 +47,11 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
         className="w-full h-1.5 appearance-none rounded-full cursor-pointer
           bg-gradient-to-r from-green-400 via-yellow-400 to-red-500
           [&::-webkit-slider-thumb]:appearance-none
-          [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+          [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
           [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full
           [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]
           [&::-webkit-slider-thumb]:cursor-pointer
-          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4
+          [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
           [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full
           [&::-moz-range-thumb]:border-none
           [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]

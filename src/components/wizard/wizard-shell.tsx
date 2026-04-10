@@ -80,19 +80,19 @@ export function WizardShell({ onComplete }: WizardShellProps) {
         )}
       </div>
 
-      {/* Navigation */}
-      <div className="flex border-t-3 border-red">
+      {/* Navigation — min-h-[48px] ensures comfortable touch targets */}
+      <div className="flex border-t-3 border-red pb-[env(safe-area-inset-bottom)]">
         {currentStep > 0 && (
           <button
             onClick={goBack}
-            className="px-6 py-4 font-display italic uppercase border-r-3 border-red hover:bg-red hover:text-pink transition-colors cursor-pointer"
+            className="px-6 py-4 min-h-[48px] font-display italic uppercase border-r-3 border-red hover:bg-red hover:text-pink transition-colors cursor-pointer"
           >
             &larr; Back
           </button>
         )}
         <button
           onClick={goNext}
-          className="flex-1 py-4 font-display italic uppercase bg-red text-pink hover:opacity-90 transition-opacity cursor-pointer text-lg"
+          className="flex-1 py-4 min-h-[48px] font-display italic uppercase bg-red text-pink hover:opacity-90 transition-opacity cursor-pointer text-lg"
         >
           {currentStep < STEPS.length - 1 ? "Next →" : "Show My Heatmap →"}
         </button>

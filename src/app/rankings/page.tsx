@@ -50,7 +50,7 @@ export default function RankingsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a12] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-8">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-sm font-body text-white/40 hover:text-white/70 transition-colors"
