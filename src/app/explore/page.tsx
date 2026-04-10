@@ -183,6 +183,12 @@ export default function ExplorePage() {
     const m = params.get("m");
 
     if (t) setMaxMinutes(Number(t));
+    // Read own-bike preference directly from localStorage to avoid a
+    // race with useSyncExternalStore hydration timing.
+    const hasOwnBike = (() => {
+      try { return localStorage.getItem("nyc-transit-own-bike") === "true"; }
+      catch { return false; }
+    })();
     if (m) {
       // Baseline transit (walk/subway/bus/ferry) is always in the blend; the
       // URL only needs to preserve the opt-in overlays (bike, car). Parse any
@@ -192,14 +198,14 @@ export default function ExplorePage() {
       ) as TransportMode[];
       const merged = Array.from(new Set([...DEFAULT_MODES, ...parsed]));
       // Apply own-bike preference if persisted and not already in URL
-      if (ownBikePref && !merged.includes("ownbike")) {
+      if (hasOwnBike && !merged.includes("ownbike")) {
         merged.push("ownbike");
       }
       setActiveModes(merged);
       // Auto-reveal advanced panel if the URL already carries an advanced mode
       // or if the own-bike preference is set.
-      if (parsed.includes("ownbike") || ownBikePref) setShowAdvanced(true);
-    } else if (ownBikePref) {
+      if (parsed.includes("ownbike") || hasOwnBike) setShowAdvanced(true);
+    } else if (hasOwnBike) {
       // No URL modes param — apply own-bike preference to defaults
       setActiveModes([...DEFAULT_MODES, "ownbike"]);
       setShowAdvanced(true);
@@ -499,6 +505,10 @@ export default function ExplorePage() {
                 setOwnBikePref(checked);
                 if (checked && !activeModes.includes("ownbike")) {
                   const next: TransportMode[] = [...activeModes, "ownbike"];
+                  setActiveModes(next);
+                  if (origin) updateURL(origin, maxMinutes, next, originAddress);
+                } else if (!checked && activeModes.includes("ownbike")) {
+                  const next = activeModes.filter((m) => m !== "ownbike");
                   setActiveModes(next);
                   if (origin) updateURL(origin, maxMinutes, next, originAddress);
                 }

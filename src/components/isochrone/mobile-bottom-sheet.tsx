@@ -30,7 +30,7 @@ export function MobileBottomSheet({
 
       {/* Collapsed summary */}
       {!expanded && summary && (
-        <div className="px-4 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{summary}</div>
+        <div className="px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{summary}</div>
       )}
 
       {/* Expanded content */}
