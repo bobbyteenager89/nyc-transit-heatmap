@@ -47,10 +47,14 @@ Shipped 5 commits on `feat/night-mode-s17`: mobile responsive fixes across all p
 ## Review Results
 - Build: ✅ clean (Turbopack 3.0s, 7 routes, all static/dynamic as expected)
 - Tests: ✅ 92/92 passing
-- Code review agent: dispatched but still running at time of briefing write
+- Code review: ✅ ran, found 3 issues, all fixed in `ae882fe`:
+  - Logic bug: unchecking own-bike checkbox wasn't removing mode from activeModes
+  - Duplicate Tailwind padding utility in bottom sheet
+  - Race condition: useEffect reading reactive ownBikePref vs localStorage directly
+  - Added Viewport type annotation
 
 ## Branches Pushed
-- `feat/night-mode-s17` — PR-ready, 5 commits ahead of main
+- `feat/night-mode-s17` — PR-ready, 7 commits ahead of main
 
 ## Next Session Suggested Start
 1. Merge `feat/night-mode-s17` to main and deploy
