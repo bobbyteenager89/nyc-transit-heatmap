@@ -1,62 +1,53 @@
-# Night Mode Briefing — 2026-04-09
+# Night Mode Briefing — 2026-04-09 (Session 18)
 
 ## TL;DR
-Shipped 5 commits on `feat/night-mode-s17`: mobile responsive fixes across all pages, server-rendered rankings page, own-bike localStorage persistence, SEO metadata for 3 pages, and 5 new tests (92 total). Build clean, all tests green. Ready for review + merge.
+Shipped 4 commits on `feat/night-mode-s18`: landing page polish with animations, destination-side bus+subway transfers (both directions now), explore empty-state with quick-start buttons, and reduced-motion accessibility. Build clean, 92/92 tests green.
 
 ## Completed
-- **Mobile responsive audit + fixes** → commit `4ae626c`
-  - Added viewport meta with `viewport-fit=cover` for notch handling
-  - Switched `h-screen` → `h-dvh` for correct mobile viewport height
-  - Safe area inset padding on bottom sheet and wizard nav
-  - Slider thumb 16px → 24px for touch accessibility
-  - Results sidebar full-width on mobile (was fixed 360px, overflowed)
-  - Compare page grid stacks to single column on mobile
-  - Rankings header links stack vertically on narrow screens
-  - iOS text-size-adjust prevention
+- **Landing page polish** → commit `eda98bc`
+  - Staggered card entrance animations (fade-up with 150ms delays between cards)
+  - Card hover: accent glow line at top, icon scale-up, CTA arrow slides right
+  - Per-card SVG icons (compass for Explore, pin for Find, bar chart for Rankings)
+  - Map background breathing animation (8s cycle, subtle 0.2→0.35 opacity pulse)
+  - Radial gradient overlay for visual depth
 
-- **Server-render rankings page** → commit `d313f18`
-  - Split into server component (reads `rankings.json` at build time) + client component (`RankingsList` for interactive selection/compare)
-  - No more client-side fetch, no loading spinner — instant content on first paint
-  - Page is statically prerendered at build time (○ in route table)
+- **Destination-side bus+subway transfers** → commit `383d3dc`
+  - Previously bus-assisted subway access only worked on the origin side
+  - Now `computeSubwayTime` uses `buildStationAccess` on both sides
+  - Symmetric manhattan distances mean same function works for access and egress
+  - Expands reach for destinations near bus routes but far from subway stations
 
-- **Own-bike persistence toggle** → commit `ce177b5`
-  - New `useOwnBikePreference` hook backed by `useSyncExternalStore` + localStorage
-  - "I have my own bike" checkbox in Advanced modes section
-  - On next visit, auto-enables `ownbike` + reveals Advanced panel
-  - Works with URL params: URL modes override but preference fills in when URL has no `m=` param
+- **Enhanced empty-state with quick-start locations** → commit `1bdbfa9`
+  - Pulsing pin icon animation drawing attention to the map
+  - "Drop a pin to start" with clearer copy
+  - Quick-start buttons: Times Square, Williamsburg, Astoria
+  - One tap to instantly set origin and trigger compute — zero typing needed
 
-- **SEO metadata** → commit `f56cf4d`
-  - Added `title` + `description` metadata for Rankings, Compare, and Find pages
-  - Rankings uses inline metadata (RSC); Compare and Find use `layout.tsx` wrappers
-
-- **Tests** → commit `d48333a`
-  - 5 tests for own-bike preference localStorage behavior
-  - Test suite: 87 → 92 passing
+- **Reduced-motion accessibility** → commit `d4990e0`
+  - `prefers-reduced-motion: reduce` disables all landing page animations
+  - Static fallback values ensure content is still visible
 
 ## In Progress
 - None — all planned work completed
 
 ## Decisions Needed (1-way doors)
-### Merge strategy
-**Context:** 5 focused commits on `feat/night-mode-s17`, all build-clean and tested.
+### Station-click-as-origin for rankings page
+**Context:** The rankings page links each neighborhood to `/explore?lat=...`. An alternative would be showing an inline isochrone preview when you click a ranking card.
 **Options:**
-- A) Merge to main and deploy *(recommended — all changes are safe, incremental improvements)*
-- B) Create a PR for review first
-**Blocking:** Production deploy
+- A) Keep current behavior — click links to /explore *(recommended — simple, already works)*
+- B) Add inline preview map on click — more complex, may slow down the page
+**Blocking:** Nothing — this is a future enhancement
 
 ## Review Results
-- Build: ✅ clean (Turbopack 3.0s, 7 routes, all static/dynamic as expected)
+- Build: ✅ clean (Turbopack 3.0s, 7 routes)
 - Tests: ✅ 92/92 passing
-- Code review: ✅ ran, found 3 issues, all fixed in `ae882fe`:
-  - Logic bug: unchecking own-bike checkbox wasn't removing mode from activeModes
-  - Duplicate Tailwind padding utility in bottom sheet
-  - Race condition: useEffect reading reactive ownBikePref vs localStorage directly
-  - Added Viewport type annotation
+- Code review: dispatched, results pending at time of briefing write
 
 ## Branches Pushed
-- `feat/night-mode-s17` — PR-ready, 7 commits ahead of main
+- `feat/night-mode-s18` — PR-ready, 4 commits ahead of main
 
 ## Next Session Suggested Start
-1. Merge `feat/night-mode-s17` to main and deploy
-2. Mobile QA on real iPhone (verify the responsive fixes in-hand)
-3. Pick next roadmap item: bus GTFS route graph, destination-side transfers, or landing polish
+1. Merge `feat/night-mode-s18` to main and deploy
+2. Check the live landing page — do the animations feel right? Too much/little?
+3. Test the bus+subway destination-side transfers — explore from a location where a bus-to-subway egress leg should matter (e.g., deep Brooklyn)
+4. Remaining roadmap: GTFS bus route graph (replaces great-circle approximation), landing page video/preview in cards
