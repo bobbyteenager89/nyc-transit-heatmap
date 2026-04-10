@@ -80,5 +80,8 @@ html {
     animation: none;
     opacity: 0.25;
   }
+  .animate-ping {
+    animation: none;
+  }
 }
 
