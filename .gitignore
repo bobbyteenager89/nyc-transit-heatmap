@@ -42,4 +42,5 @@ next-env.d.ts
 
 # project-specific
 data/gtfs/
+data/gtfs-bus/
 .superpowers/

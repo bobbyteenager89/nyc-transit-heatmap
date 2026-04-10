@@ -127,19 +127,33 @@ function cellsToHexGeoJSON(
 }
 
 /**
- * Color ramp — stepped contours in 10-min bands.
- * Each band is a flat color (no interpolation), so subway-powered "veins"
- * of faster time show up as crisp finger-shaped intrusions of the lower
- * band into the slower band around it.
+ * Color ramp — hybrid smooth-within-bands.
+ * Smooth interpolation within each 10-min band for fine-grained detail,
+ * with visible color jumps at band edges so the contour structure reads
+ * clearly at a glance. Best of both: you see "everything under 20 min"
+ * as a distinct zone, but within that zone the gradient reveals which
+ * spots are 12 vs 18 minutes.
  */
 const COLOR_RAMP: mapboxgl.Expression = [
-  "step", ["get", "time"],
-  "#39ff14",          // 0-10 min — neon green
-  10, "#ffd000",      // 10-20 min — golden yellow
-  20, "#ff8800",      // 20-30 min — vivid amber
-  30, "#ff4400",      // 30-40 min — vivid orange
-  40, "#e21822",      // 40-50 min — red
-  50, "#8b0000",      // 50+ min — dark red
+  "interpolate", ["linear"], ["get", "time"],
+  // Band 1: 0-10 min — bright green to yellow-green
+  0,  "#39ff14",
+  9,  "#8aff00",
+  // Jump to band 2: 10-20 min — golden yellow to amber
+  10, "#ffd000",
+  19, "#ffb000",
+  // Jump to band 3: 20-30 min — vivid amber to orange
+  20, "#ff8800",
+  29, "#ff6200",
+  // Jump to band 4: 30-40 min — vivid orange to red-orange
+  30, "#ff4400",
+  39, "#f02010",
+  // Jump to band 5: 40-50 min — red
+  40, "#e21822",
+  49, "#c01020",
+  // Jump to band 6: 50+ min — dark red
+  50, "#8b0000",
+  60, "#5a0000",
 ];
 
 export function IsochroneMap({
