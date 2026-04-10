@@ -627,13 +627,42 @@ export default function ExplorePage() {
 
         {!origin && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div className="text-center px-4">
-              <p className="font-display italic uppercase text-3xl text-white/20">
-                Enter an address
+            <div className="text-center px-4 animate-fade-in">
+              {/* Pulsing pin icon */}
+              <div className="mx-auto mb-4 relative w-10 h-10">
+                <svg className="w-10 h-10 text-accent/40" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                </svg>
+                <span className="absolute inset-0 rounded-full bg-accent/20 animate-ping" />
+              </div>
+              <p className="font-display italic uppercase text-2xl md:text-3xl text-white/20">
+                Drop a pin to start
               </p>
-              <p className="font-body text-sm text-white/20 mt-2">
-                Try <span className="text-accent/60">Times Square</span> — or click the map to drop a pin
+              <p className="font-body text-sm text-white/30 mt-2 mb-4">
+                Click the map — or try one of these:
               </p>
+              {/* Quick-start location buttons */}
+              <div className="flex flex-wrap justify-center gap-2 pointer-events-auto">
+                {[
+                  { name: "Times Square", lat: 40.758, lng: -73.9855 },
+                  { name: "Williamsburg", lat: 40.7081, lng: -73.9571 },
+                  { name: "Astoria", lat: 40.7724, lng: -73.9301 },
+                ].map((loc) => (
+                  <button
+                    key={loc.name}
+                    onClick={() => {
+                      const latlng = { lat: loc.lat, lng: loc.lng };
+                      setOrigin(latlng);
+                      setOriginAddress(loc.name);
+                      runCompute(latlng);
+                      updateURL(latlng, maxMinutes, activeModes, loc.name);
+                    }}
+                    className="px-3 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-body hover:bg-accent/20 transition-colors cursor-pointer"
+                  >
+                    {loc.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
