@@ -1,8 +1,15 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { RankingsList } from "@/components/rankings/rankings-list";
 import type { RankedEntry } from "@/components/rankings/rankings-list";
+
+export const metadata: Metadata = {
+  title: "NYC Neighborhood Rankings — Isochrone NYC",
+  description:
+    "Which NYC neighborhoods have the best transit access? Ranked by average subway travel time to 5 major hubs.",
+};
 
 async function getRankings(): Promise<RankedEntry[]> {
   const filePath = join(process.cwd(), "public", "data", "rankings.json");
