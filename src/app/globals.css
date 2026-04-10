@@ -69,3 +69,16 @@ html {
   animation: map-breathe 8s ease-in-out infinite;
 }
 
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in {
+    animation: none;
+    opacity: 1;
+  }
+  .animate-map-breathe {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
