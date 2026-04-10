@@ -29,6 +29,7 @@ import { H3_RESOLUTION } from "@/lib/constants";
 import { useTransitData } from "@/hooks/use-transit-data";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useDynamicGridCompute } from "@/hooks/use-dynamic-grid-compute";
+import { useOwnBikePreference } from "@/hooks/use-own-bike-preference";
 
 const ALL_MODES: TransportMode[] = ["subway", "bus", "walk", "car", "bike", "ownbike", "ferry"];
 
@@ -74,6 +75,9 @@ export default function ExplorePage() {
   const [mobileExpanded, setMobileExpanded] = useState(true);
   const [meetupCopied, setMeetupCopied] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+
+  // Own-bike preference — persisted in localStorage
+  const [ownBikePref, setOwnBikePref] = useOwnBikePreference();
 
   // All transit datasets (subway, citibike, ferry, bus)
   const {
@@ -187,9 +191,18 @@ export default function ExplorePage() {
         ALL_MODES.includes(mode as TransportMode)
       ) as TransportMode[];
       const merged = Array.from(new Set([...DEFAULT_MODES, ...parsed]));
+      // Apply own-bike preference if persisted and not already in URL
+      if (ownBikePref && !merged.includes("ownbike")) {
+        merged.push("ownbike");
+      }
       setActiveModes(merged);
-      // Auto-reveal advanced panel if the URL already carries an advanced mode.
-      if (parsed.includes("ownbike")) setShowAdvanced(true);
+      // Auto-reveal advanced panel if the URL already carries an advanced mode
+      // or if the own-bike preference is set.
+      if (parsed.includes("ownbike") || ownBikePref) setShowAdvanced(true);
+    } else if (ownBikePref) {
+      // No URL modes param — apply own-bike preference to defaults
+      setActiveModes([...DEFAULT_MODES, "ownbike"]);
+      setShowAdvanced(true);
     }
     if (lat && lng) {
       const loc = { lat: Number(lat), lng: Number(lng) };
@@ -476,6 +489,27 @@ export default function ExplorePage() {
         >
           {showAdvanced ? "− Hide advanced" : "+ Advanced modes"}
         </button>
+        {showAdvanced && (
+          <label className="mt-2 flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={ownBikePref}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setOwnBikePref(checked);
+                if (checked && !activeModes.includes("ownbike")) {
+                  const next: TransportMode[] = [...activeModes, "ownbike"];
+                  setActiveModes(next);
+                  if (origin) updateURL(origin, maxMinutes, next, originAddress);
+                }
+              }}
+              className="w-3.5 h-3.5 rounded border border-white/20 bg-transparent accent-accent cursor-pointer"
+            />
+            <span className="text-[10px] uppercase tracking-wider text-white/40 group-hover:text-white/60 transition-colors">
+              I have my own bike
+            </span>
+          </label>
+        )}
       </PanelSection>
 
       {/* View as: render filter (separate from compute toggles above) */}
