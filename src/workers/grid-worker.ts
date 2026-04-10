@@ -213,23 +213,24 @@ function computeSubwayTime(
 ): number | null {
   // Consider top 8 stations at each end. Widening the candidate pool lets the
   // matrix pick the best end-to-end route even if one side's best line is the
-  // 4th-nearest station. If `busStopGrid` is provided, the origin-side access
-  // set is augmented with bus-to-station legs (one-side-only bus transfers).
+  // 4th-nearest station. If `busStopGrid` is provided, BOTH sides get
+  // bus-to-station legs: "walk → bus → subway station" on access and
+  // "subway station → bus → walk" on egress. Distances are symmetric
+  // (manhattan), so buildStationAccess works identically in both directions.
   const fromAccess = buildStationAccess(from, stationGrid, busStopGrid);
-  const nearTo = findNearestStationsIndexed(to, stationGrid, SUBWAY_MAX_WALK_MI, 8);
-  if (fromAccess.size === 0 || nearTo.length === 0) return null;
+  const toAccess = buildStationAccess(to, stationGrid, busStopGrid);
+  if (fromAccess.size === 0 || toAccess.size === 0) return null;
   let best = Infinity;
   for (const [fromId, accessMin] of fromAccess) {
     const fi = idxMap.get(fromId);
     if (fi === undefined) continue;
-    for (const t of nearTo) {
-      const ti = idxMap.get(t.id);
+    for (const [toId, egressMin] of toAccess) {
+      const ti = idxMap.get(toId);
       if (ti === undefined) continue;
       const stationTime = cachedMatrixLookup(matrix, fi, ti);
       if (stationTime >= 999) continue;
-      const walkFromStation = (t.dist / WALK_SPEED) * 60;
       // Add average boarding wait — the GTFS matrix is pure ride time.
-      const total = accessMin + SUBWAY_WAIT_MIN + stationTime + walkFromStation;
+      const total = accessMin + SUBWAY_WAIT_MIN + stationTime + egressMin;
       if (total < best) best = total;
     }
   }
@@ -319,9 +320,9 @@ function computeTimesForLocation(
     times.ownbike = Math.round(bikeRideMin(point, destLoc) * 10) / 10;
   }
   if (modes.includes("subway")) {
-    // When bus is also active, pass the bus stop grid so the access leg can
-    // be "walk → bus stop → bus ride → subway station" instead of a straight
-    // walk from the hex. One-sided: only the origin leg uses bus assist.
+    // When bus is also active, pass the bus stop grid so both access and
+    // egress legs can use "walk → bus → subway station" instead of a
+    // straight walk. Both sides are bus-assisted.
     const busAssist = modes.includes("bus") ? busStopGrid : null;
     times.subway = computeSubwayTime(point, destLoc, stationGrid, stationMatrix.times, idxMap, busAssist);
   }
