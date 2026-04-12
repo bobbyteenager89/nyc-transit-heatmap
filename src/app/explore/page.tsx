@@ -213,11 +213,16 @@ export default function ExplorePage() {
     if (lat && lng) {
       const loc = { lat: Number(lat), lng: Number(lng) };
       setOrigin(loc);
+      // Show address from URL immediately (before async geocode)
+      const urlAddress = params.get("address");
+      if (urlAddress) setOriginAddress(urlAddress);
       runCompute(loc);
-      // Reverse geocode to show address in input
-      reverseGeocode(loc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
-        .then((addr) => setOriginAddress(addr))
-        .catch(() => setOriginAddress(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`));
+      // Reverse geocode to fill/refine address if not in URL
+      if (!urlAddress) {
+        reverseGeocode(loc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
+          .then((addr) => setOriginAddress(addr))
+          .catch(() => setOriginAddress(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`));
+      }
     }
 
     // If a ?compare=[slug] param is present, decode it and pre-load the friend's location.

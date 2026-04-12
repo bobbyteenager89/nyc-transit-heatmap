@@ -38,27 +38,27 @@ export function ResultsSidebar({
   shareUrl,
 }: ResultsSidebarProps) {
   return (
-    <aside className="w-full md:w-[360px] flex-shrink-0 flex flex-col md:border-r-3 border-red bg-pink md:overflow-y-auto">
+    <aside className="w-full md:w-[360px] flex-shrink-0 flex flex-col bg-surface md:overflow-y-auto gap-3 p-4">
       {/* Header */}
-      <PanelSection className="pb-6">
-        <h1 className="text-3xl leading-none">
-          Find My<br />Neighborhood
+      <PanelSection className="pb-4">
+        <h1 className="text-3xl leading-none text-white">
+          Find My<br /><span className="text-accent">Neighborhood</span>
         </h1>
-        <p className="font-body text-xs text-red/60 mt-1">
+        <p className="font-body text-xs text-white/40 mt-1">
           {destinations.length} destination{destinations.length !== 1 ? "s" : ""} · {modes.length} mode{modes.length !== 1 ? "s" : ""}
         </p>
       </PanelSection>
 
       {/* Best Neighborhood callout */}
       {bestCell && (
-        <div className="border-b-3 border-red">
+        <div className="border-b border-white/10">
           <BestNeighborhood bestCell={bestCell} bestAddress={bestAddress} />
         </div>
       )}
 
       {/* Surprise insight */}
       {bestCell && destinations.length >= 2 && (
-        <div className="border-b-3 border-red px-6 py-4">
+        <div className="border-b border-white/10 px-2 py-3">
           <SurpriseInsight destinations={destinations} bestCell={bestCell} />
         </div>
       )}
@@ -68,7 +68,7 @@ export function ResultsSidebar({
         {selectedDestId && (
           <button
             onClick={() => onSelectDest(null)}
-            className="w-full border-3 border-red p-2 font-display italic uppercase text-xs hover:bg-red hover:text-pink transition-colors cursor-pointer mb-2"
+            className="w-full border border-white/20 rounded p-2 font-display italic uppercase text-xs text-white/70 hover:bg-white/10 transition-colors cursor-pointer mb-2"
           >
             ← Show All Destinations
           </button>
@@ -81,16 +81,16 @@ export function ResultsSidebar({
                 <button
                   onClick={() => onSelectDest(isSelected ? null : dest.id)}
                   aria-pressed={isSelected}
-                  className={`w-full flex justify-between items-center text-sm font-body p-2 border-3 transition-colors cursor-pointer ${
+                  className={`w-full flex justify-between items-center text-sm font-body p-2 rounded border transition-colors cursor-pointer ${
                     isSelected
-                      ? "border-red bg-red text-pink"
+                      ? "border-accent bg-accent/20 text-accent"
                       : selectedDestId
-                        ? "border-red/30 text-red/40 hover:border-red hover:text-red"
-                        : "border-red hover:bg-red hover:text-pink"
+                        ? "border-white/10 text-white/40 hover:border-white/30 hover:text-white/70"
+                        : "border-white/20 text-white/80 hover:bg-white/10"
                   }`}
                 >
                   <span className="font-bold">{dest.name}</span>
-                  <span className={isSelected ? "text-pink/70" : "text-red/60"}>{dest.frequency}×/wk</span>
+                  <span className={isSelected ? "text-accent/70" : "text-white/40"}>{dest.frequency}×/wk</span>
                 </button>
               </li>
             );
@@ -99,7 +99,7 @@ export function ResultsSidebar({
         <div className="mt-3 flex gap-2">
           <button
             onClick={onEditDestinations}
-            className="flex-1 border-3 border-red p-2 font-display italic uppercase text-sm hover:bg-red hover:text-pink transition-colors cursor-pointer"
+            className="flex-1 border border-white/20 rounded p-2 font-display italic uppercase text-sm text-white/70 hover:bg-white/10 transition-colors cursor-pointer"
           >
             Edit
           </button>
@@ -107,8 +107,8 @@ export function ResultsSidebar({
             <button
               onClick={onDropPin}
               aria-pressed={!!pinDropMode}
-              className={`flex-1 border-3 border-red p-2 font-display italic uppercase text-sm transition-colors cursor-pointer ${
-                pinDropMode ? "bg-red text-pink" : "hover:bg-red hover:text-pink"
+              className={`flex-1 border rounded p-2 font-display italic uppercase text-sm transition-colors cursor-pointer ${
+                pinDropMode ? "border-accent bg-accent/20 text-accent" : "border-white/20 text-white/70 hover:bg-white/10"
               }`}
             >
               {pinDropMode ? "Cancel Pin" : "Drop a Pin"}

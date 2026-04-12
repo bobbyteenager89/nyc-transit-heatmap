@@ -1,17 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WizardShell } from "@/components/wizard/wizard-shell";
 import { HexMap } from "@/components/results/hex-map";
 import { ResultsSidebar } from "@/components/results/results-sidebar";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { SubwayData } from "@/lib/subway";
-import { CitiBikeData } from "@/lib/citibike";
-import { loadFerryData } from "@/lib/ferry";
-import type { FerryData, FerryAdjacency } from "@/lib/ferry";
-import { loadBusData } from "@/lib/bus";
-import type { BusData } from "@/lib/bus";
+import { useTransitData } from "@/hooks/use-transit-data";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import { reverseGeocode } from "@/lib/geocode";
@@ -21,8 +16,6 @@ import type {
   Destination,
   TransportMode,
   HexCell,
-  StationGraph,
-  StationMatrix,
   LatLng,
 } from "@/lib/types";
 
@@ -38,13 +31,8 @@ export default function FindPage() {
   const [computing, setComputing] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
 
-  // Transit data
-  const [stationGraph, setStationGraph] = useState<StationGraph | null>(null);
-  const [stationMatrix, setStationMatrix] = useState<StationMatrix | null>(null);
-  const [citiBikeData, setCitiBikeData] = useState<CitiBikeData | null>(null);
-  const [ferryData, setFerryData] = useState<{ data: FerryData; adjacency: FerryAdjacency } | null>(null);
-  const [busData, setBusData] = useState<BusData | null>(null);
-  const [dataReady, setDataReady] = useState(false);
+  // Transit data (shared hook — same data as explore page)
+  const { stationGraph, stationMatrix, citiBikeData, ferryData, busData, dataReady } = useTransitData();
 
   // Results UI state
   const [selectedDestId, setSelectedDestId] = useState<string | null>(null);
@@ -63,36 +51,6 @@ export default function FindPage() {
   // eliminate the double-mount that occurred when sidebarContent was placed in
   // both the desktop div and MobileBottomSheet simultaneously.
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  // Load subway + Citi Bike data on mount
-  useEffect(() => {
-    async function load() {
-      try {
-        const [graphRes, matrixRes] = await Promise.all([
-          fetch("/data/station-graph.json"),
-          fetch("/data/station-matrix.json"),
-        ]);
-        const graph: StationGraph = await graphRes.json();
-        const matrix: StationMatrix = await matrixRes.json();
-        setStationGraph(graph);
-        setStationMatrix(matrix);
-
-        const citi = await CitiBikeData.fetch();
-        setCitiBikeData(citi);
-
-        const ferry = await loadFerryData();
-        setFerryData(ferry);
-
-        const bus = await loadBusData();
-        setBusData(bus);
-
-        setDataReady(true);
-      } catch (err) {
-        console.error("Failed to load transit data:", err);
-      }
-    }
-    load();
-  }, []);
 
   // Check for shared state in URL on mount
   useEffect(() => {
@@ -271,21 +229,18 @@ export default function FindPage() {
       ? window.location.href
       : `https://nyc-transit-heatmap.vercel.app/find?${encodeShareableState(destinations, modes)}`;
 
-  // Visible cells depend on view mode
+  // Visible cells depend on view mode — memoized to avoid 150k-cell spread per render
+  const visibleCells = useMemo(() => {
+    if (selectedDestId === null) return cells;
+    return cells.map((cell) => {
+      const destTime = cell.destBreakdown[selectedDestId] ?? null;
+      return {
+        ...cell,
+        compositeScore: destTime ?? 999,
+      };
+    });
+  }, [cells, selectedDestId]);
   const showPerPin = selectedDestId !== null;
-  const visibleCells = (() => {
-    if (showPerPin) {
-      // Show per-pin view: raw travel time in minutes (like accessibility heatmap)
-      return cells.map((cell) => {
-        const destTime = cell.destBreakdown[selectedDestId] ?? null;
-        return {
-          ...cell,
-          compositeScore: destTime ?? 999,
-        };
-      });
-    }
-    return cells;
-  })();
 
   if (phase === "wizard") {
     return (
@@ -330,7 +285,7 @@ export default function FindPage() {
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-full p-0 md:p-3">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Desktop sidebar — only mounted on >=md. Eliminates double-mount. */}
       {isDesktop && (
         <div>
@@ -340,8 +295,8 @@ export default function FindPage() {
 
       <main className="flex-1 relative w-full">
         {computing && (
-          <div className="absolute inset-0 bg-pink/80 z-50 flex items-center justify-center">
-            <span className="font-display italic uppercase text-2xl animate-pulse">
+          <div className="absolute inset-0 bg-surface/90 z-50 flex items-center justify-center">
+            <span className="font-display italic uppercase text-2xl text-accent animate-pulse">
               Computing… {computeProgress}%
             </span>
           </div>
@@ -349,7 +304,7 @@ export default function FindPage() {
 
         {!dataReady && !computing && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <span className="font-display italic uppercase text-xl text-red/40 animate-pulse">
+            <span className="font-display italic uppercase text-xl text-white/30 animate-pulse">
               Loading transit data…
             </span>
           </div>

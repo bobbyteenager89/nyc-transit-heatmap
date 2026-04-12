@@ -11,6 +11,7 @@ export class CitiBikeData {
 
   static async fetch(): Promise<CitiBikeData> {
     const res = await fetch(CITIBIKE_STATION_INFO_URL);
+    if (!res.ok) return new CitiBikeData([]);
     const json = await res.json();
     const stations: CitiBikeStation[] = json.data.stations.map((s: any) => ({
       id: s.station_id,

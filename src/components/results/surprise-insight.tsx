@@ -32,13 +32,13 @@ export function SurpriseInsight({ destinations, bestCell }: SurpriseInsightProps
   if (fastestTime >= 20) return null;
 
   return (
-    <div className="border-3 border-red p-4 bg-pink">
-      <div className="text-xs uppercase font-bold tracking-widest mb-1 text-red/60">
+    <div className="border border-white/15 rounded-lg p-4 bg-surface-card">
+      <div className="text-xs uppercase font-bold tracking-widest mb-1 text-white/40">
         Surprise Finding
       </div>
-      <p className="font-body text-sm leading-relaxed">
-        <span className="font-bold">{fastestDest.name}</span> is only{" "}
-        <span className="font-bold">{fastestTime} min away</span> from your ideal neighborhood
+      <p className="font-body text-sm leading-relaxed text-white/70">
+        <span className="font-bold text-white">{fastestDest.name}</span> is only{" "}
+        <span className="font-bold text-accent">{fastestTime} min away</span> from your ideal neighborhood
         — even though it might not feel close on a map.
       </p>
     </div>

@@ -427,8 +427,8 @@ export function IsochroneMap({
         }
 
         const modeLabels: Record<string, string> = {
-          walk: "Walk", bike: "Citi Bike", subway: "Subway",
-          bus: "Bus", car: "Car", ferry: "Ferry",
+          walk: "Walk", bike: "Citi Bike", ownbike: "Own Bike",
+          subway: "Subway", bus: "Bus", car: "Car", ferry: "Ferry",
         };
         const modeRows = activeModesRef.current
           .map((mode) => {

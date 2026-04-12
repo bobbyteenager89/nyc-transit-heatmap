@@ -1,6 +1,6 @@
 import type { LatLng, StationGraph, StationMatrix } from "./types";
 import { manhattanDistanceMi } from "./travel-time";
-import { SUBWAY_MAX_WALK_MI, WALK_SPEED } from "./constants";
+import { SUBWAY_MAX_WALK_MI, SUBWAY_WAIT_MIN, WALK_SPEED } from "./constants";
 
 interface NearestStation {
   stationId: string;
@@ -69,7 +69,7 @@ export function computeSubwayTime(
       const stationTime = subway.stationToStationTime(origin.stationId, dest.stationId);
       if (stationTime === null) continue;
 
-      const total = origin.walkMinutes + stationTime + dest.walkMinutes;
+      const total = origin.walkMinutes + SUBWAY_WAIT_MIN + stationTime + dest.walkMinutes;
       if (total < best) best = total;
     }
   }

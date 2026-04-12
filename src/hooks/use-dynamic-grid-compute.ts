@@ -130,6 +130,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
 
       setComputing(true);
       setComputeProgress(0);
+      setGridBounds(CORE_NYC_BOUNDS);
       try {
         const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
@@ -165,7 +166,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
           });
         };
 
-        const currentBounds = gridBounds;
+        const currentBounds = CORE_NYC_BOUNDS;
         const [hexResult, contours] = await Promise.all([
           computeForBounds(currentBounds, (p) => setComputeProgress(p)),
           fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
@@ -197,7 +198,8 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
         setComputing(false);
       }
     },
-    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, gridBounds, maxMinutes]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, maxMinutes]
   );
 
   return {

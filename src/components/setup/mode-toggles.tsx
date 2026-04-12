@@ -39,7 +39,7 @@ export function ModeToggles({ selected, onChange }: ModeTogglesProps) {
           />
         ))}
       </div>
-      <p className="font-body text-xs text-red/50 mt-2 leading-relaxed">
+      <p className="font-body text-xs text-white/40 mt-2 leading-relaxed">
         The map shows the fastest of your selected modes for each hex.
       </p>
     </div>

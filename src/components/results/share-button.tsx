@@ -38,7 +38,7 @@ export function ShareButton({ url }: ShareButtonProps) {
   return (
     <button
       onClick={handleShare}
-      className="w-full border-3 border-red p-3 font-display italic uppercase text-sm hover:bg-red hover:text-pink transition-colors cursor-pointer"
+      className="w-full border border-white/20 rounded p-3 font-display italic uppercase text-sm text-white/70 hover:bg-white/10 transition-colors cursor-pointer"
     >
       {copied ? "Copied!" : "Share This Heatmap"}
     </button>

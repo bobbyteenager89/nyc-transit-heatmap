@@ -24,6 +24,7 @@ let cached: { data: FerryData; adjacency: FerryAdjacency } | null = null;
 export async function loadFerryData(): Promise<{ data: FerryData; adjacency: FerryAdjacency }> {
   if (cached) return cached;
   const res = await fetch("/data/ferry-terminals.json");
+  if (!res.ok) return { data: { terminals: [], routes: {} }, adjacency: {} };
   const data: FerryData = await res.json();
   const adjacency = buildFerryAdjacency(data);
   cached = { data, adjacency };

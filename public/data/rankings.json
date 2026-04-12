@@ -6,7 +6,7 @@
       "lat": 40.7549,
       "lng": -73.984
     },
-    "avgMinutes": 17
+    "avgMinutes": 16.8
   },
   {
     "name": "West Village",
@@ -15,7 +15,7 @@
       "lat": 40.7336,
       "lng": -74.0027
     },
-    "avgMinutes": 17.8
+    "avgMinutes": 17.7
   },
   {
     "name": "SoHo",
@@ -24,7 +24,16 @@
       "lat": 40.7233,
       "lng": -73.9985
     },
-    "avgMinutes": 20
+    "avgMinutes": 19.8
+  },
+  {
+    "name": "Tribeca",
+    "borough": "Manhattan",
+    "center": {
+      "lat": 40.7163,
+      "lng": -74.0086
+    },
+    "avgMinutes": 20.2
   },
   {
     "name": "Murray Hill",
@@ -36,22 +45,13 @@
     "avgMinutes": 20.3
   },
   {
-    "name": "Tribeca",
-    "borough": "Manhattan",
-    "center": {
-      "lat": 40.7163,
-      "lng": -74.0086
-    },
-    "avgMinutes": 20.3
-  },
-  {
     "name": "Chelsea",
     "borough": "Manhattan",
     "center": {
       "lat": 40.7465,
       "lng": -74.0014
     },
-    "avgMinutes": 21.5
+    "avgMinutes": 21.3
   },
   {
     "name": "Financial District",
@@ -60,7 +60,7 @@
       "lat": 40.7075,
       "lng": -74.0089
     },
-    "avgMinutes": 21.5
+    "avgMinutes": 21.4
   },
   {
     "name": "Gramercy",
@@ -69,7 +69,7 @@
       "lat": 40.7368,
       "lng": -73.9845
     },
-    "avgMinutes": 22
+    "avgMinutes": 21.7
   },
   {
     "name": "East Village",
@@ -87,7 +87,7 @@
       "lat": 40.744,
       "lng": -73.956
     },
-    "avgMinutes": 25
+    "avgMinutes": 24.7
   },
   {
     "name": "Upper West Side",
@@ -96,7 +96,7 @@
       "lat": 40.787,
       "lng": -73.9754
     },
-    "avgMinutes": 25.6
+    "avgMinutes": 25.5
   },
   {
     "name": "Hell's Kitchen",
@@ -105,7 +105,7 @@
       "lat": 40.7638,
       "lng": -73.9918
     },
-    "avgMinutes": 26.6
+    "avgMinutes": 26.2
   },
   {
     "name": "DUMBO",
@@ -114,16 +114,7 @@
       "lat": 40.7033,
       "lng": -73.989
     },
-    "avgMinutes": 27.7
-  },
-  {
-    "name": "Greenpoint",
-    "borough": "Brooklyn",
-    "center": {
-      "lat": 40.7274,
-      "lng": -73.951
-    },
-    "avgMinutes": 28.1
+    "avgMinutes": 27.6
   },
   {
     "name": "Lower East Side",
@@ -132,7 +123,16 @@
       "lat": 40.715,
       "lng": -73.9843
     },
-    "avgMinutes": 28.3
+    "avgMinutes": 28
+  },
+  {
+    "name": "Greenpoint",
+    "borough": "Brooklyn",
+    "center": {
+      "lat": 40.7274,
+      "lng": -73.951
+    },
+    "avgMinutes": 28
   },
   {
     "name": "Williamsburg",
@@ -141,7 +141,7 @@
       "lat": 40.7081,
       "lng": -73.9571
     },
-    "avgMinutes": 29.2
+    "avgMinutes": 29.1
   },
   {
     "name": "Fort Greene",
@@ -150,7 +150,7 @@
       "lat": 40.6892,
       "lng": -73.9747
     },
-    "avgMinutes": 29.2
+    "avgMinutes": 29.1
   },
   {
     "name": "Prospect Heights",
@@ -159,7 +159,7 @@
       "lat": 40.6775,
       "lng": -73.9692
     },
-    "avgMinutes": 30.6
+    "avgMinutes": 30.5
   },
   {
     "name": "Cobble Hill",
@@ -168,7 +168,7 @@
       "lat": 40.686,
       "lng": -73.9969
     },
-    "avgMinutes": 32.8
+    "avgMinutes": 32.5
   },
   {
     "name": "Harlem",
@@ -177,7 +177,7 @@
       "lat": 40.8116,
       "lng": -73.9465
     },
-    "avgMinutes": 34.2
+    "avgMinutes": 33.8
   },
   {
     "name": "Crown Heights",
@@ -186,7 +186,7 @@
       "lat": 40.6694,
       "lng": -73.9422
     },
-    "avgMinutes": 34.8
+    "avgMinutes": 34.7
   },
   {
     "name": "Park Slope",
@@ -195,7 +195,7 @@
       "lat": 40.671,
       "lng": -73.9777
     },
-    "avgMinutes": 37.6
+    "avgMinutes": 37.3
   },
   {
     "name": "Bushwick",
@@ -204,7 +204,7 @@
       "lat": 40.6942,
       "lng": -73.9215
     },
-    "avgMinutes": 41.6
+    "avgMinutes": 41.5
   },
   {
     "name": "Bed-Stuy",
@@ -213,7 +213,7 @@
       "lat": 40.6872,
       "lng": -73.9418
     },
-    "avgMinutes": 41.8
+    "avgMinutes": 41.5
   },
   {
     "name": "Astoria",
@@ -222,6 +222,6 @@
       "lat": 40.7723,
       "lng": -73.9301
     },
-    "avgMinutes": 48.3
+    "avgMinutes": 47.9
   }
 ]

@@ -45,9 +45,10 @@
 - **Isochrone NYC** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
 - **Find My Neighborhood** (`/find`): score heatmap showing total monthly transit hours (green=low, red=high)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
-- **Bus**: walk to stop → wait (7 min avg) → ride (8 mph avg) → walk from stop. ~200 curated stops across Manhattan, Brooklyn, Queens
+- **Bus**: walk to stop → wait (7 min avg) → ride (8 mph avg) → walk from stop. 733 stops across Manhattan, Brooklyn, Queens
 - **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
 - **Resolution 10**: ~150k hex cells with spatial grid indexing for O(1) station lookups
+- **Modes**: 7 transport modes — subway, bus, walk, car, bike (Citi Bike), ownbike, ferry
 
 ## Design
 - Dark glass theme: surface (#12131a), cards (#1a1b24), accent cyan (#22d3ee)

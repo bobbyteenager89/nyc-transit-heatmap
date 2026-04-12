@@ -59,7 +59,7 @@ const LANDMARKS = [
 
 function manhattanDistanceMi(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const latDiff = Math.abs(a.lat - b.lat) * 69.0;
-  const lngDiff = Math.abs(a.lng - b.lng) * 54.6;
+  const lngDiff = Math.abs(a.lng - b.lng) * 52.3; // cos(40.7) * 69
   return latDiff + lngDiff;
 }
 

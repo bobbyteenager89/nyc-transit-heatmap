@@ -49,8 +49,9 @@ export function HexMap({
 
   // Animation state
   const animationRef = useRef<number>(0);
+  const initialCenter = useRef(center);
 
-  // Initialize map
+  // Initialize map (once)
   useEffect(() => {
     if (!mapContainer.current) return;
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
@@ -58,7 +59,7 @@ export function HexMap({
     const m = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center: [center.lng, center.lat],
+      center: [initialCenter.current.lng, initialCenter.current.lat],
       zoom: 11.5,
     });
     mapRef.current = m;
@@ -89,7 +90,7 @@ export function HexMap({
         type: "line",
         source: "hex-grid",
         paint: {
-          "line-color": "#fcdde8",
+          "line-color": "rgba(255,255,255,0.15)",
           "line-width": 0.5,
           "line-opacity": 0,
         },
@@ -190,7 +191,14 @@ export function HexMap({
       mapRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [center.lat, center.lng]);
+  }, []);
+
+  // Pan to new center without re-creating the map
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+    m.flyTo({ center: [center.lng, center.lat], duration: 800 });
+  }, [center.lat, center.lng, mapReady]);
 
   // Update hex data with animated reveal
   useEffect(() => {
@@ -230,7 +238,7 @@ export function HexMap({
     for (const dest of destinations) {
       const el = document.createElement("div");
       const label = document.createElement("div");
-      label.style.cssText = "background:#e21822;color:#fcdde8;padding:2px 6px;font-size:11px;font-weight:bold;font-family:Arial Black;font-style:italic;text-transform:uppercase;white-space:nowrap";
+      label.style.cssText = "background:#1a1b24;color:#22d3ee;padding:2px 6px;font-size:11px;font-weight:bold;font-family:Arial Black;font-style:italic;text-transform:uppercase;white-space:nowrap;border:1px solid rgba(255,255,255,0.15);border-radius:4px";
       label.textContent = dest.name;
       el.appendChild(label);
       const marker = new mapboxgl.Marker({ element: el })
@@ -249,15 +257,15 @@ export function HexMap({
 
       {/* Pin drop mode indicator */}
       {pinDropMode && (
-        <div role="status" aria-live="polite" className="absolute top-4 left-1/2 -translate-x-1/2 bg-red text-pink px-4 py-2 z-20 font-display italic uppercase text-sm">
+        <div role="status" aria-live="polite" className="absolute top-4 left-1/2 -translate-x-1/2 bg-surface-card/95 text-accent border border-accent/30 rounded-full px-4 py-2 z-20 font-display italic uppercase text-sm backdrop-blur-md">
           Click anywhere on the map to drop a pin
         </div>
       )}
 
       {/* Pending pin form */}
       {pendingPin && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-pink border-3 border-red p-4 z-30 w-72">
-          <p className="text-xs uppercase font-bold tracking-widest mb-3">Name This Pin</p>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-surface-card border border-white/15 rounded-lg p-4 z-30 w-72 backdrop-blur-md">
+          <p className="text-xs uppercase font-bold tracking-widest mb-3 text-white/50">Name This Pin</p>
           <input
             type="text"
             value={pinName}
@@ -266,7 +274,7 @@ export function HexMap({
             autoFocus
             name="pin-name"
             autoComplete="off"
-            className="w-full bg-transparent border-3 border-red text-red p-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-red placeholder:text-red/50 focus:bg-red focus:text-pink mb-3"
+            className="w-full bg-transparent border border-white/20 rounded text-white p-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent placeholder:text-white/30 focus:border-accent mb-3"
             onKeyDown={(e) => {
               if (e.key === "Enter" && pinName.trim()) {
                 onPinConfirm?.(pinName.trim(), pinCategory);
@@ -279,8 +287,8 @@ export function HexMap({
               <button
                 key={c.key}
                 onClick={() => setPinCategory(c.key)}
-                className={`text-xs border-2 border-red px-2 py-1 uppercase font-bold cursor-pointer ${
-                  pinCategory === c.key ? "bg-red text-pink" : ""
+                className={`text-xs border rounded px-2 py-1 uppercase font-bold cursor-pointer transition-colors ${
+                  pinCategory === c.key ? "border-accent bg-accent/20 text-accent" : "border-white/20 text-white/60"
                 }`}
               >
                 {c.label}
@@ -296,13 +304,13 @@ export function HexMap({
                 }
               }}
               disabled={!pinName.trim()}
-              className="flex-1 border-3 border-red bg-red text-pink font-display italic uppercase py-2 disabled:opacity-30 cursor-pointer text-sm"
+              className="flex-1 border border-accent bg-accent/20 text-accent rounded font-display italic uppercase py-2 disabled:opacity-30 cursor-pointer text-sm"
             >
               Add
             </button>
             <button
               onClick={() => { onPinCancel?.(); setPinName(""); }}
-              className="border-3 border-red px-3 py-2 font-display italic uppercase cursor-pointer text-sm"
+              className="border border-white/20 rounded px-3 py-2 text-white/70 font-display italic uppercase cursor-pointer text-sm hover:bg-white/10"
             >
               Cancel
             </button>
@@ -313,7 +321,7 @@ export function HexMap({
       {/* Tooltip */}
       {tooltipContent && (
         <div
-          className="absolute pointer-events-none bg-red text-pink p-2 text-xs font-body z-50 max-w-xs"
+          className="absolute pointer-events-none bg-surface-card/95 text-white border border-white/15 rounded p-2 text-xs font-body z-50 max-w-xs backdrop-blur-md"
           style={{ left: tooltipPos.x + 16, top: tooltipPos.y - 16 }}
         >
           {tooltipContent.split("\n").map((line, i) => (
@@ -323,8 +331,8 @@ export function HexMap({
       )}
 
       {/* Legend */}
-      <div className="absolute bottom-6 right-6 bg-pink border-3 border-red p-3 z-10">
-        <div className="text-xs uppercase font-bold tracking-widest mb-2">
+      <div className="absolute bottom-6 right-6 bg-surface-card/95 border border-white/15 rounded-lg p-3 z-10 backdrop-blur-md">
+        <div className="text-xs uppercase font-bold tracking-widest mb-2 text-white/50">
           {hasDestinations ? "Monthly Transit Hours" : "Travel Time"}
         </div>
         <div

@@ -344,9 +344,31 @@ function getFastestTime(times: Record<TransportMode, number | null>): { fastest:
   return { fastest, time: fastestTime };
 }
 
-// --- Main worker handler ---
+// --- Worker protocol ---
+// LOAD_DATA: send transit datasets once. Worker builds spatial indexes.
+// COMPUTE:   send hex centers + origin/destinations per compute call.
+//            Worker reuses existing spatial indexes.
 
-interface WorkerInput {
+interface LoadDataMessage {
+  type: "LOAD_DATA";
+  stationGraph: StationGraph;
+  stationMatrix: StationMatrix;
+  citiBikeStations: CitiBikeStation[];
+  ferryTerminals: FerryTerminalData[];
+  ferryAdjacency: FerryAdjacencyData;
+  busStops: BusStopData[];
+}
+
+interface ComputeMessage {
+  type: "COMPUTE";
+  hexCenters: { h3Index: string; lat: number; lng: number }[];
+  origin: LatLng | null;
+  destinations: Destination[];
+  modes: TransportMode[];
+}
+
+// Legacy single-message format (backwards compat during transition)
+interface LegacyMessage {
   hexCenters: { h3Index: string; lat: number; lng: number }[];
   origin: LatLng | null;
   destinations: Destination[];
@@ -359,6 +381,8 @@ interface WorkerInput {
   busStops: BusStopData[];
 }
 
+type WorkerMessage = LoadDataMessage | ComputeMessage | LegacyMessage;
+
 const CHUNK_SIZE = 5000;
 
 type CellResult = {
@@ -369,21 +393,54 @@ type CellResult = {
   destBreakdown: Record<string, number>;
 };
 
-self.onmessage = (e: MessageEvent<WorkerInput>) => {
-  const { hexCenters, origin, destinations, modes, stationGraph, stationMatrix, citiBikeStations, ferryTerminals, ferryAdjacency, busStops } = e.data;
+// Persistent state — built once on LOAD_DATA, reused across COMPUTE calls
+let persistentState: {
+  stationGraph: StationGraph;
+  stationMatrix: { times: number[][] };
+  idxMap: Map<string, number>;
+  stationGrid: SpatialGrid<{ id: string; lat: number; lng: number }>;
+  dockGrid: SpatialGrid<CitiBikeStation>;
+  terminalGrid: SpatialGrid<FerryTerminalData>;
+  ferryAdjacency: FerryAdjacencyData;
+  busStopGrid: SpatialGrid<BusStopData>;
+} | null = null;
+
+function loadData(msg: LoadDataMessage | LegacyMessage) {
+  const stationGraph = msg.stationGraph;
+  const stationMatrix = msg.stationMatrix;
   const idxMap = buildStationIdxMap(stationMatrix.stationIds);
-  const fTerminals = ferryTerminals ?? [];
-  const fAdjacency = ferryAdjacency ?? {};
-  const bStops = busStops ?? [];
-
-  // Clear caches for fresh computation
-  subwayTimeCache.clear();
-
-  // Build spatial indexes (one-time cost, pays off over ~150k cells)
   const stationGrid = buildStationSpatialGrid(stationGraph.stations);
-  const dockGrid = buildSpatialGrid(citiBikeStations);
-  const terminalGrid = buildSpatialGrid(fTerminals);
-  const busStopGrid = buildSpatialGrid(bStops);
+  const dockGrid = buildSpatialGrid(msg.citiBikeStations ?? []);
+  const terminalGrid = buildSpatialGrid(msg.ferryTerminals ?? []);
+  const busStopGrid = buildSpatialGrid(msg.busStops ?? []);
+
+  persistentState = {
+    stationGraph,
+    stationMatrix,
+    idxMap,
+    stationGrid,
+    dockGrid,
+    terminalGrid,
+    ferryAdjacency: msg.ferryAdjacency ?? {},
+    busStopGrid,
+  };
+}
+
+function runCompute(
+  hexCenters: { h3Index: string; lat: number; lng: number }[],
+  origin: LatLng | null,
+  destinations: Destination[],
+  modes: TransportMode[]
+) {
+  if (!persistentState) {
+    self.postMessage({ type: "error", message: "No data loaded. Send LOAD_DATA first." });
+    return;
+  }
+
+  const { stationGraph, stationMatrix, idxMap, stationGrid, dockGrid, terminalGrid, ferryAdjacency, busStopGrid } = persistentState;
+
+  // Clear station-pair cache per compute (origin changes invalidate it)
+  subwayTimeCache.clear();
 
   const total = hexCenters.length;
   const cells: CellResult[] = new Array(total);
@@ -393,11 +450,10 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     const end = Math.min(processed + CHUNK_SIZE, total);
 
     if (destinations.length === 0 && origin) {
-      // Explore mode: accessibility from origin
       for (let i = processed; i < end; i++) {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
-        const times = computeTimesForLocation(point, origin, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency, busStopGrid);
+        const times = computeTimesForLocation(point, origin, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, ferryAdjacency, busStopGrid);
         const { fastest, time } = getFastestTime(times);
         cells[i] = {
           h3Index: hex.h3Index,
@@ -408,7 +464,6 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         };
       }
     } else {
-      // Score mode: total monthly minutes per hex cell
       for (let i = processed; i < end; i++) {
         const hex = hexCenters[i];
         const point: LatLng = { lat: hex.lat, lng: hex.lng };
@@ -422,7 +477,7 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
           let bestTimes: Record<TransportMode, number | null> = { walk: null, car: null, bike: null, ownbike: null, subway: null, bus: null, ferry: null };
 
           for (const destLoc of destLocations) {
-            const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, fAdjacency, busStopGrid);
+            const locTimes = computeTimesForLocation(point, destLoc, modes, stationGrid, stationGraph, stationMatrix, idxMap, dockGrid, terminalGrid, ferryAdjacency, busStopGrid);
             const { time } = getFastestTime(locTimes);
             if (time < bestTime) { bestTime = time; bestTimes = locTimes; }
           }
@@ -452,19 +507,36 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
 
     processed = end;
-
-    // Post progress update
-    self.postMessage({ type: 'progress', percent: Math.round((processed / total) * 100) });
+    self.postMessage({ type: "progress", percent: Math.round((processed / total) * 100) });
 
     if (processed < total) {
-      // Yield to avoid blocking the worker thread, then continue
       setTimeout(processChunk, 0);
     } else {
-      // Done — send final result
-      self.postMessage({ type: 'result', cells });
+      self.postMessage({ type: "result", cells });
     }
   }
 
-  // Start chunked processing
   processChunk();
+}
+
+self.onmessage = (e: MessageEvent<WorkerMessage>) => {
+  const msg = e.data;
+
+  if ("type" in msg) {
+    if (msg.type === "LOAD_DATA") {
+      loadData(msg);
+      self.postMessage({ type: "data_loaded" });
+      return;
+    }
+    if (msg.type === "COMPUTE") {
+      runCompute(msg.hexCenters, msg.origin, msg.destinations, msg.modes);
+      return;
+    }
+  }
+
+  // Legacy format: single message with both data + compute params.
+  // Load data (rebuilds indexes) and then compute.
+  const legacy = msg as LegacyMessage;
+  loadData(legacy);
+  runCompute(legacy.hexCenters, legacy.origin, legacy.destinations, legacy.modes);
 };
