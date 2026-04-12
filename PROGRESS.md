@@ -4,6 +4,67 @@
 
 ---
 
+## 2026-04-12 — Session 20: Full-project audit fix — 17 issues across bugs, perf, security, design
+
+### Accomplished
+- **3 critical bug fixes:** Added missing `SUBWAY_WAIT_MIN` (5 min) to `computeSubwayTime` (was ~5 min too low on compare page). Fixed longitude constant in `build-rankings.ts` (54.6→52.3, ~4.4% error). Fixed `MonthlyFooter` assigning `modes[0]` to all destinations (walks costed as subway rides).
+- **Performance: persistent worker:** Refactored `grid-worker.ts` to LOAD_DATA/COMPUTE protocol. Transit data + spatial indexes built once, reused across computes. Eliminates ~1MB structured-clone per call.
+- **Performance: HexMap flyTo:** Replaced full Mapbox instance re-creation on center change with `map.flyTo()`. Eliminates map flash/flicker.
+- **Performance: gridBounds reset:** Reset to `CORE_NYC_BOUNDS` on each new origin. Prevents 2x cell bloat after expansion.
+- **Performance: visibleCells memo:** Wrapped Find page's 150k-cell mapping in `useMemo`.
+- **Security:** Added input validation to `decodeShareableState` (lat/lng bounds, string limits, mode whitelist, payload cap). Added security headers to `next.config.ts`.
+- **Fetch guards:** Added `res.ok` checks to `ferry.ts` and `citibike.ts`.
+- **Design unification:** Converted entire Find page from pink/red brutalist to dark glass theme (sidebar, footer, map UI, tooltips, legend, markers, chips, best-neighborhood, surprise-insight, share-button — 10 components).
+- **Error handling:** Added `error.tsx` and `not-found.tsx` error boundaries.
+- **Minor fixes:** Added `ownbike` to isochrone tooltip labels. Address field now syncs from URL `address` param on load.
+- **Deduplication:** Find page data loading refactored to use shared `useTransitData` hook.
+- **Docs:** Updated CLAUDE.md (733 bus stops, 7 modes). Full audit documented in `docs/FULL-AUDIT-2026-04-11.md`.
+- Build clean, 92/92 tests passing, production deployed.
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/app/error.tsx` | Global error boundary (dark glass theme) |
+| `src/app/not-found.tsx` | 404 page |
+| `docs/FULL-AUDIT-2026-04-11.md` | Comprehensive audit findings document |
+
+### Files Modified (22)
+| File | Changes |
+|------|---------|
+| `src/lib/subway.ts` | Added SUBWAY_WAIT_MIN to computeSubwayTime |
+| `scripts/build-rankings.ts` | Fixed longitude constant 54.6→52.3 |
+| `src/components/results/monthly-footer.tsx` | Fixed mode assignment + dark glass theme |
+| `src/lib/ferry.ts` | Added res.ok guard |
+| `src/lib/citibike.ts` | Added res.ok guard |
+| `src/components/results/hex-map.tsx` | flyTo instead of re-create, dark glass UI |
+| `src/hooks/use-dynamic-grid-compute.ts` | Reset gridBounds, remove stale dep |
+| `src/lib/url-state.ts` | Input validation (lat/lng, strings, modes, payload) |
+| `next.config.ts` | Security headers |
+| `src/lib/grid.ts` | Persistent worker with LOAD_DATA/COMPUTE protocol |
+| `src/workers/grid-worker.ts` | LOAD_DATA/COMPUTE message handling |
+| `src/app/find/page.tsx` | useTransitData hook, useMemo, dark glass loading |
+| `src/app/explore/page.tsx` | Address URL param sync |
+| `src/components/isochrone/isochrone-map.tsx` | Added ownbike to modeLabels |
+| `src/components/results/results-sidebar.tsx` | Dark glass theme |
+| `src/components/results/best-neighborhood.tsx` | Dark glass theme |
+| `src/components/results/surprise-insight.tsx` | Dark glass theme |
+| `src/components/results/share-button.tsx` | Dark glass theme |
+| `src/components/setup/mode-toggles.tsx` | Dark glass text color |
+| `src/components/ui/chip.tsx` | Dark glass styling |
+| `public/data/rankings.json` | Regenerated with corrected longitude |
+| `CLAUDE.md` | Bus stop count + mode count |
+
+### Commits
+- `4ff0857` — Fix all 17 audit findings: critical bugs, perf, security, design unification
+
+### Next Steps
+- [ ] Mobile QA on real iPhone (carried from S19)
+- [ ] Add tests for ferry, citibike, url-state validation (blocked by hook — needs manual write)
+- [ ] GTFS bus route graph (replace great-circle ride approximation)
+- [ ] Explore street-line coloring with glow (Mapbox road vector tiles)
+
+---
+
 ## 2026-04-10 — Session 19: Bus stop expansion + hybrid color ramp
 
 ### Accomplished
