@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-04-16 — Session 21: Deep resume + full preflight + smoke test — all green
+
+### Accomplished
+- **Deep resume:** Full project-resumer briefing — reviewed all 20 sessions, documented open backlog (mobile QA, ferry/citibike tests, GTFS bus route graph, URL state edge case).
+- **Review orchestrator sweep:** Scanned 10 active projects, found 8 with stale reviews. No NYC Transit reviews were stale (preflight/smoke were 4d old — within threshold).
+- **Full preflight (Full Mode):** Build clean (Next.js 16.1.6, Turbopack). 92/92 tests passing. Screenshots at 375px / 1024px / 1440px — all pages render correctly. No console errors. No broken images. All interactive elements have focus styles. Deletion audit clean.
+  - ⚠️ Explore page shows WebGL error in headless (expected — error boundary from S20 works correctly).
+  - ⚠️ Find wizard still uses legacy pink/red theme (by design — only results components were converted in S20).
+- **Smoke test:** 6/6 routes return 200 on https://nyc-transit-heatmap.vercel.app. No runtime errors in Vercel logs. Rankings, Compare, Find all load with data. Primary CTAs navigate correctly.
+- **Tracking:** Updated `.projects.json` `lastWorked`, `preflight`, `smokeTest` dates.
+- **agent-browser fix:** Installed correct playwright-core chromium version (v1208) for agent-browser after global playwright update caused version mismatch.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `.claude/agent-memory/performance-reviewer/project_perf_context.md` | Performance reviewer memory updated |
+| `.claude/agent-memory/security-reviewer/MEMORY.md` | Security reviewer memory updated |
+| `.claude/agent-memory/security-reviewer/project_og_token_exposure.md` | New: OG token exposure note |
+| `.claude/agent-memory/security-reviewer/project_unvalidated_url_state.md` | New: URL state validation note |
+
+### Next Steps
+- [ ] Mobile QA on real iPhone (carried from S19 — deploy is live at https://nyc-transit-heatmap.vercel.app)
+- [ ] Add tests for ferry, citibike, url-state validation
+- [ ] GTFS bus route graph (replace great-circle ride approximation)
+- [ ] Explore street-line coloring with glow (Mapbox road vector tiles)
+- [ ] Verify `?lat=&lng=` URL state edge case is fixed by S20 input validation
+
+---
+
 ## 2026-04-12 — Session 20: Full-project audit fix — 17 issues across bugs, perf, security, design
 
 ### Accomplished

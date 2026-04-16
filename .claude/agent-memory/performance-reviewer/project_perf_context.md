@@ -7,26 +7,30 @@ type: project
 ~150k H3 hex cells at resolution 10, computed in a web worker via chunked processing (5k cells/chunk). Worker is the right pattern here — main-thread INP risk is in rendering, not computation.
 
 Key render bottlenecks:
-- `cellsToHexGeoJSON` iterates all 150k cells on every slider move (maxMinutes change)
-- `buildFairnessGeoJSON` iterates 150k cells with a Map lookup — runs on BOTH cells + friendCells changes
-- `ReachStats` iterates 150k cells × n modes synchronously on every maxMinutes change
+- `buildFairnessGeoJSON` has `maxMinutes` in useEffect deps (use-fairness-layer.ts ~line 105) — causes full 150k-cell GeoJSON rebuild on every slider snap in friend/meet mode. `maxMinutes` guard inside the function should be removed and delegated to a GL filter instead.
+- `ReachStats` iterates 150k cells × n modes synchronously on every maxMinutes change — this IS wrapped in useMemo correctly.
 - Two full 150k-cell arrays in memory when friend is added (cells + friendCells)
-- `generateHexCenters` is called identically in both runCompute and runFriendCompute — wasted work (though it has a module-level cache so the second call IS free)
-- `allContours` array spread in render (`[...apiContours, ...friendContours]`) creates a new array reference every render, triggering the API contour useEffect unnecessarily
 
-Worker architecture: single `activeWorker` global — friend compute terminates main compute if user adds a friend while origin is computing. This is intentional cancel behavior but could surprise users.
+Worker architecture:
+- Web worker is re-created on every compute call (new Worker() in grid.ts). The expansion loop in use-dynamic-grid-compute.ts calls computeForBounds up to 3 times per origin — each call creates a new worker, serializes the full transit data payload (1MB+) via structured-clone, and rebuilds all spatial indexes (stationGrid, dockGrid, terminalGrid, busStopGrid) from scratch. This is the dominant compute setup cost.
+- Keeping a long-lived worker and separating "load transit data once" from "compute for these hexes" would eliminate 3× serialization of 1MB+ data during expansion passes.
+- single `activeWorker` global — friend compute terminates main compute if user adds a friend while origin is computing. Intentional cancel behavior.
 
 **Session 6 additions (reviewed 2026-03-30):**
-- Rankings page: fetches station-matrix.json (956KB) + station-graph.json (54KB) on every page load with no caching. `scoreNeighborhoods` runs 25 neighborhoods × 5 landmarks × `findNearest` (full O(n) scan of 496 stations) = 125 O(n) station scans synchronously on main thread. Each `findNearest` does a full map+filter+sort over 496 entries. Total: 62,500 station comparisons synchronously after JSON parse. Not debilitating but could be slow on low-end devices. Results never change — could be pre-computed at build time or cached in a module constant after first run.
-- iso-outline layer: two `setPaintProperty` calls per animation frame during the 800ms reveal. This is cosmetically acceptable but slightly more GL state to flush. `setFilter` is now called twice on every slider tick (iso-fill + iso-outline). Both are GL-side operations — no JS iteration. Fine as-is.
-- Mobile bottom sheet (explore): uses a JSX variable `sidebarControls` shared between desktop aside and mobile sheet. NOT a second React subtree — both consume the same JSX object reference. No double-render issue, no unnecessary re-renders introduced.
-- Mobile bottom sheet (find/page.tsx): ResultsSidebar IS instantiated twice as separate React component instances — once in the hidden desktop div, once inside MobileBottomSheet. Both mount and run their render logic even though only one is visible at a time. On desktop, the mobile sheet is CSS-hidden but still mounted.
-- OG route: fetches Mapbox static image (1200×630@2x) inside the edge function on every share link crawl. Cache-Control IS set (public, max-age=86400, s-maxage=86400) on the success path — confirmed correct. Edge-runtime only; zero client bundle impact.
-- @vercel/og is edge-runtime only (import confined to src/app/api/og/route.tsx with `export const runtime = "edge"`). Does NOT affect client bundle.
-- ResultsSidebar double-mount in find/page.tsx is **P1**: `sidebarContent` is a JSX variable rendered as two separate React component instances (desktop div + MobileBottomSheet). Both mount and re-render on every compute progress tick (~30 re-render waves × 2 trees during 150k-cell computation). Fix: use CSS visibility toggle or a React portal, same as explore/page.tsx which correctly shares a single `sidebarControls` JSX object.
-- Rankings scoreNeighborhoods: 25 × 5 × O(496) = 62,500 station comparisons synchronously on main thread after 956KB JSON parse. Results are fully deterministic — should be pre-computed as a static JSON or at minimum deferred with setTimeout to yield before scoring.
-- Compare page: getNearbySubwayLines + getNearestSubwayWalk both do full O(496) station scans per neighborhood with no spatial index. countNearbyBikeDocks iterates all ~1,700 CitiBike stations per neighborhood. Runs in useMemo on every neighborhood add/remove.
-- station-matrix.json (956KB) parsed fresh on every navigation between /rankings and /compare — no module-level singleton or layout-level cache.
+- Rankings page: was fetching station-matrix.json (956KB) + running scoreNeighborhoods synchronously on main thread. **NOW FIXED** — rankings page is a Server Component reading pre-computed rankings.json from filesystem. No longer a perf issue.
+- ResultsSidebar double-mount in find/page.tsx: **NOW FIXED** — uses useMediaQuery conditional render. Desktop gets `{isDesktop && <div>{sidebarContent}</div>}` and mobile gets `{!isDesktop && <MobileBottomSheet>...</MobileBottomSheet>}`. Only one instance mounts at a time.
+- Compare page: getNearbySubwayLines + getNearestSubwayWalk both do full O(496) station scans per neighborhood. countNearbyBikeDocks iterates all ~1,700 CitiBike stations per neighborhood. Runs in useMemo. Acceptable at current scale.
 
-**Why:** Confirmed in full performance review of Session 6 diff (5599201..HEAD).
-**How to apply:** P1 is the find page double-mount — fix before next release. Rankings pre-computation is the easiest P2 win (static JSON at build time). Compare page O(n) scans are acceptable at 496 stations but should use the spatial grid pattern if the station count grows.
+**Session 19 findings (reviewed 2026-04-11, diff covers night-mode + bus stop expansion):**
+- P1: Worker re-created + full transit data re-serialized on every compute pass (up to 3× per origin). Fix: long-lived worker with separate "load" message.
+- P1: `buildFairnessGeoJSON` has `maxMinutes` in useEffect deps — full 150k-cell rebuild fires on every slider snap in friend mode. Fix: remove maxMinutes from deps, delegate the filter to GL.
+- P2: `visibleCells` IIFE in find/page.tsx (lines 276-288) not memoized — spreads 150k cell objects on every render when showPerPin is true. Fix: useMemo([cells, selectedDestId]).
+- P2: No debounce on reverse geocode in mousemove handlers (isochrone-map.tsx and hex-map.tsx). Geocode cache mitigates repeat lookups but initial sweeps fire concurrent fetches.
+- P2: station-matrix.json (956KB) fetched + parsed independently by 3 pages (/explore via use-transit-data.ts, /find, /compare). No shared singleton or layout-level cache.
+- P2: CitiBike GBFS fetched at runtime on every page load with no caching strategy (no stale-while-revalidate, no localStorage, no CDN proxy). Station info changes at most daily.
+- `generateIsochroneLayers` in isochrone.ts — confirmed dead code (zero production callers). No perf impact; safe to delete for bundle size.
+- COLOR_RAMP change from "step" to "interpolate" (12 stops) — GL-expression only, no JS perf impact.
+- Bus stop expansion (222→733 stops) increases spatial index build cost in the worker but is correctly handled by the existing grid indexing pattern.
+
+**Why:** Full review of codebase state as of 2026-04-11.
+**How to apply:** P1 worker serialization is the highest-leverage fix — it eliminates 3× structured-clone of 1MB+ and 3× spatial index rebuilds per origin. P1 fairness layer dep is easy to fix (remove maxMinutes from deps array). P2 items are scalability risks that become visible under load or with friend mode active.
