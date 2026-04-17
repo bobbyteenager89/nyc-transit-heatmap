@@ -1,5 +1,6 @@
 import type { LatLng, TransportMode, CitiBikeStation, Destination, StationGraph, StationMatrix } from "../lib/types";
 import { WALK_SPEED, BIKE_SPEED, DRIVE_SPEED_MANHATTAN, DRIVE_SPEED_OUTER, MANHATTAN_BOUNDARY_LAT, BIKE_DOCK_TIME_MIN, BIKE_DOCK_RANGE_MI, SUBWAY_MAX_WALK_MI, SUBWAY_WAIT_MIN, WEEKS_PER_MONTH, FERRY_MAX_WALK_MI, BUS_SPEED_MPH, BUS_MAX_WALK_MI, BUS_WAIT_MIN } from "../lib/constants";
+import { stopsShareRoute } from "../lib/bus";
 
 // Ferry types (inlined — can't import from lib in worker)
 interface FerryTerminalData {
@@ -272,27 +273,39 @@ function computeBusTime(
   from: LatLng, to: LatLng,
   busGrid: SpatialGrid<BusStopData>
 ): number | null {
-  // Find nearest bus stop to origin
   const nearFrom = searchGrid(from, busGrid, BUS_MAX_WALK_MI);
   if (nearFrom.length === 0) return null;
-  nearFrom.sort((a, b) => a.dist - b.dist);
-  const stopFrom = nearFrom[0];
-
-  // Find nearest bus stop to destination
   const nearTo = searchGrid(to, busGrid, BUS_MAX_WALK_MI);
   if (nearTo.length === 0) return null;
+
+  // Consider the top-4 nearest stops on each side so the route-membership
+  // filter can find a usable pair even when the single nearest stops don't
+  // share a line. K=4 keeps the O(K²) pairing bounded while still covering
+  // the realistic case of 2-3 competing local routes.
+  nearFrom.sort((a, b) => a.dist - b.dist);
   nearTo.sort((a, b) => a.dist - b.dist);
-  const stopTo = nearTo[0];
+  const fromCandidates = nearFrom.slice(0, 4);
+  const toCandidates = nearTo.slice(0, 4);
 
-  // If same stop, just walk
-  if (stopFrom.item.id === stopTo.item.id) return null;
-
-  const walkToStop = (stopFrom.dist / WALK_SPEED) * 60;
-  const busRideDist = manhattanDist(stopFrom.item, stopTo.item);
-  const busRideTime = (busRideDist / BUS_SPEED_MPH) * 60;
-  const walkFromStop = (stopTo.dist / WALK_SPEED) * 60;
-
-  return Math.round((walkToStop + BUS_WAIT_MIN + busRideTime + walkFromStop) * 10) / 10;
+  let best = Infinity;
+  for (const sf of fromCandidates) {
+    const fromRoutes = sf.item.routes;
+    // Stops must carry route metadata — populate-bus-routes.ts ensures all
+    // stops do — and the two stops must share at least one route. Without
+    // this check, any stop-pair was modeled as a direct bus ride, which
+    // inflated bus reach across disconnected corridors.
+    if (fromRoutes.length === 0) continue;
+    const walkToStop = (sf.dist / WALK_SPEED) * 60;
+    for (const st of toCandidates) {
+      if (sf.item.id === st.item.id) continue;
+      if (!stopsShareRoute(sf.item, st.item)) continue;
+      const walkFromStop = (st.dist / WALK_SPEED) * 60;
+      const busRideTime = (manhattanDist(sf.item, st.item) / BUS_SPEED_MPH) * 60;
+      const total = walkToStop + BUS_WAIT_MIN + busRideTime + walkFromStop;
+      if (total < best) best = total;
+    }
+  }
+  return best === Infinity ? null : Math.round(best * 10) / 10;
 }
 
 // --- Compute travel times from a point to a destination ---

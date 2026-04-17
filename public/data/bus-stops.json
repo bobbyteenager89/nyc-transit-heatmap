@@ -137,9 +137,9 @@
       "lat": 40.7322,
       "lng": -73.9807,
       "routes": [
+        "M14A",
         "M15",
-        "M15-SBS",
-        "M14A"
+        "M15-SBS"
       ]
     },
     {
@@ -228,8 +228,8 @@
       "lat": 40.7781,
       "lng": -73.9814,
       "routes": [
-        "M4",
-        "M104"
+        "M104",
+        "M4"
       ]
     },
     {
@@ -238,8 +238,8 @@
       "lat": 40.7867,
       "lng": -73.9756,
       "routes": [
-        "M4",
-        "M104"
+        "M104",
+        "M4"
       ]
     },
     {
@@ -248,8 +248,8 @@
       "lat": 40.7945,
       "lng": -73.9713,
       "routes": [
-        "M4",
-        "M104"
+        "M104",
+        "M4"
       ]
     },
     {
@@ -258,8 +258,8 @@
       "lat": 40.8068,
       "lng": -73.9637,
       "routes": [
-        "M4",
-        "M104"
+        "M104",
+        "M4"
       ]
     },
     {
@@ -268,8 +268,8 @@
       "lat": 40.8149,
       "lng": -73.9599,
       "routes": [
-        "M4",
-        "M104"
+        "M104",
+        "M4"
       ]
     },
     {
@@ -1009,9 +1009,9 @@
       "lat": 40.8042,
       "lng": -73.9421,
       "routes": [
-        "M60-SBS",
         "M100",
-        "M101"
+        "M101",
+        "M60-SBS"
       ]
     },
     {
@@ -1020,9 +1020,9 @@
       "lat": 40.8082,
       "lng": -73.9468,
       "routes": [
-        "M60-SBS",
         "M100",
-        "M101"
+        "M101",
+        "M60-SBS"
       ]
     },
     {
@@ -1031,9 +1031,9 @@
       "lat": 40.8149,
       "lng": -73.9599,
       "routes": [
-        "M60-SBS",
         "M100",
-        "M101"
+        "M101",
+        "M60-SBS"
       ]
     },
     {
@@ -1042,9 +1042,9 @@
       "lat": 40.7195,
       "lng": -74.0001,
       "routes": [
-        "M5",
+        "M103",
         "M20",
-        "M103"
+        "M5"
       ]
     },
     {
@@ -1053,9 +1053,9 @@
       "lat": 40.7255,
       "lng": -73.9968,
       "routes": [
-        "M5",
         "M20",
-        "M21"
+        "M21",
+        "M5"
       ]
     },
     {
@@ -1064,8 +1064,8 @@
       "lat": 40.7303,
       "lng": -73.9948,
       "routes": [
-        "M5",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1074,8 +1074,8 @@
       "lat": 40.736,
       "lng": -73.9908,
       "routes": [
-        "M5",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1084,8 +1084,8 @@
       "lat": 40.7415,
       "lng": -73.9893,
       "routes": [
-        "M5",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1094,8 +1094,8 @@
       "lat": 40.749,
       "lng": -73.9868,
       "routes": [
-        "M5",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1104,9 +1104,9 @@
       "lat": 40.7555,
       "lng": -73.9862,
       "routes": [
-        "M5",
+        "M104",
         "M20",
-        "M104"
+        "M5"
       ]
     },
     {
@@ -1144,9 +1144,9 @@
       "lat": 40.7097,
       "lng": -74.0069,
       "routes": [
-        "M5",
         "M15",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1155,9 +1155,9 @@
       "lat": 40.7141,
       "lng": -74.0063,
       "routes": [
-        "M5",
         "M20",
-        "M22"
+        "M22",
+        "M5"
       ]
     },
     {
@@ -1166,9 +1166,9 @@
       "lat": 40.7128,
       "lng": -74.006,
       "routes": [
-        "M5",
         "M15",
-        "M22"
+        "M22",
+        "M5"
       ]
     },
     {
@@ -1177,9 +1177,9 @@
       "lat": 40.7066,
       "lng": -74.0097,
       "routes": [
-        "M5",
         "M15",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -1188,9 +1188,9 @@
       "lat": 40.7013,
       "lng": -74.0131,
       "routes": [
-        "M5",
         "M15",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -2040,8 +2040,8 @@
       "lat": 40.7231,
       "lng": -73.9992,
       "routes": [
-        "M5",
-        "M21"
+        "M21",
+        "M5"
       ]
     },
     {
@@ -2050,8 +2050,8 @@
       "lat": 40.721,
       "lng": -74.0042,
       "routes": [
-        "M5",
-        "M20"
+        "M20",
+        "M5"
       ]
     },
     {
@@ -2060,8 +2060,8 @@
       "lat": 40.81,
       "lng": -73.9488,
       "routes": [
-        "M7",
-        "M102"
+        "M102",
+        "M7"
       ]
     },
     {
@@ -2070,8 +2070,8 @@
       "lat": 40.8113,
       "lng": -73.9527,
       "routes": [
-        "M7",
-        "M102"
+        "M102",
+        "M7"
       ]
     },
     {
@@ -2080,8 +2080,8 @@
       "lat": 40.8082,
       "lng": -73.9468,
       "routes": [
-        "M7",
-        "M102"
+        "M102",
+        "M7"
       ]
     },
     {
@@ -2090,8 +2090,8 @@
       "lat": 40.8025,
       "lng": -73.9504,
       "routes": [
-        "M7",
-        "M102"
+        "M102",
+        "M7"
       ]
     },
     {
@@ -2149,8 +2149,8 @@
       "lat": 40.8644,
       "lng": -73.9199,
       "routes": [
-        "M4",
-        "M100"
+        "M100",
+        "M4"
       ]
     },
     {
@@ -2158,3577 +2158,4753 @@
       "name": "FRANCIS LEWIS BLVD/147 DR",
       "lat": 40.6554,
       "lng": -73.727,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-504951",
       "name": "149 AV/257 ST",
       "lat": 40.6528,
       "lng": -73.7317,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-503105",
       "name": "GREEN ACRES RD/GREEN ACRES MALL",
       "lat": 40.6617,
       "lng": -73.7224,
-      "routes": []
+      "routes": [
+        "Q5",
+        "Q87",
+        "Q89"
+      ]
     },
     {
       "id": "bus-904035",
       "name": "253 ST/149 AV",
       "lat": 40.6528,
       "lng": -73.7368,
-      "routes": []
+      "routes": [
+        "Q86"
+      ]
     },
     {
       "id": "bus-505404",
       "name": "FRANCIS LWEIS BLVD/CANEY LN",
       "lat": 40.6616,
       "lng": -73.7321,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-552977",
       "name": "BROOKVILLE BL/148 AV",
       "lat": 40.6545,
       "lng": -73.7456,
-      "routes": []
+      "routes": [
+        "Q86"
+      ]
     },
     {
       "id": "bus-500678",
       "name": "243 ST/144 AV",
       "lat": 40.6606,
       "lng": -73.7391,
-      "routes": []
+      "routes": [
+        "Q85",
+        "Q86"
+      ]
     },
     {
       "id": "bus-503827",
       "name": "HOOK CREEK BLVD/NORTH CONDUIT AV",
       "lat": 40.6661,
       "lng": -73.7297,
-      "routes": []
+      "routes": [
+        "Q5",
+        "Q87",
+        "QM63"
+      ]
     },
     {
       "id": "bus-500564",
       "name": "MERRICK BLVD/HOOK CREEK BLVD",
       "lat": 40.6741,
       "lng": -73.7277,
-      "routes": []
+      "routes": [
+        "Q5",
+        "Q87",
+        "QM63"
+      ]
     },
     {
       "id": "bus-500571",
       "name": "FRANCIS LEWIS BLVD/BROOKVILLE BLVD",
       "lat": 40.6674,
       "lng": -73.7371,
-      "routes": []
+      "routes": [
+        "Q5"
+      ]
     },
     {
       "id": "bus-503127",
       "name": "MERRICK BLVD/242 ST",
       "lat": 40.6739,
       "lng": -73.7316,
-      "routes": []
+      "routes": [
+        "Q5",
+        "Q87",
+        "QM63"
+      ]
     },
     {
       "id": "bus-500684",
       "name": "NORTH CONDUIT AV/230 PL",
       "lat": 40.6665,
       "lng": -73.7451,
-      "routes": []
+      "routes": [
+        "Q85",
+        "Q89"
+      ]
     },
     {
       "id": "bus-500578",
       "name": "MERRICK BLVD/231 ST",
       "lat": 40.6757,
       "lng": -73.739,
-      "routes": []
+      "routes": [
+        "Q5",
+        "Q86",
+        "Q87"
+      ]
     },
     {
       "id": "bus-500478",
       "name": "120 AV/237 ST",
       "lat": 40.6855,
       "lng": -73.7276,
-      "routes": []
+      "routes": [
+        "Q84"
+      ]
     },
     {
       "id": "bus-552309",
       "name": "147 AV/184 ST",
       "lat": 40.6598,
       "lng": -73.764,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-500687",
       "name": "SPRINGFIELD BLVD/144 AV",
       "lat": 40.6671,
       "lng": -73.7571,
-      "routes": []
+      "routes": [
+        "Q77",
+        "Q85",
+        "Q89"
+      ]
     },
     {
       "id": "bus-503568",
       "name": "LINDEN BLVD/235 ST",
       "lat": 40.6908,
       "lng": -73.7274,
-      "routes": []
+      "routes": [
+        "Q4"
+      ]
     },
     {
       "id": "bus-904251",
       "name": "JFK AIRPORT/TERMINAL 8",
       "lat": 40.6469,
       "lng": -73.789,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-505455",
       "name": "MERRICK BLVD/222 ST",
       "lat": 40.6785,
       "lng": -73.748,
-      "routes": []
+      "routes": [
+        "Q86",
+        "Q87"
+      ]
     },
     {
       "id": "bus-500246",
       "name": "FARMERS BLVD/175 ST",
       "lat": 40.6611,
       "lng": -73.771,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-503779",
       "name": "FARMERS BLVD/145 DR",
       "lat": 40.6644,
       "lng": -73.7683,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-500396",
       "name": "LINDEN BLVD/228 ST",
       "lat": 40.6928,
       "lng": -73.7328,
-      "routes": []
+      "routes": [
+        "Q4",
+        "QM64"
+      ]
     },
     {
       "id": "bus-502818",
       "name": "SPRINGFIELD BLVD/EASTGATE PLAZA",
       "lat": 40.6755,
       "lng": -73.756,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-501952",
       "name": "JERICHO TPKE/BRADDOCK AV",
       "lat": 40.7246,
       "lng": -73.724,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-505208",
       "name": "FARMERS BLVD/140 AV",
       "lat": 40.6712,
       "lng": -73.7648,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-503999",
       "name": "VAN WYCK SOUTH SERVICE RD/BUILDING 90",
       "lat": 40.6449,
       "lng": -73.7997,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-500490",
       "name": "120 AV/224 ST",
       "lat": 40.6893,
       "lng": -73.7395,
-      "routes": []
+      "routes": [
+        "Q84"
+      ]
     },
     {
       "id": "bus-503700",
       "name": "NORTH BOUNDARY RD/N HANGAR RD",
       "lat": 40.6607,
       "lng": -73.7787,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-502072",
       "name": "HILLSIDE AV/239 ST",
       "lat": 40.7336,
       "lng": -73.7255,
-      "routes": []
+      "routes": [
+        "Q43"
+      ]
     },
     {
       "id": "bus-502813",
       "name": "SPRINGFIELD BLVD/197 ST",
       "lat": 40.6854,
       "lng": -73.7505,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-500167",
       "name": "FARMERS BLVD/WESTGATE ST",
       "lat": 40.6747,
       "lng": -73.7636,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-503705",
       "name": "148 ST/SOUTH CARGO RD",
       "lat": 40.6548,
       "lng": -73.7913,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-501954",
       "name": "JAMAICA AV/239 ST",
       "lat": 40.7231,
       "lng": -73.7284,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-502815",
       "name": "SPRINGFIELD BLVD/LUCAS ST",
       "lat": 40.6823,
       "lng": -73.752,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-505316",
       "name": "BELMONT PARK RACETRACK/UBS ARENA",
       "lat": 40.7129,
       "lng": -73.7277,
-      "routes": []
+      "routes": [
+        "Q2"
+      ]
     },
     {
       "id": "bus-904104",
       "name": "227 ST/113 DR",
       "lat": 40.7021,
       "lng": -73.7303,
-      "routes": []
+      "routes": [
+        "Q83"
+      ]
     },
     {
       "id": "bus-500305",
       "name": "SPRINGFIELD BLVD/99 AV",
       "lat": 40.7154,
       "lng": -73.7356,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-502100",
       "name": "HILLSIDE AV/WINCHESTER BLVD",
       "lat": 40.7335,
       "lng": -73.7351,
-      "routes": []
+      "routes": [
+        "Q43",
+        "QM68"
+      ]
     },
     {
       "id": "bus-500467",
       "name": "120 AV/NASHVILLE BLVD",
       "lat": 40.6913,
       "lng": -73.7476,
-      "routes": []
+      "routes": [
+        "Q84"
+      ]
     },
     {
       "id": "bus-500122",
       "name": "HEMPSTEAD AV/225 ST",
       "lat": 40.7115,
       "lng": -73.7293,
-      "routes": []
+      "routes": [
+        "Q2",
+        "Q82"
+      ]
     },
     {
       "id": "bus-503696",
       "name": "NORTH BOUNDARY RD/150 AV",
       "lat": 40.6616,
       "lng": -73.7898,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-500052",
       "name": "SPRINGFIELD BLVD/92 AV",
       "lat": 40.7249,
       "lng": -73.7393,
-      "routes": []
+      "routes": [
+        "Q27",
+        "Q36",
+        "Q88"
+      ]
     },
     {
       "id": "bus-502378",
       "name": "UNION TPKE/COMMONWEALTH BLVD",
       "lat": 40.7415,
       "lng": -73.7248,
-      "routes": []
+      "routes": [
+        "Q43",
+        "Q46"
+      ]
     },
     {
       "id": "bus-504441",
       "name": "148 ST/150 AV",
       "lat": 40.661,
       "lng": -73.7929,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-502065",
       "name": "HILLSIDE AV/88 AV",
       "lat": 40.7317,
       "lng": -73.7411,
-      "routes": []
+      "routes": [
+        "Q43"
+      ]
     },
     {
       "id": "bus-505141",
       "name": "SPRINGFIELD BLVD/115 RD",
       "lat": 40.6999,
       "lng": -73.742,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-500638",
       "name": "BEDELL ST/130 AV",
       "lat": 40.678,
       "lng": -73.7708,
-      "routes": []
+      "routes": [
+        "Q85",
+        "Q89"
+      ]
     },
     {
       "id": "bus-503764",
       "name": "FARMERS BLVD/NELLIS ST",
       "lat": 40.6837,
       "lng": -73.7606,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-503997",
       "name": "VAN WYCK NORTH SERVICE RD/BUILDING 21",
       "lat": 40.6529,
       "lng": -73.8059,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-552249",
       "name": "HEMPSTEAD AV/217 LN",
       "lat": 40.7141,
       "lng": -73.7386,
-      "routes": []
+      "routes": [
+        "Q82"
+      ]
     },
     {
       "id": "bus-500499",
       "name": "120 AV/195 ST",
       "lat": 40.6888,
       "lng": -73.755,
-      "routes": []
+      "routes": [
+        "Q84"
+      ]
     },
     {
       "id": "bus-502380",
       "name": "UNION TPKE/WINCHESTER BLVD",
       "lat": 40.7391,
       "lng": -73.7335,
-      "routes": []
+      "routes": [
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-502842",
       "name": "FRANCIS LEWIS BLVD/116 AV",
       "lat": 40.6979,
       "lng": -73.7468,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-501962",
       "name": "JAMAICA AV/212 PL",
       "lat": 40.7161,
       "lng": -73.7454,
-      "routes": []
+      "routes": [
+        "Q82"
+      ]
     },
     {
       "id": "bus-500979",
       "name": "LITTLE NECK PKWY/73 RD",
       "lat": 40.7495,
       "lng": -73.7201,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-501925",
       "name": "212 PL/90 AV",
       "lat": 40.7218,
       "lng": -73.7493,
-      "routes": []
+      "routes": [
+        "Q82"
+      ]
     },
     {
       "id": "bus-501654",
       "name": "SPRINGFIELD BLVD/HILLSIDE AV",
       "lat": 40.7303,
       "lng": -73.7451,
-      "routes": []
+      "routes": [
+        "Q1",
+        "Q27",
+        "Q88"
+      ]
     },
     {
       "id": "bus-503998",
       "name": "VAN WYCK NORTH SERVICE RD/CARGO SERVICE RD",
       "lat": 40.6575,
       "lng": -73.8054,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-503804",
       "name": "130 PL/EAST HANGAR RD",
       "lat": 40.6547,
       "lng": -73.8093,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-502335",
       "name": "UNION TPKE/234 ST",
       "lat": 40.7377,
       "lng": -73.7373,
-      "routes": []
+      "routes": [
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-505133",
       "name": "SPRINGFIELD BLVD/109 AV",
       "lat": 40.7087,
       "lng": -73.7384,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-500508",
       "name": "MERRICK BLVD/VICTORIA RD",
       "lat": 40.6856,
       "lng": -73.7726,
-      "routes": []
+      "routes": [
+        "Q5"
+      ]
     },
     {
       "id": "bus-500418",
       "name": "LINDEN BLVD/FARMERS BLVD",
       "lat": 40.6918,
       "lng": -73.7629,
-      "routes": []
+      "routes": [
+        "Q4"
+      ]
     },
     {
       "id": "bus-503965",
       "name": "HILLSIDE AV/210 ST",
       "lat": 40.7232,
       "lng": -73.7562,
-      "routes": []
+      "routes": [
+        "Q82",
+        "QM68"
+      ]
     },
     {
       "id": "bus-500322",
       "name": "MURDOCK AV/200 ST",
       "lat": 40.6999,
       "lng": -73.7551,
-      "routes": []
+      "routes": [
+        "Q83"
+      ]
     },
     {
       "id": "bus-503802",
       "name": "130 PL/BERGEN RD",
       "lat": 40.6588,
       "lng": -73.8108,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-500976",
       "name": "LITTLE NECK PKWY/CULLMAN AV",
       "lat": 40.7555,
       "lng": -73.7232,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-307952",
       "name": "SURF AV/STILLWELL AV",
       "lat": 40.5755,
       "lng": -73.981,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-502794",
       "name": "FRANCIS LEWIS BLVD/93 AV",
       "lat": 40.716,
       "lng": -73.7558,
-      "routes": []
+      "routes": [
+        "Q77"
+      ]
     },
     {
       "id": "bus-302597",
       "name": "GERRITSEN AV/GERRITSEN BEACH",
       "lat": 40.5871,
       "lng": -73.9189,
-      "routes": []
+      "routes": [
+        "B31"
+      ]
     },
     {
       "id": "bus-500133",
       "name": "HOLLIS AV/207 ST",
       "lat": 40.7076,
       "lng": -73.7502,
-      "routes": []
+      "routes": [
+        "Q2"
+      ]
     },
     {
       "id": "bus-308017",
       "name": "STILLWELL AV/NEPTUNE AV",
       "lat": 40.5783,
       "lng": -73.9817,
-      "routes": []
+      "routes": [
+        "B82"
+      ]
     },
     {
       "id": "bus-502768",
       "name": "FRANCIS LEWIS BLVD/204 ST",
       "lat": 40.7232,
       "lng": -73.7623,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-501630",
       "name": "SPRINGFIELD BLVD/77 AV",
       "lat": 40.7382,
       "lng": -73.7487,
-      "routes": []
+      "routes": [
+        "Q27",
+        "Q88"
+      ]
     },
     {
       "id": "bus-501470",
       "name": "NASSAU BLVD/LITTLE NECK PKWY",
       "lat": 40.7643,
       "lng": -73.7259,
-      "routes": []
+      "routes": [
+        "Q30"
+      ]
     },
     {
       "id": "bus-307923",
       "name": "SURF AV/W 21 ST",
       "lat": 40.5745,
       "lng": -73.9881,
-      "routes": []
+      "routes": [
+        "B36",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-500891",
       "name": "LITTLE NECK PKWY/NORTHERN BLVD",
       "lat": 40.7705,
       "lng": -73.7351,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-502389",
       "name": "UNION TPKE/BELL BLVD",
       "lat": 40.7343,
       "lng": -73.7557,
-      "routes": []
+      "routes": [
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-503978",
       "name": "HILLSIDE AV/199 ST",
       "lat": 40.7192,
       "lng": -73.7637,
-      "routes": []
+      "routes": [
+        "Q1"
+      ]
     },
     {
       "id": "bus-500422",
       "name": "LINDEN BLVD/176 ST",
       "lat": 40.693,
       "lng": -73.7737,
-      "routes": []
+      "routes": [
+        "Q4"
+      ]
     },
     {
       "id": "bus-500135",
       "name": "HOLLIS AV/205 ST",
       "lat": 40.7069,
       "lng": -73.7534,
-      "routes": []
+      "routes": [
+        "Q2"
+      ]
     },
     {
       "id": "bus-302851",
       "name": "SURF AV/W 5 ST",
       "lat": 40.575,
       "lng": -73.9742,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-103523",
       "name": "CROSS BRONX EXPWY SERVICE RD/CASTLE HILL AV",
       "lat": 40.8301,
       "lng": -73.8508,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-308592",
       "name": "WEST 20 ST/MERMAID AV",
       "lat": 40.5766,
       "lng": -73.9869,
-      "routes": []
+      "routes": [
+        "X38"
+      ]
     },
     {
       "id": "bus-500220",
       "name": "FARMERS BLVD/JORDAN AV",
       "lat": 40.7017,
       "lng": -73.7655,
-      "routes": []
+      "routes": [
+        "Q3",
+        "Q83"
+      ]
     },
     {
       "id": "bus-502323",
       "name": "UNION TPKE/HOLLIS HILLS TERR",
       "lat": 40.7329,
       "lng": -73.763,
-      "routes": []
+      "routes": [
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-500965",
       "name": "LITTLE NECK PKWY/MARATHON PKWY",
       "lat": 40.7707,
       "lng": -73.7384,
-      "routes": []
+      "routes": [
+        "Q36"
+      ]
     },
     {
       "id": "bus-302603",
       "name": "GERRITSEN AV/GOTHAM AV",
       "lat": 40.5918,
       "lng": -73.9239,
-      "routes": []
+      "routes": [
+        "B31"
+      ]
     },
     {
       "id": "bus-501466",
       "name": "HORACE HARDING EXPWY/MARATHON PKWY",
       "lat": 40.7605,
       "lng": -73.7313,
-      "routes": []
+      "routes": [
+        "Q30"
+      ]
     },
     {
       "id": "bus-103374",
       "name": "BRUSH AV/BRUCKNER BLVD",
       "lat": 40.8281,
       "lng": -73.841,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-504461",
       "name": "LINDEN BLVD/172 ST",
       "lat": 40.6918,
       "lng": -73.7788,
-      "routes": []
+      "routes": [
+        "Q4"
+      ]
     },
     {
       "id": "bus-308618",
       "name": "SURF AV/W 30 ST",
       "lat": 40.5728,
       "lng": -73.996,
-      "routes": []
+      "routes": [
+        "X28"
+      ]
     },
     {
       "id": "bus-307045",
       "name": "SHORE PKWY/BRIGHAM ST",
       "lat": 40.5856,
       "lng": -73.9319,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-300135",
       "name": "ORIENTAL BLVD/KENSINGTON ST",
       "lat": 40.5781,
       "lng": -73.9412,
-      "routes": []
+      "routes": [
+        "B1",
+        "B49"
+      ]
     },
     {
       "id": "bus-302806",
       "name": "W 5 ST/NEPTUNE AV",
       "lat": 40.5795,
       "lng": -73.9719,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-502947",
       "name": "73 AV/SPRINGFIELD BLVD",
       "lat": 40.7424,
       "lng": -73.7539,
-      "routes": []
+      "routes": [
+        "Q88"
+      ]
     },
     {
       "id": "bus-504957",
       "name": "LINDEN BLVD/GUY BREWER BLVD",
       "lat": 40.6891,
       "lng": -73.7857,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-901058",
       "name": "SURF AV/W 37 ST",
       "lat": 40.5732,
       "lng": -74.002,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-502004",
       "name": "SAYRES AV/178 ST",
       "lat": 40.6974,
       "lng": -73.7755,
-      "routes": []
+      "routes": [
+        "Q42"
+      ]
     },
     {
       "id": "bus-306980",
       "name": "STILLWELL AV/W 15 PL",
       "lat": 40.5864,
       "lng": -73.9832,
-      "routes": []
+      "routes": [
+        "B64"
+      ]
     },
     {
       "id": "bus-505239",
       "name": "DOUGLASTON PKWY/DOUGLASTON PLAZA",
       "lat": 40.7556,
       "lng": -73.7394,
-      "routes": []
+      "routes": [
+        "Q30"
+      ]
     },
     {
       "id": "bus-982006",
       "name": "LEFFERTS BLVD/AIRTRAIN STATION",
       "lat": 40.6615,
       "lng": -73.8242,
-      "routes": []
+      "routes": [
+        "Q3"
+      ]
     },
     {
       "id": "bus-302591",
       "name": "GERRITSEN AV/EVERETT AV",
       "lat": 40.5932,
       "lng": -73.9256,
-      "routes": []
+      "routes": [
+        "B31"
+      ]
     },
     {
       "id": "bus-502394",
       "name": "UNION TPKE/FRANCIS LEWIS BLVD",
       "lat": 40.7318,
       "lng": -73.7707,
-      "routes": []
+      "routes": [
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-500104",
       "name": "HOLLIS AV/104 AV",
       "lat": 40.7073,
       "lng": -73.7647,
-      "routes": []
+      "routes": [
+        "Q2"
+      ]
     },
     {
       "id": "bus-901201",
       "name": "South conduit en EB/lefferts bl",
       "lat": 40.6634,
       "lng": -73.8232,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-550265",
       "name": "LINDEN BLVD/SUTPHIN BLVD",
       "lat": 40.6864,
       "lng": -73.7935,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-300131",
       "name": "ORIENTAL BLVD/DOVER ST",
       "lat": 40.5772,
       "lng": -73.9488,
-      "routes": []
+      "routes": [
+        "B1",
+        "B49"
+      ]
     },
     {
       "id": "bus-500011",
       "name": "HILLSIDE AV/189 ST",
       "lat": 40.7153,
       "lng": -73.7728,
-      "routes": []
+      "routes": [
+        "Q1",
+        "Q36",
+        "Q43"
+      ]
     },
     {
       "id": "bus-103767",
       "name": "LAFAYETTE AV/HUTCHINSON RIVER PKWY",
       "lat": 40.8249,
       "lng": -73.837,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-502651",
       "name": "73 AV/210 ST",
       "lat": 40.7391,
       "lng": -73.7641,
-      "routes": []
+      "routes": [
+        "Q88"
+      ]
     },
     {
       "id": "bus-501481",
       "name": "HORACE HARDING EXPWY/EAST HAMPTON BLVD",
       "lat": 40.7521,
       "lng": -73.7475,
-      "routes": []
+      "routes": [
+        "Q30"
+      ]
     },
     {
       "id": "bus-103392",
       "name": "WESTCHESTER AV/HUGH GRANT CIR",
       "lat": 40.8329,
       "lng": -73.8617,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-801107",
       "name": "n conduit av/cohancy st",
       "lat": 40.6659,
       "lng": -73.8222,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-501332",
       "name": "188 ST/AVON RD",
       "lat": 40.7236,
       "lng": -73.7781,
-      "routes": []
+      "routes": [
+        "Q17"
+      ]
     },
     {
       "id": "bus-501457",
       "name": "HORACE HARDING EXPWY/CLOVERDALE BLVD",
       "lat": 40.7503,
       "lng": -73.7507,
-      "routes": []
+      "routes": [
+        "Q30"
+      ]
     },
     {
       "id": "bus-300373",
       "name": "NEPTUNE AV/BRIGHTON 4 ST",
       "lat": 40.5809,
       "lng": -73.9649,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-504432",
       "name": "NORTHERN BLVD/243 ST",
       "lat": 40.7653,
       "lng": -73.7435,
-      "routes": []
+      "routes": [
+        "Q12"
+      ]
     },
     {
       "id": "bus-303502",
       "name": "NOSTRAND AV/VOORHIES AV",
       "lat": 40.587,
       "lng": -73.9395,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-307939",
       "name": "W 33 ST/BAY VIEW AV",
       "lat": 40.5792,
       "lng": -74.0005,
-      "routes": []
+      "routes": [
+        "B36",
+        "B74"
+      ]
     },
     {
       "id": "bus-502013",
       "name": "174 ST/109 AV",
       "lat": 40.6991,
       "lng": -73.7812,
-      "routes": []
+      "routes": [
+        "Q42"
+      ]
     },
     {
       "id": "bus-306854",
       "name": "ASHFORD ST/COZINE AV",
       "lat": 40.659,
       "lng": -73.8779,
-      "routes": []
+      "routes": [
+        "B6",
+        "B84"
+      ]
     },
     {
       "id": "bus-500264",
       "name": "LIBERTY AV/CAMDEN AV",
       "lat": 40.7042,
       "lng": -73.7705,
-      "routes": []
+      "routes": [
+        "Q83"
+      ]
     },
     {
       "id": "bus-305539",
       "name": "HARWAY AV/27 AV",
       "lat": 40.5899,
       "lng": -73.9879,
-      "routes": []
+      "routes": [
+        "B64"
+      ]
     },
     {
       "id": "bus-500901",
       "name": "NORTHERN BLVD/232 ST",
       "lat": 40.7646,
       "lng": -73.7469,
-      "routes": []
+      "routes": [
+        "Q12"
+      ]
     },
     {
       "id": "bus-501624",
       "name": "SPRINGFIELD BLVD/HORACE HARDING EXPWY SOUTH",
       "lat": 40.7488,
       "lng": -73.7566,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-901475",
       "name": "GATEWAY PLAZA 2/BAY 2",
       "lat": 40.6527,
       "lng": -73.8766,
-      "routes": []
+      "routes": [
+        "B13",
+        "B83"
+      ]
     },
     {
       "id": "bus-308380",
       "name": "SEAVIEW AV/ERSKINE ST",
       "lat": 40.653,
       "lng": -73.8666,
-      "routes": []
+      "routes": [
+        "B13"
+      ]
     },
     {
       "id": "bus-504959",
       "name": "LINDEN BLVD/VAN WYCK EXPWY",
       "lat": 40.6832,
       "lng": -73.8051,
-      "routes": []
+      "routes": [
+        "QM63"
+      ]
     },
     {
       "id": "bus-300381",
       "name": "SHELL RD/BOUCK CT",
       "lat": 40.5889,
       "lng": -73.9741,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-306733",
       "name": "GERRITSEN AV/AVENUE X",
       "lat": 40.5968,
       "lng": -73.9294,
-      "routes": []
+      "routes": [
+        "B31"
+      ]
     },
     {
       "id": "bus-502623",
       "name": "73 AV/189 ST",
       "lat": 40.7335,
       "lng": -73.7817,
-      "routes": []
+      "routes": [
+        "Q88"
+      ]
     },
     {
       "id": "bus-300109",
       "name": "86 ST/AVENUE V",
       "lat": 40.5937,
       "lng": -73.9804,
-      "routes": []
+      "routes": [
+        "B1",
+        "B4"
+      ]
     },
     {
       "id": "bus-303355",
       "name": "ROCKAWAY PKWY/SHORE PKWY SERVICE RD NORTH",
       "lat": 40.6313,
       "lng": -73.8867,
-      "routes": []
+      "routes": [
+        "B42"
+      ]
     },
     {
       "id": "bus-307107",
       "name": "PENNSYLVANIA AV/SEAVIEW AV",
       "lat": 40.6444,
       "lng": -73.878,
-      "routes": []
+      "routes": [
+        "B82",
+        "B83"
+      ]
     },
     {
       "id": "bus-308913",
       "name": "LIVONIA AV/ASHFORD ST",
       "lat": 40.6664,
       "lng": -73.8836,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-501044",
       "name": "BELL BLVD/212 ST",
       "lat": 40.7881,
       "lng": -73.7811,
-      "routes": []
+      "routes": [
+        "Q13"
+      ]
     },
     {
       "id": "bus-303901",
       "name": "WEST END AV/HAMPTON AV",
       "lat": 40.5796,
       "lng": -73.9533,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-502689",
       "name": "FRANCIS LEWIS BLVD/73 AV",
       "lat": 40.7366,
       "lng": -73.7729,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-307539",
       "name": "PENNSYLVANIA AV/SCHROEDERS AV",
       "lat": 40.6476,
       "lng": -73.8817,
-      "routes": []
+      "routes": [
+        "B82",
+        "B83"
+      ]
     },
     {
       "id": "bus-306257",
       "name": "VAN SICLEN AV/STANLEY AV",
       "lat": 40.6587,
       "lng": -73.8844,
-      "routes": []
+      "routes": [
+        "B83"
+      ]
     },
     {
       "id": "bus-505233",
       "name": "HILLSIDE AV/AVON ST",
       "lat": 40.7135,
       "lng": -73.7804,
-      "routes": []
+      "routes": [
+        "Q3",
+        "Q76"
+      ]
     },
     {
       "id": "bus-501452",
       "name": "HORACE HARDING EXPWY/214 ST",
       "lat": 40.7468,
       "lng": -73.7628,
-      "routes": []
+      "routes": [
+        "Q30",
+        "Q75"
+      ]
     },
     {
       "id": "bus-504464",
       "name": "LIBERTY AV/180 ST",
       "lat": 40.7053,
       "lng": -73.7799,
-      "routes": []
+      "routes": [
+        "Q83"
+      ]
     },
     {
       "id": "bus-300499",
       "name": "CROPSEY AV/25 AV",
       "lat": 40.592,
       "lng": -73.993,
-      "routes": []
+      "routes": [
+        "B82",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-300339",
       "name": "OCEAN AV/VOORHIES AV",
       "lat": 40.5866,
       "lng": -73.9489,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-307181",
       "name": "FOUNTAIN AV/BROOKLYN DEVELOPMENTAL CENTER",
       "lat": 40.6558,
       "lng": -73.8637,
-      "routes": []
+      "routes": [
+        "B13",
+        "B84"
+      ]
     },
     {
       "id": "bus-505107",
       "name": "56 AV/QBCC",
       "lat": 40.754,
       "lng": -73.7581,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-501048",
       "name": "BELL BLVD/23 AV",
       "lat": 40.7821,
       "lng": -73.7764,
-      "routes": []
+      "routes": [
+        "Q13"
+      ]
     },
     {
       "id": "bus-103383",
       "name": "CROSS BRONX EXPWY/ROSEDALE AV",
       "lat": 40.8355,
       "lng": -73.8695,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-901200",
       "name": "south conduit en eb/cohancy st",
       "lat": 40.6658,
       "lng": -73.8346,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-308781",
       "name": "SEAVIEW AV/E 105 ST",
       "lat": 40.6374,
       "lng": -73.8839,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-304087",
       "name": "PENNSYLVANIA AV/VANDALIA AV",
       "lat": 40.6517,
       "lng": -73.8853,
-      "routes": []
+      "routes": [
+        "B82"
+      ]
     },
     {
       "id": "bus-300245",
       "name": "AVENUE U/E 59 ST",
       "lat": 40.6138,
       "lng": -73.9164,
-      "routes": []
+      "routes": [
+        "B3",
+        "B47"
+      ]
     },
     {
       "id": "bus-502313",
       "name": "UNION TPKE/UTOPIA PKWY",
       "lat": 40.7258,
       "lng": -73.7911,
-      "routes": []
+      "routes": [
+        "Q45",
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-300241",
       "name": "AVENUE U/E 69 ST",
       "lat": 40.619,
       "lng": -73.9088,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-301798",
       "name": "SEAVIEW AV/E 91 ST",
       "lat": 40.6308,
       "lng": -73.8942,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-503967",
       "name": "MERRICK BLVD/104 AV",
       "lat": 40.7016,
       "lng": -73.7904,
-      "routes": []
+      "routes": [
+        "Q5"
+      ]
     },
     {
       "id": "bus-300186",
       "name": "25 AV/BENSON AV",
       "lat": 40.5965,
       "lng": -73.9886,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-301575",
       "name": "SUTTER AV/VERMONT ST",
       "lat": 40.6697,
       "lng": -73.8937,
-      "routes": []
+      "routes": [
+        "B14"
+      ]
     },
     {
       "id": "bus-302844",
       "name": "AVENUE Z/HUBBARD ST",
       "lat": 40.5871,
       "lng": -73.9633,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-308653",
       "name": "FLATLANDS AV/FOUNTAIN AV",
       "lat": 40.6605,
       "lng": -73.8677,
-      "routes": []
+      "routes": [
+        "B84"
+      ]
     },
     {
       "id": "bus-505297",
       "name": "HILLSIDE AV/EDGERTON BLVD",
       "lat": 40.7122,
       "lng": -73.7859,
-      "routes": []
+      "routes": [
+        "Q3",
+        "Q76"
+      ]
     },
     {
       "id": "bus-300216",
       "name": "AVENUE U/E 37 ST",
       "lat": 40.6068,
       "lng": -73.927,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-501489",
       "name": "HORACE HARDING EXPWY/OCEANIA ST",
       "lat": 40.746,
       "lng": -73.7683,
-      "routes": []
+      "routes": [
+        "Q30",
+        "Q75"
+      ]
     },
     {
       "id": "bus-300213",
       "name": "AVENUE U/BURNETT ST",
       "lat": 40.6028,
       "lng": -73.9332,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-302831",
       "name": "NOSTRAND AV/AVENUE W",
       "lat": 40.596,
       "lng": -73.9412,
-      "routes": []
+      "routes": [
+        "B36",
+        "B44"
+      ]
     },
     {
       "id": "bus-501035",
       "name": "BELL BLVD/24 AV",
       "lat": 40.7792,
       "lng": -73.7755,
-      "routes": []
+      "routes": [
+        "Q13",
+        "Q31"
+      ]
     },
     {
       "id": "bus-503609",
       "name": "NORTHERN BLVD/227 ST",
       "lat": 40.7632,
       "lng": -73.7532,
-      "routes": []
+      "routes": [
+        "Q12"
+      ]
     },
     {
       "id": "bus-301151",
       "name": "DUMONT AV/MONTAUK AV",
       "lat": 40.6689,
       "lng": -73.8763,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-303352",
       "name": "ROCKAWAY PKWY/AVENUE N",
       "lat": 40.6352,
       "lng": -73.8914,
-      "routes": []
+      "routes": [
+        "B42"
+      ]
     },
     {
       "id": "bus-300273",
       "name": "AVENUE U/McDONALD AV",
       "lat": 40.5971,
       "lng": -73.973,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-308792",
       "name": "FLATBUSH AV/AVENUE T",
       "lat": 40.6111,
       "lng": -73.9242,
-      "routes": []
+      "routes": [
+        "B2",
+        "B9"
+      ]
     },
     {
       "id": "bus-301766",
       "name": "E 80 ST/PAERDEGAT 15 ST",
       "lat": 40.6279,
       "lng": -73.9005,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-501268",
       "name": "CROSS ISLAND PKWY/GOLF COURSE",
       "lat": 40.7873,
       "lng": -73.7915,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-501435",
       "name": "UTOPIA PKWY/73 AV",
       "lat": 40.7304,
       "lng": -73.7935,
-      "routes": []
+      "routes": [
+        "Q30",
+        "Q31",
+        "Q75"
+      ]
     },
     {
       "id": "bus-301959",
       "name": "PENNSYLVANIA AV/HEGEMAN AV",
       "lat": 40.6602,
       "lng": -73.8918,
-      "routes": []
+      "routes": [
+        "B20"
+      ]
     },
     {
       "id": "bus-302814",
       "name": "AVENUE Z/E 13 ST",
       "lat": 40.5877,
       "lng": -73.9558,
-      "routes": []
+      "routes": [
+        "B36"
+      ]
     },
     {
       "id": "bus-501184",
       "name": "166 ST/POWELLS COVE BLVD",
       "lat": 40.7938,
       "lng": -73.7974,
-      "routes": []
+      "routes": [
+        "Q15",
+        "Q61"
+      ]
     },
     {
       "id": "bus-502311",
       "name": "UNION TPKE/173 ST",
       "lat": 40.7245,
       "lng": -73.7954,
-      "routes": []
+      "routes": [
+        "Q45"
+      ]
     },
     {
       "id": "bus-804006",
       "name": "HORACE HARDING EXPWY/FRANCIS LEWIS BLVD",
       "lat": 40.7437,
       "lng": -73.7766,
-      "routes": []
+      "routes": [
+        "Q88"
+      ]
     },
     {
       "id": "bus-300424",
       "name": "CROPSEY AV/23 AV",
       "lat": 40.596,
       "lng": -73.9969,
-      "routes": []
+      "routes": [
+        "B6",
+        "B82",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-300482",
       "name": "KINGS HWY/W 6 ST",
       "lat": 40.6051,
       "lng": -73.9789,
-      "routes": []
+      "routes": [
+        "B82"
+      ]
     },
     {
       "id": "bus-303333",
       "name": "VETERANS AV/E 64 ST",
       "lat": 40.6196,
       "lng": -73.9152,
-      "routes": []
+      "routes": [
+        "B41"
+      ]
     },
     {
       "id": "bus-501424",
       "name": "HOMELAWN ST/HIGHLAND AV",
       "lat": 40.7129,
       "lng": -73.7932,
-      "routes": []
+      "routes": [
+        "Q31"
+      ]
     },
     {
       "id": "bus-501618",
       "name": "216 ST/50 AV",
       "lat": 40.7543,
       "lng": -73.7641,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-302175",
       "name": "ATLANTIC AV/LINWOOD ST",
       "lat": 40.6784,
       "lng": -73.8837,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-500879",
       "name": "NORTHERN BLVD/217 ST",
       "lat": 40.761,
       "lng": -73.7644,
-      "routes": []
+      "routes": [
+        "Q12"
+      ]
     },
     {
       "id": "bus-504961",
       "name": "LIBERTY AV/REMINGTON ST",
       "lat": 40.6922,
       "lng": -73.8095,
-      "routes": []
+      "routes": [
+        "QM64"
+      ]
     },
     {
       "id": "bus-305092",
       "name": "WILLIAMS AV/GLENWOOD RD",
       "lat": 40.6511,
       "lng": -73.8925,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-501422",
       "name": "170 ST/JAMAICA AV",
       "lat": 40.7075,
       "lng": -73.7899,
-      "routes": []
+      "routes": [
+        "Q54",
+        "Q56"
+      ]
     },
     {
       "id": "bus-302180",
       "name": "ATLANTIC AV/MILLER AV",
       "lat": 40.6763,
       "lng": -73.8926,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-304092",
       "name": "FLATLANDS AV/E 105 ST",
       "lat": 40.6474,
       "lng": -73.8951,
-      "routes": []
+      "routes": [
+        "B60",
+        "B82",
+        "B82-SBS"
+      ]
     },
     {
       "id": "bus-501397",
       "name": "188 ST/HORACE HARDING EXPWY",
       "lat": 40.7403,
       "lng": -73.7865,
-      "routes": []
+      "routes": [
+        "Q17",
+        "Q88"
+      ]
     },
     {
       "id": "bus-301032",
       "name": "LINDEN BLVD/CRESCENT ST",
       "lat": 40.6688,
       "lng": -73.8685,
-      "routes": []
+      "routes": [
+        "B13",
+        "B15",
+        "B20"
+      ]
     },
     {
       "id": "bus-502408",
       "name": "UNION TPKE/164 ST",
       "lat": 40.7216,
       "lng": -73.8043,
-      "routes": []
+      "routes": [
+        "Q45",
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-801108",
       "name": "n conduit av/95 st",
       "lat": 40.6693,
       "lng": -73.8411,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-301535",
       "name": "SUTTER AV/VAN SINDEREN AV",
       "lat": 40.6684,
       "lng": -73.9013,
-      "routes": []
+      "routes": [
+        "B14"
+      ]
     },
     {
       "id": "bus-503255",
       "name": "BELL BLVD/33 RD",
       "lat": 40.7714,
       "lng": -73.7742,
-      "routes": []
+      "routes": [
+        "Q13",
+        "Q31"
+      ]
     },
     {
       "id": "bus-300308",
       "name": "STILLWELL AV/23 AV",
       "lat": 40.6046,
       "lng": -73.9869,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-503933",
       "name": "ARCHER AV/GUY R BREWER BLVD",
       "lat": 40.7034,
       "lng": -73.7956,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q30",
+        "Q31",
+        "Q75"
+      ]
     },
     {
       "id": "bus-505127",
       "name": "POWELLS COVE BLVD/158 ST",
       "lat": 40.7944,
       "lng": -73.8033,
-      "routes": []
+      "routes": [
+        "Q15",
+        "Q61"
+      ]
     },
     {
       "id": "bus-303366",
       "name": "NOSTRAND AV/AVENUE T",
       "lat": 40.6031,
       "lng": -73.9423,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-306620",
       "name": "E 80 ST/AVENUE M",
       "lat": 40.6299,
       "lng": -73.9051,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-301564",
       "name": "SUTTER AV/FOUNTAIN AV",
       "lat": 40.6725,
       "lng": -73.8745,
-      "routes": []
+      "routes": [
+        "B14"
+      ]
     },
     {
       "id": "bus-503021",
       "name": "UTOPIA PKWY/WILLETS POINT BLVD",
       "lat": 40.7858,
       "lng": -73.795,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-301049",
       "name": "NEW LOTS AV/VAN SINDEREN AV",
       "lat": 40.659,
       "lng": -73.8995,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-303915",
       "name": "OCEAN AV/AVENUE V",
       "lat": 40.5976,
       "lng": -73.9509,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-100646",
       "name": "BOSTON RD/E 180 ST",
       "lat": 40.8426,
       "lng": -73.8783,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-308344",
       "name": "AVENUE L/REMSEN AV",
       "lat": 40.6351,
       "lng": -73.9009,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-502693",
       "name": "FRANCIS LEWIS BLVD/56 AV",
       "lat": 40.7475,
       "lng": -73.7776,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-300199",
       "name": "AVENUE U/E 8 ST",
       "lat": 40.5981,
       "lng": -73.9626,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-300168",
       "name": "E 36 ST/FILLMORE AV",
       "lat": 40.6113,
       "lng": -73.933,
-      "routes": []
+      "routes": [
+        "B2"
+      ]
     },
     {
       "id": "bus-304529",
       "name": "JAMAICA AV/SCHENCK AV",
       "lat": 40.6815,
       "lng": -73.8903,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-503273",
       "name": "MERRICK BLVD/90 AV",
       "lat": 40.7072,
       "lng": -73.795,
-      "routes": []
+      "routes": [
+        "Q30",
+        "Q31",
+        "Q75"
+      ]
     },
     {
       "id": "bus-300478",
       "name": "KINGS HWY/McDONALD AV",
       "lat": 40.6043,
       "lng": -73.9719,
-      "routes": []
+      "routes": [
+        "B82",
+        "B82-SBS"
+      ]
     },
     {
       "id": "bus-104003",
       "name": "EAST TREMONT AV/E 177 ST",
       "lat": 40.8398,
       "lng": -73.8784,
-      "routes": []
+      "routes": [
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-308096",
       "name": "CROPSEY AV/BAY 25 ST",
       "lat": 40.5995,
       "lng": -74.0019,
-      "routes": []
+      "routes": [
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-308918",
       "name": "GLENWOOD RD/E 104 ST",
       "lat": 40.6485,
       "lng": -73.8972,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-300036",
       "name": "86 ST/21 AV",
       "lat": 40.6032,
       "lng": -73.9959,
-      "routes": []
+      "routes": [
+        "B1"
+      ]
     },
     {
       "id": "bus-504031",
       "name": "HORACE HARDING EXPWY/175 PL",
       "lat": 40.7393,
       "lng": -73.7938,
-      "routes": []
+      "routes": [
+        "Q17",
+        "Q88"
+      ]
     },
     {
       "id": "bus-505309",
       "name": "JAMAICA AV/150 ST",
       "lat": 40.7023,
       "lng": -73.8041,
-      "routes": []
+      "routes": [
+        "Q30",
+        "Q75"
+      ]
     },
     {
       "id": "bus-502410",
       "name": "UNION TPKE/PARSONS BLVD",
       "lat": 40.72,
       "lng": -73.8089,
-      "routes": []
+      "routes": [
+        "Q45",
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-306944",
       "name": "FLATLANDS AV/E 98 ST",
       "lat": 40.644,
       "lng": -73.9003,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-501024",
       "name": "BELL BLVD/42 AV",
       "lat": 40.763,
       "lng": -73.7705,
-      "routes": []
+      "routes": [
+        "Q13",
+        "Q31"
+      ]
     },
     {
       "id": "bus-303276",
       "name": "AVENUE N/E 53 ST",
       "lat": 40.6192,
       "lng": -73.9245,
-      "routes": []
+      "routes": [
+        "B41"
+      ]
     },
     {
       "id": "bus-304631",
       "name": "JAMAICA AV/SHEPHERD AV",
       "lat": 40.6849,
       "lng": -73.8834,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-306726",
       "name": "ROCKAWAY AV/SUTTER AV",
       "lat": 40.6675,
       "lng": -73.9101,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-300393",
       "name": "BAY RIDGE PKWY/BAY PKWY",
       "lat": 40.6084,
       "lng": -73.9876,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-501847",
       "name": "CORPORAL KENNEDY ST/33 AV",
       "lat": 40.7707,
       "lng": -73.7798,
-      "routes": []
+      "routes": [
+        "Q27",
+        "Q31"
+      ]
     },
     {
       "id": "bus-301973",
       "name": "JAMAICA AV/BROADWAY",
       "lat": 40.677,
       "lng": -73.9001,
-      "routes": []
+      "routes": [
+        "B20",
+        "Q24"
+      ]
     },
     {
       "id": "bus-501857",
       "name": "BELL BLVD/46 AV",
       "lat": 40.7579,
       "lng": -73.7682,
-      "routes": []
+      "routes": [
+        "Q27",
+        "Q31"
+      ]
     },
     {
       "id": "bus-308315",
       "name": "LORING AV/DREW ST",
       "lat": 40.6681,
       "lng": -73.861,
-      "routes": []
+      "routes": [
+        "B14",
+        "B15"
+      ]
     },
     {
       "id": "bus-301429",
       "name": "CRESCENT ST/PITKIN AV",
       "lat": 40.6756,
       "lng": -73.87,
-      "routes": []
+      "routes": [
+        "B13"
+      ]
     },
     {
       "id": "bus-300519",
       "name": "BAY PKWY/64 ST",
       "lat": 40.6146,
       "lng": -73.9805,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-505396",
       "name": "10 AV/CLINTONVILLE ST",
       "lat": 40.793,
       "lng": -73.8129,
-      "routes": []
+      "routes": [
+        "Q15"
+      ]
     },
     {
       "id": "bus-502304",
       "name": "UNION TPKE/150 ST",
       "lat": 40.7191,
       "lng": -73.8117,
-      "routes": []
+      "routes": [
+        "Q45"
+      ]
     },
     {
       "id": "bus-306907",
       "name": "AVENUE R/MADISON PL",
       "lat": 40.6096,
       "lng": -73.9402,
-      "routes": []
+      "routes": [
+        "B2"
+      ]
     },
     {
       "id": "bus-306967",
       "name": "ROCKAWAY AV/LOTT AV",
       "lat": 40.6583,
       "lng": -73.9077,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-501275",
       "name": "UTOPIA PKWY/19 AV",
       "lat": 40.7801,
       "lng": -73.7941,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-300265",
       "name": "AVENUE U/E 16 ST",
       "lat": 40.5989,
       "lng": -73.956,
-      "routes": []
+      "routes": [
+        "B3"
+      ]
     },
     {
       "id": "bus-306199",
       "name": "RALPH AV/AVENUE J",
       "lat": 40.6284,
       "lng": -73.9183,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-300143",
       "name": "AVENUE R/BEDFORD AV",
       "lat": 40.6068,
       "lng": -73.9481,
-      "routes": []
+      "routes": [
+        "B2",
+        "B31"
+      ]
     },
     {
       "id": "bus-304958",
       "name": "ROCKAWAY AV/DITMAS AV",
       "lat": 40.6532,
       "lng": -73.9065,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-552208",
       "name": "88 AV/PARSONS BLVD",
       "lat": 40.7067,
       "lng": -73.8024,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-501196",
       "name": "154 ST/14 AV",
       "lat": 40.7891,
       "lng": -73.8077,
-      "routes": []
+      "routes": [
+        "Q61"
+      ]
     },
     {
       "id": "bus-300795",
       "name": "18 AV/BENSON AV",
       "lat": 40.6053,
       "lng": -74.0045,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-504198",
       "name": "JAMAICA AV/144 ST",
       "lat": 40.7023,
       "lng": -73.8114,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q56"
+      ]
     },
     {
       "id": "bus-300566",
       "name": "FLATLANDS AV/E 86 ST",
       "lat": 40.6385,
       "lng": -73.9085,
-      "routes": []
+      "routes": [
+        "B6",
+        "B82"
+      ]
     },
     {
       "id": "bus-307195",
       "name": "60 ST/21 AV",
       "lat": 40.6178,
       "lng": -73.9804,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-501347",
       "name": "HORACE HARDING EXPWY/168 ST",
       "lat": 40.7386,
       "lng": -73.8013,
-      "routes": []
+      "routes": [
+        "Q17",
+        "Q88"
+      ]
     },
     {
       "id": "bus-301522",
       "name": "PITKIN AV/HERZL ST",
       "lat": 40.669,
       "lng": -73.915,
-      "routes": []
+      "routes": [
+        "B12",
+        "B14"
+      ]
     },
     {
       "id": "bus-301554",
       "name": "DREW ST/SUTTER AV",
       "lat": 40.6739,
       "lng": -73.8621,
-      "routes": []
+      "routes": [
+        "B14"
+      ]
     },
     {
       "id": "bus-503666",
       "name": "ATLANTIC AV/130 ST",
       "lat": 40.6959,
       "lng": -73.8193,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-303222",
       "name": "FLATBUSH AV/TROY AV",
       "lat": 40.6193,
       "lng": -73.9332,
-      "routes": []
+      "routes": [
+        "B41",
+        "B9"
+      ]
     },
     {
       "id": "bus-505454",
       "name": "FRANCIS LEWIS BLVD/45 DR",
       "lat": 40.7551,
       "lng": -73.7821,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-901020",
       "name": "GLENWOOD RD/REMSEN AV",
       "lat": 40.6421,
       "lng": -73.907,
-      "routes": []
+      "routes": [
+        "B17"
+      ]
     },
     {
       "id": "bus-501874",
       "name": "UTOPIA PKWY/PIDGEON MEADOW RD",
       "lat": 40.7473,
       "lng": -73.7925,
-      "routes": []
+      "routes": [
+        "Q31"
+      ]
     },
     {
       "id": "bus-305705",
       "name": "CONEY ISLAND AV/AVENUE R",
       "lat": 40.6057,
       "lng": -73.9616,
-      "routes": []
+      "routes": [
+        "B68"
+      ]
     },
     {
       "id": "bus-304973",
       "name": "ROCKAWAY AV/PACIFIC ST",
       "lat": 40.6759,
       "lng": -73.9109,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-301496",
       "name": "CRESCENT ST/RIDGEWOOD AV",
       "lat": 40.6851,
       "lng": -73.8727,
-      "routes": []
+      "routes": [
+        "B13"
+      ]
     },
     {
       "id": "bus-502137",
       "name": "SUTPHIN BLVD/HILLSIDE AV",
       "lat": 40.7054,
       "lng": -73.8096,
-      "routes": []
+      "routes": [
+        "Q1",
+        "Q43",
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-501605",
       "name": "47 AV/193 ST",
       "lat": 40.7518,
       "lng": -73.788,
-      "routes": []
+      "routes": [
+        "Q27",
+        "Q31"
+      ]
     },
     {
       "id": "bus-300991",
       "name": "AVENUE N/E 3 ST",
       "lat": 40.6143,
       "lng": -73.9723,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-501261",
       "name": "FRANCIS LEWIS BLVD/WILLETS POINT BLVD",
       "lat": 40.7801,
       "lng": -73.8023,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-304007",
       "name": "OCEAN AV/AVENUE R",
       "lat": 40.606,
       "lng": -73.9528,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-300703",
       "name": "RIVERDALE AV/E 98 ST",
       "lat": 40.6598,
       "lng": -73.9165,
-      "routes": []
+      "routes": [
+        "B7"
+      ]
     },
     {
       "id": "bus-501110",
       "name": "150 ST/CROSS ISLAND PKWY SERVICE RD NORTH",
       "lat": 40.7876,
       "lng": -73.8133,
-      "routes": []
+      "routes": [
+        "Q15"
+      ]
     },
     {
       "id": "bus-300041",
       "name": "86 ST/17 AV",
       "lat": 40.6089,
       "lng": -74.0051,
-      "routes": []
+      "routes": [
+        "B1"
+      ]
     },
     {
       "id": "bus-304114",
       "name": "FLATLANDS AV/AVENUE J",
       "lat": 40.6282,
       "lng": -73.9248,
-      "routes": []
+      "routes": [
+        "B82"
+      ]
     },
     {
       "id": "bus-504137",
       "name": "CYPRESS HILLS ST/MACHPELAH CEMETERY",
       "lat": 40.6936,
       "lng": -73.8843,
-      "routes": []
+      "routes": [
+        "B13"
+      ]
     },
     {
       "id": "bus-302087",
       "name": "ATLANTIC AV/AUTUMN AV",
       "lat": 40.6822,
       "lng": -73.8694,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-306159",
       "name": "RALPH AV/GLENWOOD RD",
       "lat": 40.6344,
       "lng": -73.9188,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-505237",
       "name": "MAIN ST/75 AV",
       "lat": 40.7241,
       "lng": -73.8205,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-300914",
       "name": "CROPSEY AV/16 AV",
       "lat": 40.6054,
       "lng": -74.0127,
-      "routes": []
+      "routes": [
+        "B8",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-504191",
       "name": "ATLANTIC AV/LEFFERTS BLVD",
       "lat": 40.694,
       "lng": -73.8275,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-504491",
       "name": "GRAND AV/61 ST",
       "lat": 40.7217,
       "lng": -73.9046,
-      "routes": []
+      "routes": [
+        "Q59"
+      ]
     },
     {
       "id": "bus-502414",
       "name": "UNION TPKE/MAIN ST",
       "lat": 40.7177,
       "lng": -73.8178,
-      "routes": []
+      "routes": [
+        "Q45",
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-300904",
       "name": "18 AV/BAY RIDGE PKWY",
       "lat": 40.6132,
       "lng": -73.9963,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-501249",
       "name": "FRANCIS LEWIS BLVD/27 AV",
       "lat": 40.7727,
       "lng": -73.795,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-300452",
       "name": "KINGS HWY/E 27 ST",
       "lat": 40.614,
       "lng": -73.9476,
-      "routes": []
+      "routes": [
+        "B7",
+        "B82"
+      ]
     },
     {
       "id": "bus-501733",
       "name": "FRANCIS LEWIS BLVD/32 RD",
       "lat": 40.7686,
       "lng": -73.7914,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-300804",
       "name": "18 AV/70 ST",
       "lat": 40.6164,
       "lng": -73.9928,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-500915",
       "name": "NORTHERN BLVD/194 ST",
       "lat": 40.7579,
       "lng": -73.788,
-      "routes": []
+      "routes": [
+        "Q12"
+      ]
     },
     {
       "id": "bus-306362",
       "name": "JAMAICA AV/CRESCENT ST",
       "lat": 40.6892,
       "lng": -73.8745,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-301746",
       "name": "REMSEN AV/AVENUE A",
       "lat": 40.6514,
       "lng": -73.9183,
-      "routes": []
+      "routes": [
+        "B17",
+        "B8"
+      ]
     },
     {
       "id": "bus-301121",
       "name": "RALPH AV/EASTERN PKWY",
       "lat": 40.6678,
       "lng": -73.9228,
-      "routes": []
+      "routes": [
+        "B14"
+      ]
     },
     {
       "id": "bus-300898",
       "name": "18 AV/62 ST",
       "lat": 40.6207,
       "lng": -73.9887,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-300741",
       "name": "SARATOGA AV/ATLANTIC AV",
       "lat": 40.6763,
       "lng": -73.9165,
-      "routes": []
+      "routes": [
+        "B7"
+      ]
     },
     {
       "id": "bus-300857",
       "name": "RALPH AV/CLARENDON RD",
       "lat": 40.6454,
       "lng": -73.9199,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-501730",
       "name": "FRANCIS LEWIS BLVD/35 AV",
       "lat": 40.7647,
       "lng": -73.7883,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-801197",
       "name": "kings hwy/e 35 st",
       "lat": 40.6205,
       "lng": -73.9407,
-      "routes": []
+      "routes": [
+        "B82-SBS"
+      ]
     },
     {
       "id": "bus-503541",
       "name": "FRESH POND RD/ELIOT AV",
       "lat": 40.7147,
       "lng": -73.9013,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-305708",
       "name": "CONEY ISLAND AV/AVENUE O",
       "lat": 40.6129,
       "lng": -73.9628,
-      "routes": []
+      "routes": [
+        "B68"
+      ]
     },
     {
       "id": "bus-306183",
       "name": "CLARKSON AV/E 94 ST",
       "lat": 40.6594,
       "lng": -73.9229,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-300774",
       "name": "KINGS HWY/AVENUE J",
       "lat": 40.628,
       "lng": -73.9326,
-      "routes": []
+      "routes": [
+        "B7"
+      ]
     },
     {
       "id": "bus-503415",
       "name": "JAMAICA AV/132 ST",
       "lat": 40.7021,
       "lng": -73.8208,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-300448",
       "name": "KINGS HWY/E 18 ST",
       "lat": 40.61,
       "lng": -73.9552,
-      "routes": []
+      "routes": [
+        "B7",
+        "B82"
+      ]
     },
     {
       "id": "bus-505021",
       "name": "15 AV/COLLEGE POINT BLVD",
       "lat": 40.7842,
       "lng": -73.8455,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q76"
+      ]
     },
     {
       "id": "bus-300653",
       "name": "BAY PKWY/McDONALD AV",
       "lat": 40.6208,
       "lng": -73.9754,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-504105",
       "name": "FRESH POND RD/CATALPA AV",
       "lat": 40.7043,
       "lng": -73.8957,
-      "routes": []
+      "routes": [
+        "B13",
+        "B20"
+      ]
     },
     {
       "id": "bus-502166",
       "name": "MAIN ST/JEWEL AV",
       "lat": 40.7299,
       "lng": -73.8233,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-301979",
       "name": "BROADWAY/CHAUNCEY ST",
       "lat": 40.6829,
       "lng": -73.9103,
-      "routes": []
+      "routes": [
+        "B20",
+        "Q24"
+      ]
     },
     {
       "id": "bus-300622",
       "name": "AVENUE H/E 54 ST",
       "lat": 40.6331,
       "lng": -73.9248,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-503466",
       "name": "FLUSHING AV/64 ST",
       "lat": 40.7228,
       "lng": -73.9011,
-      "routes": []
+      "routes": [
+        "Q59"
+      ]
     },
     {
       "id": "bus-551964",
       "name": "69 ST/62 RD",
       "lat": 40.7169,
       "lng": -73.889,
-      "routes": []
+      "routes": [
+        "Q67"
+      ]
     },
     {
       "id": "bus-501352",
       "name": "HORACE HARDING EXPWY/156 ST",
       "lat": 40.739,
       "lng": -73.8127,
-      "routes": []
+      "routes": [
+        "Q17",
+        "Q88"
+      ]
     },
     {
       "id": "bus-553253",
       "name": "MAURICE AV/MASPETH AV",
       "lat": 40.7234,
       "lng": -73.9121,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-502727",
       "name": "14 AV/PARSONS BLVD",
       "lat": 40.7869,
       "lng": -73.8219,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-503652",
       "name": "ATLANTIC AV/108 ST",
       "lat": 40.6914,
       "lng": -73.8371,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-701185",
       "name": "PUTNAM AV/FOREST AV",
       "lat": 40.7054,
       "lng": -73.9012,
-      "routes": []
+      "routes": [
+        "B20"
+      ]
     },
     {
       "id": "bus-300891",
       "name": "18 AV/47 ST",
       "lat": 40.6293,
       "lng": -73.9802,
-      "routes": []
+      "routes": [
+        "B11",
+        "B8"
+      ]
     },
     {
       "id": "bus-504332",
       "name": "MYRTLE AV/62 ST",
       "lat": 40.7009,
       "lng": -73.8929,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-301721",
       "name": "3 AV/SHORE RD",
       "lat": 40.6127,
       "lng": -74.0359,
-      "routes": []
+      "routes": [
+        "B16",
+        "X27",
+        "X37"
+      ]
     },
     {
       "id": "bus-302719",
       "name": "CHURCH AV/KINGS HWY",
       "lat": 40.6524,
       "lng": -73.9223,
-      "routes": []
+      "routes": [
+        "B35"
+      ]
     },
     {
       "id": "bus-504370",
       "name": "MYRTLE AV/67 ST",
       "lat": 40.7015,
       "lng": -73.8864,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-303375",
       "name": "NOSTRAND AV/AVENUE M",
       "lat": 40.6199,
       "lng": -73.9455,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-501563",
       "name": "46 AV/171 ST",
       "lat": 40.7539,
       "lng": -73.7968,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-501162",
       "name": "150 ST/21 AV",
       "lat": 40.7802,
       "lng": -73.8143,
-      "routes": []
+      "routes": [
+        "Q15"
+      ]
     },
     {
       "id": "bus-306822",
       "name": "14 AV/BENSON AV",
       "lat": 40.6112,
       "lng": -74.0135,
-      "routes": []
+      "routes": [
+        "B64",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-503396",
       "name": "JAMAICA AV/LEFFERTS BLVD",
       "lat": 40.7001,
       "lng": -73.8302,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-300765",
       "name": "KINGS HWY/CLARENDON RD",
       "lat": 40.6449,
       "lng": -73.925,
-      "routes": []
+      "routes": [
+        "B7",
+        "B8"
+      ]
     },
     {
       "id": "bus-505017",
       "name": "20 AV/127 ST",
       "lat": 40.7817,
       "lng": -73.8413,
-      "routes": []
+      "routes": [
+        "Q20"
+      ]
     },
     {
       "id": "bus-503238",
       "name": "METROPOLITAN AV/ANDREWS AV",
       "lat": 40.7131,
       "lng": -73.9093,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-307004",
       "name": "EASTERN PKWY/UTICA AV",
       "lat": 40.6685,
       "lng": -73.9312,
-      "routes": []
+      "routes": [
+        "B14",
+        "B17"
+      ]
     },
     {
       "id": "bus-307313",
       "name": "POLY PL/VETERANS HOSPITAL",
       "lat": 40.6073,
       "lng": -74.0207,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-303138",
       "name": "RALPH AV/DEAN ST",
       "lat": 40.6757,
       "lng": -73.9219,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-505009",
       "name": "QUEENS BLVD/MAIN ST",
       "lat": 40.7087,
       "lng": -73.8188,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q44-SBS",
+        "QM68"
+      ]
     },
     {
       "id": "bus-502466",
       "name": "14 AV/132 ST",
       "lat": 40.7862,
       "lng": -73.8358,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-504485",
       "name": "DITMARS BLVD/102 ST",
       "lat": 40.7691,
       "lng": -73.8685,
-      "routes": []
+      "routes": [
+        "Q90"
+      ]
     },
     {
       "id": "bus-501302",
       "name": "29 AV/159 ST",
       "lat": 40.7712,
       "lng": -73.8057,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-502169",
       "name": "MAIN ST/MELBOURNE AV",
       "lat": 40.734,
       "lng": -73.8252,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-303599",
       "name": "UTICA AV/KINGS HWY",
       "lat": 40.634,
       "lng": -73.9285,
-      "routes": []
+      "routes": [
+        "B46"
+      ]
     },
     {
       "id": "bus-307112",
       "name": "AVENUE M/CONEY ISLAND AV",
       "lat": 40.6177,
       "lng": -73.9636,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-301179",
       "name": "50 ST/16 AV",
       "lat": 40.6302,
       "lng": -73.9858,
-      "routes": []
+      "routes": [
+        "B11"
+      ]
     },
     {
       "id": "bus-307777",
       "name": "JAMAICA AV/ELDERT LN",
       "lat": 40.6911,
       "lng": -73.8682,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-904987",
       "name": "LGA/TERMINAL B",
       "lat": 40.773,
       "lng": -73.8727,
-      "routes": []
+      "routes": [
+        "Q90"
+      ]
     },
     {
       "id": "bus-700881",
       "name": "ATLANTIC AV/81 ST",
       "lat": 40.6848,
       "lng": -73.8601,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-551336",
       "name": "JUNIPER VALLEY RD/70 ST",
       "lat": 40.7146,
       "lng": -73.8846,
-      "routes": []
+      "routes": [
+        "Q38"
+      ]
     },
     {
       "id": "bus-504112",
       "name": "GATES AV/FAIRVIEW AV",
       "lat": 40.7061,
       "lng": -73.9056,
-      "routes": []
+      "routes": [
+        "B13"
+      ]
     },
     {
       "id": "bus-301281",
       "name": "AVENUE I/OCEAN PKWY",
       "lat": 40.6266,
       "lng": -73.9716,
-      "routes": []
+      "routes": [
+        "B11"
+      ]
     },
     {
       "id": "bus-303228",
       "name": "FLATBUSH AV/BROOKLYN AV",
       "lat": 40.6268,
       "lng": -73.9411,
-      "routes": []
+      "routes": [
+        "B41"
+      ]
     },
     {
       "id": "bus-504181",
       "name": "SUMMERFIELD ST/WYCKOFF AV",
       "lat": 40.6948,
       "lng": -73.9025,
-      "routes": []
+      "routes": [
+        "B20"
+      ]
     },
     {
       "id": "bus-301716",
       "name": "SHORE RD/91 ST",
       "lat": 40.6212,
       "lng": -74.0404,
-      "routes": []
+      "routes": [
+        "B16",
+        "X27",
+        "X37"
+      ]
     },
     {
       "id": "bus-551950",
       "name": "53 DR/63 ST",
       "lat": 40.7293,
       "lng": -73.9027,
-      "routes": []
+      "routes": [
+        "Q67"
+      ]
     },
     {
       "id": "bus-302476",
       "name": "HALSEY ST/BROADWAY",
       "lat": 40.6857,
       "lng": -73.9157,
-      "routes": []
+      "routes": [
+        "B26"
+      ]
     },
     {
       "id": "bus-503646",
       "name": "ATLANTIC AV/100 ST",
       "lat": 40.6895,
       "lng": -73.8446,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-551385",
       "name": "58 ST/53 RD",
       "lat": 40.7345,
       "lng": -73.9103,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-300401",
       "name": "BAY RIDGE PKWY/14 AV",
       "lat": 40.6192,
       "lng": -74.0055,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-502510",
       "name": "HORACE HARDING EXPWY/148 ST",
       "lat": 40.7406,
       "lng": -73.8216,
-      "routes": []
+      "routes": [
+        "Q88"
+      ]
     },
     {
       "id": "bus-504034",
       "name": "46 AV/163 ST",
       "lat": 40.7538,
       "lng": -73.8044,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-308038",
       "name": "FORT HAMILTON PKWY/MARINE AV",
       "lat": 40.6133,
       "lng": -74.0306,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-304986",
       "name": "WILSON AV/HALSEY ST",
       "lat": 40.6915,
       "lng": -73.9094,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-505080",
       "name": "MYRTLE AV/FOREST AV",
       "lat": 40.7005,
       "lng": -73.8996,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-504545",
       "name": "UNION TPKE/QUEENS BLVD",
       "lat": 40.7146,
       "lng": -73.8288,
-      "routes": []
+      "routes": [
+        "Q45",
+        "Q46",
+        "Q48"
+      ]
     },
     {
       "id": "bus-504209",
       "name": "ATLANTIC AV/90 ST",
       "lat": 40.6872,
       "lng": -73.8527,
-      "routes": []
+      "routes": [
+        "Q24"
+      ]
     },
     {
       "id": "bus-504349",
       "name": "MYRTLE AV/114 ST",
       "lat": 40.7004,
       "lng": -73.836,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-502578",
       "name": "DITMARS BLVD/31 AV",
       "lat": 40.7626,
       "lng": -73.8614,
-      "routes": []
+      "routes": [
+        "Q90"
+      ]
     },
     {
       "id": "bus-505194",
       "name": "QUEENS BLVD/78 AV",
       "lat": 40.7156,
       "lng": -73.8324,
-      "routes": []
+      "routes": [
+        "QM63",
+        "QM64",
+        "QM68"
+      ]
     },
     {
       "id": "bus-505043",
       "name": "14 AV/139 ST",
       "lat": 40.7864,
       "lng": -73.8303,
-      "routes": []
+      "routes": [
+        "Q76"
+      ]
     },
     {
       "id": "bus-303614",
       "name": "UTICA AV/MAPLE ST",
       "lat": 40.6624,
       "lng": -73.9314,
-      "routes": []
+      "routes": [
+        "B46"
+      ]
     },
     {
       "id": "bus-303003",
       "name": "3 AV/92 ST",
       "lat": 40.6191,
       "lng": -74.033,
-      "routes": []
+      "routes": [
+        "B37"
+      ]
     },
     {
       "id": "bus-305952",
       "name": "7 AV/POLY PREP ENT",
       "lat": 40.612,
       "lng": -74.024,
-      "routes": []
+      "routes": [
+        "B70",
+        "B8"
+      ]
     },
     {
       "id": "bus-501356",
       "name": "KISSENA BLVD/ROSE AV",
       "lat": 40.7464,
       "lng": -73.8144,
-      "routes": []
+      "routes": [
+        "Q17"
+      ]
     },
     {
       "id": "bus-553002",
       "name": "69 ST/QUEENS MIDTOWN EXPWY",
       "lat": 40.7247,
       "lng": -73.8945,
-      "routes": []
+      "routes": [
+        "Q67"
+      ]
     },
     {
       "id": "bus-300090",
       "name": "13 AV/77 ST",
       "lat": 40.6189,
       "lng": -74.009,
-      "routes": []
+      "routes": [
+        "B64"
+      ]
     },
     {
       "id": "bus-504502",
       "name": "MYRTLE AV/72 ST",
       "lat": 40.7021,
       "lng": -73.8784,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-804244",
       "name": "58 ST/LAUREL HILL BLVD",
       "lat": 40.7362,
       "lng": -73.9093,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-503565",
       "name": "PARSONS BLVD/22 AV",
       "lat": 40.7792,
       "lng": -73.8235,
-      "routes": []
+      "routes": [
+        "Q20"
+      ]
     },
     {
       "id": "bus-300980",
       "name": "OCEAN AV/AVENUE L",
       "lat": 40.6206,
       "lng": -73.9555,
-      "routes": []
+      "routes": [
+        "B49",
+        "B9"
+      ]
     },
     {
       "id": "bus-308483",
       "name": "CHURCH AV/UTICA AV",
       "lat": 40.6518,
       "lng": -73.9306,
-      "routes": []
+      "routes": [
+        "B35"
+      ]
     },
     {
       "id": "bus-505054",
       "name": "FLUSHING AV/METROPOLITAN AV",
       "lat": 40.7139,
       "lng": -73.915,
-      "routes": []
+      "routes": [
+        "B57"
+      ]
     },
     {
       "id": "bus-504298",
       "name": "METROPOLITAN AV/125 ST",
       "lat": 40.7049,
       "lng": -73.8272,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-308136",
       "name": "KINGSTON AV/UNION ST",
       "lat": 40.6687,
       "lng": -73.9422,
-      "routes": []
+      "routes": [
+        "B43"
+      ]
     },
     {
       "id": "bus-505015",
       "name": "20 AV/132 ST",
       "lat": 40.7817,
       "lng": -73.8358,
-      "routes": []
+      "routes": [
+        "Q20"
+      ]
     },
     {
       "id": "bus-303673",
       "name": "UTICA AV/ATLANTIC AV",
       "lat": 40.6776,
       "lng": -73.9304,
-      "routes": []
+      "routes": [
+        "B46"
+      ]
     },
     {
       "id": "bus-300863",
       "name": "AVENUE D/UTICA AV",
       "lat": 40.6422,
       "lng": -73.9299,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-307515",
       "name": "86 ST/NARROWS AV",
       "lat": 40.6258,
       "lng": -74.0406,
-      "routes": []
+      "routes": [
+        "B16"
+      ]
     },
     {
       "id": "bus-550641",
       "name": "31 AV/102 ST",
       "lat": 40.7613,
       "lng": -73.8671,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-551340",
       "name": "FURMANVILLE AV/77 ST",
       "lat": 40.7172,
       "lng": -73.8768,
-      "routes": []
+      "routes": [
+        "Q38"
+      ]
     },
     {
       "id": "bus-551329",
       "name": "ELIOT AV/77 ST",
       "lat": 40.7236,
       "lng": -73.8824,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-301189",
       "name": "CONEY ISLAND AV/AVENUE I",
       "lat": 40.6267,
       "lng": -73.9657,
-      "routes": []
+      "routes": [
+        "B11",
+        "B68"
+      ]
     },
     {
       "id": "bus-306566",
       "name": "MCDONALD AV/CORTELYOU RD",
       "lat": 40.6382,
       "lng": -73.9789,
-      "routes": []
+      "routes": [
+        "B67",
+        "B69"
+      ]
     },
     {
       "id": "bus-551980",
       "name": "QUEENS MIDTOWN EXPY / 43RD ST",
       "lat": 40.7357,
       "lng": -73.9235,
-      "routes": []
+      "routes": [
+        "Q67"
+      ]
     },
     {
       "id": "bus-500923",
       "name": "SANFORD AV/162 ST",
       "lat": 40.7604,
       "lng": -73.8044,
-      "routes": []
+      "routes": [
+        "Q13"
+      ]
     },
     {
       "id": "bus-501235",
       "name": "BAYSIDE AV/150 ST",
       "lat": 40.7715,
       "lng": -73.8155,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-303145",
       "name": "RALPH AV/HALSEY ST",
       "lat": 40.6848,
       "lng": -73.923,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-308936",
       "name": "ALBANY AV/RUTLAND RD",
       "lat": 40.66,
       "lng": -73.9397,
-      "routes": []
+      "routes": [
+        "B12"
+      ]
     },
     {
       "id": "bus-300545",
       "name": "GLENWOOD RD/E 38 ST",
       "lat": 40.6344,
       "lng": -73.9397,
-      "routes": []
+      "routes": [
+        "B6"
+      ]
     },
     {
       "id": "bus-303482",
       "name": "NOSTRAND AV/AVENUE I",
       "lat": 40.6288,
       "lng": -73.9473,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-502172",
       "name": "MAIN ST/146 ST",
       "lat": 40.7401,
       "lng": -73.8249,
-      "routes": []
+      "routes": [
+        "Q20",
+        "Q44-SBS"
+      ]
     },
     {
       "id": "bus-301002",
       "name": "60 ST/NEW UTRECHT AV",
       "lat": 40.628,
       "lng": -73.997,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-503385",
       "name": "JAMAICA AV/94 ST",
       "lat": 40.694,
       "lng": -73.851,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-503439",
       "name": "JAMAICA AV/FOREST PKWY",
       "lat": 40.6923,
       "lng": -73.8613,
-      "routes": []
+      "routes": [
+        "Q56"
+      ]
     },
     {
       "id": "bus-504230",
       "name": "DE KALB AV/SENECA AV",
       "lat": 40.7075,
       "lng": -73.9159,
-      "routes": []
+      "routes": [
+        "B38"
+      ]
     },
     {
       "id": "bus-502246",
       "name": "PARSONS BLVD/WILLETS POINT BLVD",
       "lat": 40.7773,
       "lng": -73.8243,
-      "routes": []
+      "routes": [
+        "Q20"
+      ]
     },
     {
       "id": "bus-503594",
       "name": "48 ST/47 ST",
       "lat": 40.7327,
       "lng": -73.9188,
-      "routes": []
+      "routes": [
+        "B24"
+      ]
     },
     {
       "id": "bus-504330",
       "name": "MYRTLE AV/MADISON ST",
       "lat": 40.6999,
       "lng": -73.9079,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-307201",
       "name": "60 ST/11 AV",
       "lat": 40.6313,
       "lng": -74.0027,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-306521",
       "name": "14 AV/47 ST",
       "lat": 40.635,
       "lng": -73.9884,
-      "routes": []
+      "routes": [
+        "B16"
+      ]
     },
     {
       "id": "bus-501533",
       "name": "46 AV/PARSONS BLVD",
       "lat": 40.7541,
       "lng": -73.8129,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-504347",
       "name": "MYRTLE AV/PARK LANE SOUTH",
       "lat": 40.7011,
       "lng": -73.8424,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-301109",
       "name": "ALBANY AV/ATLANTIC AV",
       "lat": 40.6775,
       "lng": -73.9387,
-      "routes": []
+      "routes": [
+        "B15"
+      ]
     },
     {
       "id": "bus-503864",
       "name": "108 ST/VAN CLEEF ST",
       "lat": 40.7409,
       "lng": -73.8537,
-      "routes": []
+      "routes": [
+        "Q58"
+      ]
     },
     {
       "id": "bus-308418",
       "name": "5 AV/89 ST",
       "lat": 40.62,
       "lng": -74.0274,
-      "routes": []
+      "routes": [
+        "B63"
+      ]
     },
     {
       "id": "bus-505327",
       "name": "KISSENA BLVD/HOLLY AV",
       "lat": 40.7509,
       "lng": -73.8193,
-      "routes": []
+      "routes": [
+        "Q17"
+      ]
     },
     {
       "id": "bus-305047",
       "name": "WILSON AV/WOODBINE ST",
       "lat": 40.6943,
       "lng": -73.9145,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-503493",
       "name": "COLLEGE POINT BLVD/58 RD",
       "lat": 40.7457,
       "lng": -73.8352,
-      "routes": []
+      "routes": [
+        "Q58",
+        "Q98"
+      ]
     },
     {
       "id": "bus-503529",
       "name": "GRAND AV/73 ST",
       "lat": 40.7293,
       "lng": -73.8903,
-      "routes": []
+      "routes": [
+        "Q59"
+      ]
     },
     {
       "id": "bus-504281",
       "name": "METROPOLITAN AV/PARK LN SOUTH",
       "lat": 40.7078,
       "lng": -73.8368,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-551070",
       "name": "80 ST/METROPOLITAN AV",
       "lat": 40.7132,
       "lng": -73.8716,
-      "routes": []
+      "routes": [
+        "Q29",
+        "Q54"
+      ]
     },
     {
       "id": "bus-306563",
       "name": "MCDONALD AV/ALBEMARLE RD",
       "lat": 40.6448,
       "lng": -73.9799,
-      "routes": []
+      "routes": [
+        "B67",
+        "B69"
+      ]
     },
     {
       "id": "bus-303401",
       "name": "NEW YORK AV/UNION ST",
       "lat": 40.6691,
       "lng": -73.9477,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-504219",
       "name": "GREENPOINT AV/48 AV",
       "lat": 40.7398,
       "lng": -73.9244,
-      "routes": []
+      "routes": [
+        "B24"
+      ]
     },
     {
       "id": "bus-308083",
       "name": "CHURCH AV/E 39 ST",
       "lat": 40.6513,
       "lng": -73.9413,
-      "routes": []
+      "routes": [
+        "B35"
+      ]
     },
     {
       "id": "bus-306480",
       "name": "MEEKER AV/STEWART AV",
       "lat": 40.7267,
       "lng": -73.9342,
-      "routes": []
+      "routes": [
+        "B48"
+      ]
     },
     {
       "id": "bus-307780",
       "name": "SHORE RD/83 ST",
       "lat": 40.6279,
       "lng": -74.0399,
-      "routes": []
+      "routes": [
+        "B16",
+        "B63",
+        "X27",
+        "X37"
+      ]
     },
     {
       "id": "bus-505426",
       "name": "103 ST/34 AV",
       "lat": 40.7557,
       "lng": -73.8652,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-302504",
       "name": "HALSEY ST/STUYVESANT AV",
       "lat": 40.6838,
       "lng": -73.9326,
-      "routes": []
+      "routes": [
+        "B26"
+      ]
     },
     {
       "id": "bus-300820",
       "name": "18 AV/E 8 ST",
       "lat": 40.6343,
       "lng": -73.9695,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-504362",
       "name": "MYRTLE AV/81 ST",
       "lat": 40.7031,
       "lng": -73.8677,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-501308",
       "name": "BAYSIDE AV/148 ST",
       "lat": 40.7713,
       "lng": -73.8191,
-      "routes": []
+      "routes": [
+        "Q16"
+      ]
     },
     {
       "id": "bus-305597",
       "name": "BERGEN ST/NEW YORK AV",
       "lat": 40.676,
       "lng": -73.9476,
-      "routes": []
+      "routes": [
+        "B65"
+      ]
     },
     {
       "id": "bus-552988",
       "name": "8 ST/ASTORIA BLVD",
       "lat": 40.773,
       "lng": -73.9324,
-      "routes": []
+      "routes": [
+        "B62"
+      ]
     },
     {
       "id": "bus-308458",
       "name": "METROPOLITAN AV/ONDERDONK AV",
       "lat": 40.714,
       "lng": -73.9241,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-305505",
       "name": "86 ST/7 AV",
       "lat": 40.6188,
       "lng": -74.0215,
-      "routes": []
+      "routes": [
+        "B1",
+        "X28",
+        "X38"
+      ]
     },
     {
       "id": "bus-303928",
       "name": "OCEAN AV/AVENUE I",
       "lat": 40.628,
       "lng": -73.9567,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-305742",
       "name": "CONEY ISLAND AV/CHURCH AV",
       "lat": 40.646,
       "lng": -73.9709,
-      "routes": []
+      "routes": [
+        "B68"
+      ]
     },
     {
       "id": "bus-304672",
       "name": "FLUSHING AV/WYCKOFF AV",
       "lat": 40.7076,
       "lng": -73.9239,
-      "routes": []
+      "routes": [
+        "B57"
+      ]
     },
     {
       "id": "bus-550947",
       "name": "37 AV/104 ST",
       "lat": 40.7534,
       "lng": -73.8637,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-308342",
       "name": "53 ST/1 AV",
       "lat": 40.6487,
       "lng": -74.0208,
-      "routes": []
+      "routes": [
+        "B11"
+      ]
     },
     {
       "id": "bus-301175",
       "name": "50 ST/NEW UTRECHT AV",
       "lat": 40.6355,
       "lng": -73.9945,
-      "routes": []
+      "routes": [
+        "B11"
+      ]
     },
     {
       "id": "bus-300881",
       "name": "FOSTER AV/RUGBY RD",
       "lat": 40.6336,
       "lng": -73.9643,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-504226",
       "name": "GREENPOINT AV/BRADLEY AV",
       "lat": 40.7356,
       "lng": -73.9347,
-      "routes": []
+      "routes": [
+        "B24"
+      ]
     },
     {
       "id": "bus-551106",
       "name": "DRY HARBOR RD/82 PL",
       "lat": 40.7223,
       "lng": -73.8742,
-      "routes": []
+      "routes": [
+        "Q29"
+      ]
     },
     {
       "id": "bus-501214",
       "name": "150 ST/NORTHERN BLVD",
       "lat": 40.7649,
       "lng": -73.8151,
-      "routes": []
+      "routes": [
+        "Q15"
+      ]
     },
     {
       "id": "bus-551354",
       "name": "63 RD/YELLOWSTONE BLVD",
       "lat": 40.7337,
       "lng": -73.8521,
-      "routes": []
+      "routes": [
+        "Q38"
+      ]
     },
     {
       "id": "bus-301677",
       "name": "37 ST/12 AV",
       "lat": 40.6428,
       "lng": -73.9871,
-      "routes": []
+      "routes": [
+        "B16"
+      ]
     },
     {
       "id": "bus-502263",
       "name": "MAIN ST/56 AV",
       "lat": 40.748,
       "lng": -73.8261,
-      "routes": []
+      "routes": [
+        "Q20"
+      ]
     },
     {
       "id": "bus-300838",
       "name": "AVENUE D/E 39 ST",
       "lat": 40.6414,
       "lng": -73.9395,
-      "routes": []
+      "routes": [
+        "B8"
+      ]
     },
     {
       "id": "bus-303149",
       "name": "RALPH AV/BROADWAY",
       "lat": 40.6908,
       "lng": -73.9243,
-      "routes": []
+      "routes": [
+        "B47"
+      ]
     },
     {
       "id": "bus-303479",
       "name": "NOSTRAND AV/FARRAGUT RD",
       "lat": 40.6359,
       "lng": -73.9481,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-301698",
       "name": "FORT HAMILTON PKWY/BAY RIDGE AV",
       "lat": 40.6287,
       "lng": -74.0122,
-      "routes": []
+      "routes": [
+        "B16"
+      ]
     },
     {
       "id": "bus-551430",
       "name": "48 AV/48 ST",
       "lat": 40.7392,
       "lng": -73.918,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-306554",
       "name": "MCDONALD AV/VANDERBILT ST",
       "lat": 40.652,
       "lng": -73.9811,
-      "routes": []
+      "routes": [
+        "B67",
+        "B69"
+      ]
     },
     {
       "id": "bus-930105",
       "name": "2 AV/37 ST",
       "lat": 40.6561,
       "lng": -74.0096,
-      "routes": []
+      "routes": [
+        "B35",
+        "B70"
+      ]
     },
     {
       "id": "bus-551436",
       "name": "48 AV/34 ST",
       "lat": 40.7408,
       "lng": -73.9316,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-503525",
       "name": "GRAND AV/CALAMUS AV",
       "lat": 40.7334,
       "lng": -73.884,
-      "routes": []
+      "routes": [
+        "Q58",
+        "Q59",
+        "Q98"
+      ]
     },
     {
       "id": "bus-505443",
       "name": "SEAVER WAY/35 AV",
       "lat": 40.759,
       "lng": -73.8451,
-      "routes": []
+      "routes": [
+        "Q90"
+      ]
     },
     {
       "id": "bus-901196",
       "name": "fdr dr n/cherry st",
       "lat": 40.7113,
       "lng": -73.9787,
-      "routes": []
+      "routes": [
+        "X37",
+        "X38"
+      ]
     },
     {
       "id": "bus-305735",
       "name": "PROSPECT PARK SOUTHWEST/11 AV",
       "lat": 40.6585,
       "lng": -73.9748,
-      "routes": []
+      "routes": [
+        "B68"
+      ]
     },
     {
       "id": "bus-503515",
       "name": "CORONA AV/NATIONAL ST",
       "lat": 40.7448,
       "lng": -73.8648,
-      "routes": []
+      "routes": [
+        "Q58"
+      ]
     },
     {
       "id": "bus-303972",
       "name": "BEDFORD AV/EASTERN PKWY",
       "lat": 40.6704,
       "lng": -73.9553,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-901297",
       "name": "SHORE RD/71 ST",
       "lat": 40.6368,
       "lng": -74.0363,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-550926",
       "name": "43 AV/102 ST",
       "lat": 40.7472,
       "lng": -73.8628,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-304413",
       "name": "MYRTLE AV/MENAHAN ST",
       "lat": 40.699,
       "lng": -73.9158,
-      "routes": []
+      "routes": [
+        "B54"
+      ]
     },
     {
       "id": "bus-306114",
       "name": "DWIGHT ST/DIKEMAN ST",
       "lat": 40.6746,
       "lng": -74.0108,
-      "routes": []
+      "routes": [
+        "B57",
+        "B61"
+      ]
     },
     {
       "id": "bus-303465",
       "name": "NOSTRAND AV/MAPLE ST",
       "lat": 40.6605,
       "lng": -73.9507,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-551315",
       "name": "99 ST/55 AV",
       "lat": 40.7393,
       "lng": -73.8606,
-      "routes": []
+      "routes": [
+        "Q14"
+      ]
     },
     {
       "id": "bus-303730",
       "name": "THROOP AV/JEFFERSON AV",
       "lat": 40.6846,
       "lng": -73.9412,
-      "routes": []
+      "routes": [
+        "B43"
+      ]
     },
     {
       "id": "bus-504228",
       "name": "VAN DAM ST/REVIEW AV",
       "lat": 40.7345,
       "lng": -73.938,
-      "routes": []
+      "routes": [
+        "B24"
+      ]
     },
     {
       "id": "bus-303391",
       "name": "NEW YORK AV/LINDEN BLVD",
       "lat": 40.6531,
       "lng": -73.9468,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-301692",
       "name": "FORT HAMILTON PKWY/58 ST",
       "lat": 40.6339,
       "lng": -74.0045,
-      "routes": []
+      "routes": [
+        "B16"
+      ]
     },
     {
       "id": "bus-303880",
       "name": "FRANKLIN AV/BERGEN ST",
       "lat": 40.6769,
       "lng": -73.9558,
-      "routes": []
+      "routes": [
+        "B48"
+      ]
     },
     {
       "id": "bus-302890",
       "name": "3 AV/58 ST",
       "lat": 40.6433,
       "lng": -74.0188,
-      "routes": []
+      "routes": [
+        "B37"
+      ]
     },
     {
       "id": "bus-302978",
       "name": "3 AV/43 ST",
       "lat": 40.6515,
       "lng": -74.0109,
-      "routes": []
+      "routes": [
+        "B37"
+      ]
     },
     {
       "id": "bus-505203",
       "name": "COOPER AV/ATLAS PARK MALL",
       "lat": 40.7099,
       "lng": -73.8681,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-307623",
       "name": "CONEY ISLAND AV/PARK CIRCLE",
       "lat": 40.6504,
       "lng": -73.9719,
-      "routes": []
+      "routes": [
+        "B68"
+      ]
     },
     {
       "id": "bus-306437",
       "name": "OLD FULTON ST/HICKS ST",
       "lat": 40.702,
       "lng": -73.9927,
-      "routes": []
+      "routes": [
+        "B25"
+      ]
     },
     {
       "id": "bus-302903",
       "name": "3 AV/30 ST",
       "lat": 40.659,
       "lng": -74.0025,
-      "routes": []
+      "routes": [
+        "B37"
+      ]
     },
     {
       "id": "bus-504359",
       "name": "MYRTLE AV/81 AV",
       "lat": 40.7033,
       "lng": -73.8611,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-551148",
       "name": "139 ST/28 RD",
       "lat": 40.7718,
       "lng": -73.8297,
-      "routes": []
+      "routes": [
+        "Q61"
+      ]
     },
     {
       "id": "bus-305855",
       "name": "PROSPECT PARK WEST/16 ST",
       "lat": 40.6602,
       "lng": -73.9807,
-      "routes": []
+      "routes": [
+        "B61"
+      ]
     },
     {
       "id": "bus-306801",
       "name": "NAVY ST/SANDS ST",
       "lat": 40.6994,
       "lng": -73.9806,
-      "routes": []
+      "routes": [
+        "B62"
+      ]
     },
     {
       "id": "bus-307912",
       "name": "MEEKER AV/MORGAN AV",
       "lat": 40.723,
       "lng": -73.9392,
-      "routes": []
+      "routes": [
+        "B24"
+      ]
     },
     {
       "id": "bus-503017",
       "name": "BROADWAY/CORONA AV",
       "lat": 40.739,
       "lng": -73.8778,
-      "routes": []
+      "routes": [
+        "Q58"
+      ]
     },
     {
       "id": "bus-503074",
       "name": "PARSONS BLVD/ASH AV",
       "lat": 40.7577,
       "lng": -73.819,
-      "routes": []
+      "routes": [
+        "Q27"
+      ]
     },
     {
       "id": "bus-553054",
       "name": "THOMSON AV/VAN DAM ST",
       "lat": 40.7449,
       "lng": -73.9344,
-      "routes": []
+      "routes": [
+        "Q39"
+      ]
     },
     {
       "id": "bus-504345",
       "name": "MYRTLE AV/WOODHAVEN BLVD",
       "lat": 40.7025,
       "lng": -73.8547,
-      "routes": []
+      "routes": [
+        "Q55"
+      ]
     },
     {
       "id": "bus-302763",
       "name": "CHURCH AV/RUGBY RD",
       "lat": 40.6479,
       "lng": -73.9671,
-      "routes": []
+      "routes": [
+        "B35"
+      ]
     },
     {
       "id": "bus-307355",
       "name": "CADMAN PLAZA WEST/CRANBERRY ST",
       "lat": 40.699,
       "lng": -73.9912,
-      "routes": []
+      "routes": [
+        "B25"
+      ]
     },
     {
       "id": "bus-304863",
       "name": "GRAND ST/METRO BRIDGE",
       "lat": 40.714,
       "lng": -73.9321,
-      "routes": []
+      "routes": [
+        "Q54",
+        "Q59"
+      ]
     },
     {
       "id": "bus-300413",
       "name": "78 ST/3 AV",
       "lat": 40.6293,
       "lng": -74.0285,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-306763",
       "name": "KENT AV/WILLIAMSBURG ST EAST",
       "lat": 40.7002,
       "lng": -73.9621,
-      "routes": []
+      "routes": [
+        "B62"
+      ]
     },
     {
       "id": "bus-303476",
       "name": "NOSTRAND AV/CLARENDON RD",
       "lat": 40.6428,
       "lng": -73.9488,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-300291",
       "name": "BAY RIDGE PKWY/6 AV",
       "lat": 40.6278,
       "lng": -74.02,
-      "routes": []
+      "routes": [
+        "B4"
+      ]
     },
     {
       "id": "bus-307166",
       "name": "60 ST/7 AV",
       "lat": 40.6366,
       "lng": -74.0115,
-      "routes": []
+      "routes": [
+        "B9"
+      ]
     },
     {
       "id": "bus-551015",
       "name": "LINDEN PL/31 RD",
       "lat": 40.769,
       "lng": -73.8325,
-      "routes": []
+      "routes": [
+        "Q61"
+      ]
     },
     {
       "id": "bus-305099",
       "name": "VAN BRUNT ST/VERONA ST",
       "lat": 40.6802,
       "lng": -74.0095,
-      "routes": []
+      "routes": [
+        "B61"
+      ]
     },
     {
       "id": "bus-504279",
       "name": "METROPOLITAN AV/72 DR",
       "lat": 40.7096,
       "lng": -73.8459,
-      "routes": []
+      "routes": [
+        "Q54"
+      ]
     },
     {
       "id": "bus-303451",
       "name": "NOSTRAND AV/PUTNAM AV",
       "lat": 40.6837,
       "lng": -73.9503,
-      "routes": []
+      "routes": [
+        "B44"
+      ]
     },
     {
       "id": "bus-901111",
       "name": "fdr/catherine slip",
       "lat": 40.709,
       "lng": -73.9962,
-      "routes": []
+      "routes": [
+        "X37",
+        "X38"
+      ]
     },
     {
       "id": "bus-305034",
       "name": "MORGAN AV/HARRISON PL",
       "lat": 40.706,
       "lng": -73.9319,
-      "routes": []
+      "routes": [
+        "B60"
+      ]
     },
     {
       "id": "bus-550680",
       "name": "21 ST/35 AV",
       "lat": 40.7612,
       "lng": -73.9354,
-      "routes": []
+      "routes": [
+        "B62"
+      ]
     },
     {
       "id": "bus-501218",
       "name": "41 AV/147 ST",
       "lat": 40.7614,
       "lng": -73.8185,
-      "routes": []
+      "routes": [
+        "Q15"
+      ]
     },
     {
       "id": "bus-302421",
       "name": "FULTON ST/WASHINGTON AV",
       "lat": 40.6832,
       "lng": -73.9653,
-      "routes": []
+      "routes": [
+        "B25",
+        "B26"
+      ]
     },
     {
       "id": "bus-551263",
       "name": "63 DR/WOODHAVEN BLVD",
       "lat": 40.7228,
       "lng": -73.8675,
-      "routes": []
+      "routes": [
+        "Q38"
+      ]
     },
     {
       "id": "bus-308214",
       "name": "5 AV/UNION ST",
       "lat": 40.6762,
       "lng": -73.9807,
-      "routes": []
+      "routes": [
+        "B63"
+      ]
     },
     {
       "id": "bus-305287",
       "name": "BOX ST/MANHATTAN AV",
       "lat": 40.7372,
       "lng": -73.9557,
-      "routes": []
+      "routes": [
+        "B43"
+      ]
     },
     {
       "id": "bus-303664",
       "name": "MALCOLM X BLVD/LAFAYETTE AV",
       "lat": 40.6919,
       "lng": -73.9309,
-      "routes": []
+      "routes": [
+        "B46"
+      ]
     },
     {
       "id": "bus-303949",
       "name": "ROGERS AV/LINCOLN RD",
       "lat": 40.6616,
       "lng": -73.9536,
-      "routes": []
+      "routes": [
+        "B49"
+      ]
     },
     {
       "id": "bus-308602",
       "name": "DIVISION AV/DRIGGS AV",
       "lat": 40.7077,
       "lng": -73.9622,
-      "routes": []
+      "routes": [
+        "B62"
+      ]
     },
     {
       "id": "bus-303534",
       "name": "WASHINGTON AV/PROSPECT PL",
       "lat": 40.6761,
       "lng": -73.9636,
-      "routes": []
+      "routes": [
+        "B45"
+      ]
     },
     {
       "id": "bus-306089",
       "name": "LORRAINE ST/HENRY ST",
       "lat": 40.6735,
       "lng": -74.0041,
-      "routes": []
+      "routes": [
+        "B57",
+        "B61"
+      ]
     },
     {
       "id": "bus-302680",
       "name": "39 ST/4 AV",
       "lat": 40.6523,
       "lng": -74.0058,
-      "routes": []
+      "routes": [
+        "B35",
+        "B70"
+      ]
     },
     {
       "id": "bus-300828",
       "name": "FOSTER AV/E 22 ST",
       "lat": 40.6373,
       "lng": -73.9562,
-      "routes": []
+      "routes": [
+        "B49",
+        "B8"
+      ]
     },
     {
       "id": "bus-503483",
       "name": "CORONA AV/JUNCTION BLVD",
       "lat": 40.7421,
       "lng": -73.8677,
-      "routes": []
+      "routes": [
+        "Q58"
+      ]
     },
     {
       "id": "bus-551252",
       "name": "62 DR/97 ST",
       "lat": 40.7324,
       "lng": -73.8621,
-      "routes": []
+      "routes": [
+        "Q38"
+      ]
     },
     {
       "id": "bus-503502",
       "name": "COLLEGE POINT BLVD/SANFORD AV",
       "lat": 40.7543,
       "lng": -73.8331,
-      "routes": []
+      "routes": [
+        "Q58",
+        "Q98"
+      ]
     },
     {
       "id": "bus-305681",
       "name": "7 AV/PROSPECT AV",
       "lat": 40.6616,
       "lng": -73.9861,
-      "routes": []
+      "routes": [
+        "B67",
+        "B69"
+      ]
     },
     {
       "id": "bus-303040",
       "name": "DE KALB AV/WILSON AV",
       "lat": 40.6995,
       "lng": -73.9239,
-      "routes": []
+      "routes": [
+        "B38"
+      ]
     }
   ]
 }
