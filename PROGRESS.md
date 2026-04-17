@@ -4,13 +4,43 @@
 
 ---
 
-## Current State (2026-04-17, Session 22)
+## Current State (2026-04-17, Session 23)
 
-- Branch: `main`, clean. Live: https://nyc-transit-heatmap.vercel.app (all 3 routes 200).
-- Tests: 120/120 passing (was 92 — +28 this session across bus, ferry, citibike, url-state).
-- Shipped: URL validation on /explore, bus route-membership filter with GTFS route population for all 733 stops, street-mode visualizer (off / plain / glow / colored), grid covers all 5 boroughs by default.
-- Iterated on colored streets: hex-fade tuning (0.12 → 0.35), segment-level coloring to fix Jersey / deep Brooklyn smearing.
-- Next: mobile QA on iPhone; investigate INP 824ms on mapbox canvas (likely colored-street sampling on idle — queryRenderedFeatures + per-vertex walk at 8k cap; options: debounce idle, throttle sampling, rAF, reduce cap, or move to worker).
+- Branch: `main`, clean. Live: https://nyc-transit-heatmap.vercel.app (all 5 routes 200).
+- Tests: 120/120 passing. Build clean.
+- Shipped S23: colored streets as default, hex opacity 0.35 → 0.50 in colored mode, widened intra-band color ramp (neon green #39ff14 → chartreuse #c8ff00 in band 1), legend in sync.
+- Tried + reverted: teal-green start (#00ffa0) read as "blue orb"; `iso-near-zero` highlight layer created a glowing shell around the pin.
+- Next: S24 — mobile QA on iPhone; investigate INP 824ms on mapbox canvas (colored-street sampling on idle — options: debounce, throttle, rAF, reduce 8k cap, or worker offload).
+
+---
+
+## 2026-04-17 — Session 23: Colored streets as default + color ramp tuning
+
+### Accomplished
+- **Decision: `colored` ships as default.** After S22 iteration, locked it in as the primary street visualization. Kept the full 4-way toggle (Off / Plain / Glow / Colored) so power users can switch.
+- **Hex opacity in colored mode: 0.35 → 0.50 (+ outline 0.15 → 0.20).** At 0.35 the subway stops blended with surrounding hexes — 1-5 min gradient was invisible. 0.50 makes the gradient readable while letting streets stay primary.
+- **Widened intra-band hue span in COLOR_RAMP.** Preserved the hard jumps at 10/20/30/40/50 that S19 introduced, but pushed each band's start/end further apart so 1-5 min differences feel perceptible. Band 1 stays pure neon green (`#39ff14`) → chartreuse (`#c8ff00`) — 0-min is unmistakably green.
+- **Attempted and reverted: teal-green start (`#00ffa0`).** Initial widening tried `#00ffa0` for the 0-min color to maximize band 1's hue range. Andrew flagged it as a "blue orb" — too cool, read as cyan not green.
+- **Attempted and reverted: `iso-near-zero` highlight layer.** Added a thick blurred outline on hexes where time ≤ 3 to make "on-a-stop" pop. Combined with teal start, it created a glowing shell around the pin that looked like a distinct feature. Removed entirely.
+- **Diagnosed "green outside range" concern.** Andrew reported green blobs in far Queens / Staten Island looking like reach. Queried rendered features at those points via `queryRenderedFeatures` — the iso layers return empty; the green is base Mapbox dark-style landuse (parks, etc). `iso-fill` correctly filters `time <= 60` (73,758 features total, 53k skipped as out-of-range).
+- **Legend synced** to new ramp colors.
+- **PROGRESS Next** flagged INP 824ms on mapbox canvas for S24 — colored-street sampling on idle is the likely culprit.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/isochrone/isochrone-map.tsx` | Default streetMode `plain` → `colored`; hex opacity 0.35 → 0.50, outline 0.15 → 0.20; COLOR_RAMP widened per band; `iso-near-zero` layer added then removed |
+| `src/components/isochrone/map-legend.tsx` | Band gradients synced to new ramp |
+| `PROGRESS.md` | Current State updated, INP note |
+
+### Commits
+- `ef5b4f8` — Colored streets now default + wider 0-9 min hue gradient
+
+### Next Steps
+- [ ] Mobile QA on real iPhone (carried from S22 — live URL deployed)
+- [ ] S24: Investigate INP 824ms on mapbox canvas. Hypothesis: colored-street sampling on idle (queryRenderedFeatures + per-vertex walk, 8k feature cap). Options: debounce idle, throttle sampling, rAF scheduling, reduce cap, or move sampling to worker.
+- [ ] On initial page load with URL params, `street-colored` source stays empty until first idle event — consider forcing first sample on map load complete, not just on idle
+- [ ] Revisit whether 50-60 min band (#5a0010 → #2a0000) is too close to dark basemap — reach edge can look fuzzy
 
 ---
 
