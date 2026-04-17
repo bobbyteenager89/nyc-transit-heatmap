@@ -137,30 +137,31 @@ function cellsToHexGeoJSON(
  * Color ramp — hybrid smooth-within-bands.
  * Smooth interpolation within each 10-min band for fine-grained detail,
  * with visible color jumps at band edges so the contour structure reads
- * clearly at a glance. Best of both: you see "everything under 20 min"
- * as a distinct zone, but within that zone the gradient reveals which
- * spots are 12 vs 18 minutes.
+ * clearly at a glance. Each band's endpoints span a wide hue range so
+ * 1-5 min differences around subway stops are perceptible — the priority
+ * is band 1, where a hex at 1 min (teal-green) reads distinctly from a
+ * hex at 5 min (lime) even though both are "green".
  */
 const COLOR_RAMP: mapboxgl.Expression = [
   "interpolate", ["linear"], ["get", "time"],
-  // Band 1: 0-10 min — bright green to yellow-green
+  // Band 1: 0-9 min — neon green to chartreuse (span within green→yellow-green)
   0,  "#39ff14",
-  9,  "#8aff00",
-  // Jump to band 2: 10-20 min — golden yellow to amber
-  10, "#ffd000",
-  19, "#ffb000",
-  // Jump to band 3: 20-30 min — vivid amber to orange
-  20, "#ff8800",
-  29, "#ff6200",
-  // Jump to band 4: 30-40 min — vivid orange to red-orange
-  30, "#ff4400",
-  39, "#f02010",
-  // Jump to band 5: 40-50 min — red
-  40, "#e21822",
-  49, "#c01020",
-  // Jump to band 6: 50+ min — dark red
-  50, "#8b0000",
-  60, "#5a0000",
+  9,  "#c8ff00",
+  // Jump to band 2: 10-19 min — gold to amber
+  10, "#ffd700",
+  19, "#ffaa00",
+  // Jump to band 3: 20-29 min — dark orange to red-orange
+  20, "#ff7700",
+  29, "#ff4500",
+  // Jump to band 4: 30-39 min — ember red to dark red
+  30, "#e81800",
+  39, "#c8101a",
+  // Jump to band 5: 40-49 min — crimson
+  40, "#a00030",
+  49, "#800020",
+  // Jump to band 6: 50+ min — dark crimson to near-black
+  50, "#5a0010",
+  60, "#2a0000",
 ];
 
 export function IsochroneMap({
@@ -203,13 +204,13 @@ export function IsochroneMap({
   // Persisted to localStorage so the preview choice survives page refreshes
   // while Andrew is iterating.
   const [streetMode, setStreetMode] = useState<StreetMode>(() => {
-    if (typeof window === "undefined") return "plain";
+    if (typeof window === "undefined") return "colored";
     try {
       const v = localStorage.getItem("nyc-transit-street-mode");
       return (["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)
         ? (v as StreetMode)
-        : "plain";
-    } catch { return "plain"; }
+        : "colored";
+    } catch { return "colored"; }
   });
   const streetModeRef = useRef(streetMode);
   streetModeRef.current = streetMode;
@@ -671,10 +672,11 @@ export function IsochroneMap({
       m.setPaintProperty("iso-fill", "fill-opacity", 0);
       m.setPaintProperty("iso-outline", "line-opacity", 0);
 
-      // Target opacities depend on streetMode — in "colored" the hex is a
-      // faint wash so the street lines carry the reach signal.
-      const fillTarget = streetModeRef.current === "colored" ? 0.35 : 0.65;
-      const outlineTarget = streetModeRef.current === "colored" ? 0.15 : 0.3;
+      // Target opacities depend on streetMode. In "colored" the hex sits
+      // at 0.50 — saturated enough that 1-5 min gradient around a subway
+      // stop reads clearly, while still letting streets stay primary.
+      const fillTarget = streetModeRef.current === "colored" ? 0.50 : 0.65;
+      const outlineTarget = streetModeRef.current === "colored" ? 0.20 : 0.3;
 
       const start = performance.now();
       const duration = 800;
@@ -734,13 +736,13 @@ export function IsochroneMap({
     m.setPaintProperty("street-colored-glow", "line-opacity", coloredOn ? 0.55 : 0);
     m.setPaintProperty("street-colored-core", "line-opacity", coloredOn ? 0.95 : 0);
 
-    // When colored streets are the primary reach indicator, fade the hex
-    // fill so the two don't compete visually — but keep it visible enough
-    // (0.35) that the reachability boundary is legible. 0.12 was too
-    // subtle and users misread street-only coverage as "we can reach this
-    // street" when in fact the hex grid has no cell there.
-    m.setPaintProperty("iso-fill", "fill-opacity", coloredOn ? 0.35 : 0.65);
-    m.setPaintProperty("iso-outline", "line-opacity", coloredOn ? 0.15 : 0.3);
+    // When colored streets are the primary reach indicator, keep the hex
+    // fill at 0.50 — saturated enough that the 1-5 min gradient around
+    // subway stops reads clearly, low enough that streets stay primary.
+    // Prior settings: 0.12 (too subtle, misread street-only coverage),
+    // 0.35 (subway stops blended with surrounding hexes).
+    m.setPaintProperty("iso-fill", "fill-opacity", coloredOn ? 0.50 : 0.65);
+    m.setPaintProperty("iso-outline", "line-opacity", coloredOn ? 0.20 : 0.3);
   }, [streetMode, mapReady]);
 
   // Sample road vector tile features against the current hex grid and emit

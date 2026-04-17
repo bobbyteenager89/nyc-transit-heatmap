@@ -4,12 +4,12 @@ export function MapLegend() {
   // Hybrid bands — gradient within each band, visible jump at edges.
   // Must match COLOR_RAMP in isochrone-map.tsx.
   const bands = [
-    { from: "#39ff14", to: "#8aff00", label: "<10" },
-    { from: "#ffd000", to: "#ffb000", label: "20" },
-    { from: "#ff8800", to: "#ff6200", label: "30" },
-    { from: "#ff4400", to: "#f02010", label: "40" },
-    { from: "#e21822", to: "#c01020", label: "50" },
-    { from: "#8b0000", to: "#5a0000", label: "50+" },
+    { from: "#39ff14", to: "#c8ff00", label: "<10" },
+    { from: "#ffd700", to: "#ffaa00", label: "20" },
+    { from: "#ff7700", to: "#ff4500", label: "30" },
+    { from: "#e81800", to: "#c8101a", label: "40" },
+    { from: "#a00030", to: "#800020", label: "50" },
+    { from: "#5a0010", to: "#2a0000", label: "50+" },
   ];
 
   return (

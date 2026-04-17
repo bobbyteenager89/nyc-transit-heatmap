@@ -10,7 +10,7 @@
 - Tests: 120/120 passing (was 92 — +28 this session across bus, ferry, citibike, url-state).
 - Shipped: URL validation on /explore, bus route-membership filter with GTFS route population for all 733 stops, street-mode visualizer (off / plain / glow / colored), grid covers all 5 boroughs by default.
 - Iterated on colored streets: hex-fade tuning (0.12 → 0.35), segment-level coloring to fix Jersey / deep Brooklyn smearing.
-- Next: mobile QA on iPhone; decide whether `colored` lands or ship `glow` as default and kill the toggle.
+- Next: mobile QA on iPhone; investigate INP 824ms on mapbox canvas (likely colored-street sampling on idle — queryRenderedFeatures + per-vertex walk at 8k cap; options: debounce idle, throttle sampling, rAF, reduce cap, or move to worker).
 
 ---
 
