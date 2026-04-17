@@ -48,14 +48,16 @@ export const CITIBIKE_STATION_INFO_URL =
 // H3 hex grid resolution — 10 = ~66m edge length. Crisp visual detail.
 export const H3_RESOLUTION = 10;
 
-// Initial NYC bounds — Manhattan + inner Brooklyn + inner Queens at res 10.
-// Kept tight so the initial compute is fast. If a reach envelope hits the
-// border (any edge cell reachable within the time budget), the explore page
-// dynamically expands the bounds and recomputes with a loading state. See
-// EXPANSION_STEP / MAX_BOUNDS for the expansion bookkeeping.
+// Initial NYC bounds — covers all 5 boroughs by default so a pin dropped
+// anywhere in the city sees the full reach envelope without waiting for
+// expansion. Dropping a pin in central Brooklyn used to miss Flatlands /
+// Midwood / Bensonhurst until the reach envelope hit the south border
+// and a secondary compute expanded to them. Now they're in the initial
+// grid. Auto-expansion still runs for the envelope-hits-border edge case
+// (wide time windows from an edge origin).
 export const CORE_NYC_BOUNDS: BoundingBox = {
-  sw: { lat: 40.63, lng: -74.03 },
-  ne: { lat: 40.82, lng: -73.87 },
+  sw: { lat: 40.55, lng: -74.06 },
+  ne: { lat: 40.90, lng: -73.72 },
 };
 
 // Expansion — when the reach envelope hits a border, grow the bounds by this
