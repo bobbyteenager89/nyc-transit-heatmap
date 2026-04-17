@@ -211,6 +211,8 @@ export function IsochroneMap({
         : "plain";
     } catch { return "plain"; }
   });
+  const streetModeRef = useRef(streetMode);
+  streetModeRef.current = streetMode;
   useEffect(() => {
     try { localStorage.setItem("nyc-transit-street-mode", streetMode); } catch { /* ignore */ }
   }, [streetMode]);
@@ -669,13 +671,18 @@ export function IsochroneMap({
       m.setPaintProperty("iso-fill", "fill-opacity", 0);
       m.setPaintProperty("iso-outline", "line-opacity", 0);
 
+      // Target opacities depend on streetMode — in "colored" the hex is a
+      // faint wash so the street lines carry the reach signal.
+      const fillTarget = streetModeRef.current === "colored" ? 0.12 : 0.65;
+      const outlineTarget = streetModeRef.current === "colored" ? 0 : 0.3;
+
       const start = performance.now();
       const duration = 800;
       function animate(now: number) {
         const progress = Math.max(0, Math.min((now - start) / duration, 1));
         const eased = 1 - Math.pow(1 - progress, 3);
-        m!.setPaintProperty("iso-fill", "fill-opacity", eased * 0.65);
-        m!.setPaintProperty("iso-outline", "line-opacity", eased * 0.3);
+        m!.setPaintProperty("iso-fill", "fill-opacity", eased * fillTarget);
+        m!.setPaintProperty("iso-outline", "line-opacity", eased * outlineTarget);
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
         }
@@ -726,6 +733,13 @@ export function IsochroneMap({
     setVisible("street-colored-core", coloredOn);
     m.setPaintProperty("street-colored-glow", "line-opacity", coloredOn ? 0.55 : 0);
     m.setPaintProperty("street-colored-core", "line-opacity", coloredOn ? 0.95 : 0);
+
+    // When colored streets are the primary reach indicator, fade the hex
+    // fill so the two don't compete visually. A faint wash (0.12) keeps
+    // a subtle ambient tint to remind you reach extends beyond the
+    // street sampling, without the hex boundaries fighting the lines.
+    m.setPaintProperty("iso-fill", "fill-opacity", coloredOn ? 0.12 : 0.65);
+    m.setPaintProperty("iso-outline", "line-opacity", coloredOn ? 0 : 0.3);
   }, [streetMode, mapReady]);
 
   // Sample road vector tile features against the current hex grid and emit
