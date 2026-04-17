@@ -8,8 +8,9 @@
 
 - Branch: `main`, clean. Live: https://nyc-transit-heatmap.vercel.app (all 3 routes 200).
 - Tests: 120/120 passing (was 92 — +28 this session across bus, ferry, citibike, url-state).
-- Shipped: URL validation on /explore, bus route-membership filter with GTFS route population for all 733 stops, street-mode visualizer (off / plain / glow / colored) on /explore map.
-- Next: mobile QA on iPhone (Andrew carrying over); decide which street mode to keep or iterate further on `colored`.
+- Shipped: URL validation on /explore, bus route-membership filter with GTFS route population for all 733 stops, street-mode visualizer (off / plain / glow / colored), grid covers all 5 boroughs by default.
+- Iterated on colored streets: hex-fade tuning (0.12 → 0.35), segment-level coloring to fix Jersey / deep Brooklyn smearing.
+- Next: mobile QA on iPhone; decide whether `colored` lands or ship `glow` as default and kill the toggle.
 
 ---
 
@@ -19,8 +20,13 @@
 - **URL validation on /explore:** `?lat=abc&lng=xyz`, out-of-range values, and out-of-NYC-envelope coords silently ignored instead of crashing the grid compute with NaN or placing a pin in the ocean. `?t=` also validated and clamped to [1, 60]. (`parseUrlLatLng` / `parseUrlMinutes` helpers in `src/app/explore/page.tsx`.)
 - **Bus route-membership filter:** `computeBusTime` was modeling any stop-pair as a direct bus ride at 8 mph × Manhattan-distance — a Queens stop "connected" straight to a Midtown stop with no shared route. Now enumerates top-4 nearest stops on each side and only accepts pairs that share ≥1 route (`stopsShareRoute` in `src/lib/bus.ts`).
 - **GTFS bus route data population:** The S19 gap-fill left 511/733 stops with `routes: []`, which would have made the filter a no-op for 70% of stops. New `scripts/populate-bus-routes.ts` joins GTFS `stop_times → trips → routes` across main + Queens feeds (2.5M stop_time rows processed) and populates every stop. Result: 511 newly populated, 222 already had, 0 still empty.
-- **Street-mode visualizer on /explore:** Top-right toggle (localStorage-persisted) with 4 modes: Off, Plain (current 25% white), Glow (55% white + blur), Colored (road vector tiles sampled via `queryRenderedFeatures`, each midpoint looked up in the hex grid via h3 index, painted with COLOR_RAMP + blur halo). Re-sampled on map idle, capped at 4k features. Verified working live in Chrome.
-- **Tests:** +28 new assertions across `bus.test.ts`, `ferry.test.ts`, `citibike.test.ts` (new files) and extended `url-state.test.ts` validation coverage.
+- **Street-mode visualizer on /explore:** Top-right toggle (localStorage-persisted) with 4 modes: Off, Plain (current 25% white), Glow (55% white + blur), Colored (road vector tiles sampled via `queryRenderedFeatures`, each midpoint looked up in the hex grid via h3 index, painted with COLOR_RAMP + blur halo). Re-sampled on map idle. Verified working live in Chrome.
+- **Colored-mode iteration (3 follow-up commits):**
+  1. Faded hex fill under Colored (0.65 → 0.12) so streets are primary — too subtle, reach boundary became invisible.
+  2. Bumped hex fade back up (0.12 → 0.35) + outline 0.15 so reach is legible under colored streets.
+  3. Fixed "Jersey streets showing at reach time" bug — Mapbox road tiles return each road as one long Line/MultiLineString; the old midpoint-only sampling smeared colored rendering into Jersey/deep Brooklyn. Now walk every vertex pair, drop segments where either endpoint is unreachable. Feature cap raised 4k → 8k.
+- **Grid bounds: default to all 5 boroughs.** `CORE_NYC_BOUNDS` was Manhattan + inner Brooklyn + inner Queens only. A pin dropped in central Brooklyn clipped Flatlands/Midwood/Bensonhurst/Mill Basin from the initial compute. Set CORE = MAX so the full borough footprint is in the initial grid.
+- **Tests:** +28 new assertions across `bus.test.ts`, `ferry.test.ts`, `citibike.test.ts` (new files) and extended `url-state.test.ts` validation coverage. `expand-bounds-if-hit.test.ts` updated to use synthetic inner bounds since CORE now equals MAX.
 
 ### Files Modified
 | File | Changes |
@@ -38,15 +44,19 @@
 - `src/lib/__tests__/ferry.test.ts` — buildFerryAdjacency cases
 - `src/lib/__tests__/citibike.test.ts` — CitiBikeData cases
 
-### Commits (4, on main)
+### Commits (7, on main)
 1. `db7fd1b` Validate ?lat=&lng=&t= on /explore URL restore
 2. `df3b55c` Backfill tests for ferry adjacency and citibike dock lookup
 3. `ec28b96` Bus route-membership filter: stops must share a route to ride
 4. `5d8d2c2` Street-mode visualizer on /explore: off / plain / glow / colored
+5. `edc0322` Fade hex fill under Colored street mode
+6. `60f3d16` Initial grid covers all 5 boroughs so reach never clips a borough
+7. `0fb32fc` Street visualizer: segment-level coloring + bump hex fade
 
 ### Next Steps
 - [ ] Mobile QA on real iPhone (carried from S21 — use live URL)
-- [ ] Decide which street mode to ship (colored is the most informative, glow is the cheapest polish)
+- [ ] Decide: keep Colored or kill it and default to Glow
+- [ ] Consider: measure initial compute time with the larger CORE grid — if sluggish, add a progressive reveal
 - [ ] `buildStationAccess` bus-assist path still uses naive bus model for walk→bus→subway; apply route-check there too if the subway accuracy matters more
 - [ ] Verify bus reach visually before/after filter on a Queens-to-Manhattan trip
 
