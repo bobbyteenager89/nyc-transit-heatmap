@@ -673,8 +673,8 @@ export function IsochroneMap({
 
       // Target opacities depend on streetMode — in "colored" the hex is a
       // faint wash so the street lines carry the reach signal.
-      const fillTarget = streetModeRef.current === "colored" ? 0.12 : 0.65;
-      const outlineTarget = streetModeRef.current === "colored" ? 0 : 0.3;
+      const fillTarget = streetModeRef.current === "colored" ? 0.35 : 0.65;
+      const outlineTarget = streetModeRef.current === "colored" ? 0.15 : 0.3;
 
       const start = performance.now();
       const duration = 800;
@@ -735,11 +735,12 @@ export function IsochroneMap({
     m.setPaintProperty("street-colored-core", "line-opacity", coloredOn ? 0.95 : 0);
 
     // When colored streets are the primary reach indicator, fade the hex
-    // fill so the two don't compete visually. A faint wash (0.12) keeps
-    // a subtle ambient tint to remind you reach extends beyond the
-    // street sampling, without the hex boundaries fighting the lines.
-    m.setPaintProperty("iso-fill", "fill-opacity", coloredOn ? 0.12 : 0.65);
-    m.setPaintProperty("iso-outline", "line-opacity", coloredOn ? 0 : 0.3);
+    // fill so the two don't compete visually — but keep it visible enough
+    // (0.35) that the reachability boundary is legible. 0.12 was too
+    // subtle and users misread street-only coverage as "we can reach this
+    // street" when in fact the hex grid has no cell there.
+    m.setPaintProperty("iso-fill", "fill-opacity", coloredOn ? 0.35 : 0.65);
+    m.setPaintProperty("iso-outline", "line-opacity", coloredOn ? 0.15 : 0.3);
   }, [streetMode, mapReady]);
 
   // Sample road vector tile features against the current hex grid and emit
@@ -775,6 +776,39 @@ export function IsochroneMap({
 
     let disposed = false;
 
+    // Reach time at a (lng, lat) point, or null if it falls outside the hex
+    // grid or the cell is unreachable under the current mode/time budget.
+    const timeAt = (lng: number, lat: number): number | null => {
+      const h3 = latLngToCell(lat, lng, H3_RESOLUTION);
+      const t = h3Times.get(h3);
+      if (t === undefined || t > maxMinutesRef.current) return null;
+      return t;
+    };
+
+    // Emit the fully-reachable subsegments of a polyline. For each
+    // consecutive vertex pair we check BOTH endpoints against the hex
+    // grid; if either is outside reach the segment is dropped. This
+    // replaces the old "color the whole feature by midpoint time" logic,
+    // which smeared coloring into Jersey / deep Brooklyn whenever a road
+    // feature straddled a reachability boundary.
+    const addFeatureSegments = (
+      coords: number[][],
+      sink: GeoJSON.Feature[]
+    ) => {
+      for (let i = 0; i < coords.length - 1; i++) {
+        const a = coords[i];
+        const b = coords[i + 1];
+        const tA = timeAt(a[0], a[1]);
+        const tB = timeAt(b[0], b[1]);
+        if (tA === null || tB === null) continue;
+        sink.push({
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: [a, b] },
+          properties: { time: Math.max(tA, tB) },
+        });
+      }
+    };
+
     const sampleStreets = () => {
       if (disposed || !mapRef.current) return;
       const roads = m.queryRenderedFeatures({ layers: ["street-overlay"] });
@@ -787,34 +821,12 @@ export function IsochroneMap({
         }
         const geom = f.geometry;
         if (!geom) continue;
-
-        // Pull a representative midpoint: middle vertex of a LineString,
-        // middle vertex of the longest segment for MultiLineString.
-        let midLng = 0, midLat = 0;
-        if (geom.type === "LineString" && geom.coordinates.length >= 2) {
-          const mid = geom.coordinates[Math.floor(geom.coordinates.length / 2)];
-          [midLng, midLat] = mid;
-        } else if (geom.type === "MultiLineString" && geom.coordinates.length > 0) {
-          let longest = geom.coordinates[0];
-          for (const seg of geom.coordinates) if (seg.length > longest.length) longest = seg;
-          const mid = longest[Math.floor(longest.length / 2)];
-          [midLng, midLat] = mid;
-        } else {
-          continue;
+        if (geom.type === "LineString") {
+          addFeatureSegments(geom.coordinates, features);
+        } else if (geom.type === "MultiLineString") {
+          for (const seg of geom.coordinates) addFeatureSegments(seg, features);
         }
-
-        const h3 = latLngToCell(midLat, midLng, H3_RESOLUTION);
-        const time = h3Times.get(h3);
-        if (time === undefined || time > maxMinutesRef.current) continue;
-
-        features.push({
-          type: "Feature",
-          geometry: geom as GeoJSON.Geometry,
-          properties: { time },
-        });
-
-        // Cap to keep the GeoJSON payload and GL upload bounded.
-        if (features.length >= 4000) break;
+        if (features.length >= 8000) break;
       }
 
       const src = m.getSource("street-colored") as mapboxgl.GeoJSONSource | undefined;
