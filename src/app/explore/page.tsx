@@ -25,7 +25,7 @@ import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { MeetupSummary } from "@/components/isochrone/meetup-summary";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
-import { H3_RESOLUTION } from "@/lib/constants";
+import { H3_RESOLUTION, MAX_NYC_BOUNDS } from "@/lib/constants";
 import { useTransitData } from "@/hooks/use-transit-data";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useDynamicGridCompute } from "@/hooks/use-dynamic-grid-compute";
@@ -41,6 +41,28 @@ const DEFAULT_MODES: TransportMode[] = ["walk", "subway", "bus", "ferry", "bike"
 const LOCKED_MODES: TransportMode[] = ["walk"];
 
 // expandBoundsIfHit now lives in useDynamicGridCompute.
+
+// URL input validation: accepts only finite numbers inside the NYC envelope
+// and a plausible time window. Anything else is silently ignored so a
+// pasted bad link (?lat=abc&lng=&t=999) loads the empty state instead of
+// crashing the grid compute with NaN or a pin in the ocean.
+function parseUrlLatLng(lat: string | null, lng: string | null): LatLng | null {
+  if (!lat || !lng) return null;
+  const la = Number(lat);
+  const lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  if (la < MAX_NYC_BOUNDS.sw.lat || la > MAX_NYC_BOUNDS.ne.lat) return null;
+  if (lo < MAX_NYC_BOUNDS.sw.lng || lo > MAX_NYC_BOUNDS.ne.lng) return null;
+  return { lat: la, lng: lo };
+}
+
+function parseUrlMinutes(t: string | null): number | null {
+  if (!t) return null;
+  const n = Number(t);
+  if (!Number.isFinite(n)) return null;
+  const clamped = Math.max(1, Math.min(60, Math.round(n)));
+  return clamped;
+}
 
 type ViewMode = "fastest" | TransportMode;
 const VIEW_MODE_LABELS: Record<ViewMode, string> = {
@@ -177,12 +199,11 @@ export default function ExplorePage() {
   useEffect(() => {
     if (!dataReady) return;
     const params = new URLSearchParams(window.location.search);
-    const lat = params.get("lat");
-    const lng = params.get("lng");
-    const t = params.get("t");
+    const urlLoc = parseUrlLatLng(params.get("lat"), params.get("lng"));
+    const urlMinutes = parseUrlMinutes(params.get("t"));
     const m = params.get("m");
 
-    if (t) setMaxMinutes(Number(t));
+    if (urlMinutes !== null) setMaxMinutes(urlMinutes);
     // Read own-bike preference directly from localStorage to avoid a
     // race with useSyncExternalStore hydration timing.
     const hasOwnBike = (() => {
@@ -210,18 +231,17 @@ export default function ExplorePage() {
       setActiveModes([...DEFAULT_MODES, "ownbike"]);
       setShowAdvanced(true);
     }
-    if (lat && lng) {
-      const loc = { lat: Number(lat), lng: Number(lng) };
-      setOrigin(loc);
+    if (urlLoc) {
+      setOrigin(urlLoc);
       // Show address from URL immediately (before async geocode)
       const urlAddress = params.get("address");
       if (urlAddress) setOriginAddress(urlAddress);
-      runCompute(loc);
+      runCompute(urlLoc);
       // Reverse geocode to fill/refine address if not in URL
       if (!urlAddress) {
-        reverseGeocode(loc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
+        reverseGeocode(urlLoc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
           .then((addr) => setOriginAddress(addr))
-          .catch(() => setOriginAddress(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`));
+          .catch(() => setOriginAddress(`${urlLoc.lat.toFixed(4)}, ${urlLoc.lng.toFixed(4)}`));
       }
     }
 
