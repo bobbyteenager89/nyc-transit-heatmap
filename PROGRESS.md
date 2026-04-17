@@ -4,6 +4,54 @@
 
 ---
 
+## Current State (2026-04-17, Session 22)
+
+- Branch: `main`, clean. Live: https://nyc-transit-heatmap.vercel.app (all 3 routes 200).
+- Tests: 120/120 passing (was 92 — +28 this session across bus, ferry, citibike, url-state).
+- Shipped: URL validation on /explore, bus route-membership filter with GTFS route population for all 733 stops, street-mode visualizer (off / plain / glow / colored) on /explore map.
+- Next: mobile QA on iPhone (Andrew carrying over); decide which street mode to keep or iterate further on `colored`.
+
+---
+
+## 2026-04-17 — Session 22: Bus route filter, URL validation, street-mode visualizer
+
+### Accomplished
+- **URL validation on /explore:** `?lat=abc&lng=xyz`, out-of-range values, and out-of-NYC-envelope coords silently ignored instead of crashing the grid compute with NaN or placing a pin in the ocean. `?t=` also validated and clamped to [1, 60]. (`parseUrlLatLng` / `parseUrlMinutes` helpers in `src/app/explore/page.tsx`.)
+- **Bus route-membership filter:** `computeBusTime` was modeling any stop-pair as a direct bus ride at 8 mph × Manhattan-distance — a Queens stop "connected" straight to a Midtown stop with no shared route. Now enumerates top-4 nearest stops on each side and only accepts pairs that share ≥1 route (`stopsShareRoute` in `src/lib/bus.ts`).
+- **GTFS bus route data population:** The S19 gap-fill left 511/733 stops with `routes: []`, which would have made the filter a no-op for 70% of stops. New `scripts/populate-bus-routes.ts` joins GTFS `stop_times → trips → routes` across main + Queens feeds (2.5M stop_time rows processed) and populates every stop. Result: 511 newly populated, 222 already had, 0 still empty.
+- **Street-mode visualizer on /explore:** Top-right toggle (localStorage-persisted) with 4 modes: Off, Plain (current 25% white), Glow (55% white + blur), Colored (road vector tiles sampled via `queryRenderedFeatures`, each midpoint looked up in the hex grid via h3 index, painted with COLOR_RAMP + blur halo). Re-sampled on map idle, capped at 4k features. Verified working live in Chrome.
+- **Tests:** +28 new assertions across `bus.test.ts`, `ferry.test.ts`, `citibike.test.ts` (new files) and extended `url-state.test.ts` validation coverage.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/explore/page.tsx` | parseUrlLatLng / parseUrlMinutes validators; import MAX_NYC_BOUNDS |
+| `src/lib/bus.ts` | stopsShareRoute pure helper |
+| `src/workers/grid-worker.ts` | computeBusTime: top-4 candidates + route-share filter |
+| `public/data/bus-stops.json` | All 733 stops have routes populated |
+| `src/components/isochrone/isochrone-map.tsx` | StreetMode type, 4-way toggle UI, colored-street layers, idle sampling |
+| `src/lib/__tests__/url-state.test.ts` | +7 validation cases |
+
+### Files Created
+- `scripts/populate-bus-routes.ts` — GTFS join to populate stop routes
+- `src/lib/__tests__/bus.test.ts` — stopsShareRoute cases
+- `src/lib/__tests__/ferry.test.ts` — buildFerryAdjacency cases
+- `src/lib/__tests__/citibike.test.ts` — CitiBikeData cases
+
+### Commits (4, on main)
+1. `db7fd1b` Validate ?lat=&lng=&t= on /explore URL restore
+2. `df3b55c` Backfill tests for ferry adjacency and citibike dock lookup
+3. `ec28b96` Bus route-membership filter: stops must share a route to ride
+4. `5d8d2c2` Street-mode visualizer on /explore: off / plain / glow / colored
+
+### Next Steps
+- [ ] Mobile QA on real iPhone (carried from S21 — use live URL)
+- [ ] Decide which street mode to ship (colored is the most informative, glow is the cheapest polish)
+- [ ] `buildStationAccess` bus-assist path still uses naive bus model for walk→bus→subway; apply route-check there too if the subway accuracy matters more
+- [ ] Verify bus reach visually before/after filter on a Queens-to-Manhattan trip
+
+---
+
 ## 2026-04-16 — Session 21: Deep resume + full preflight + smoke test — all green
 
 ### Accomplished
