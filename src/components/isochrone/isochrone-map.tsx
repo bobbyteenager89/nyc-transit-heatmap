@@ -3,13 +3,20 @@
 import { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { latLngToCell } from "h3-js";
 import type { LatLng, TransportMode, HexCell } from "@/lib/types";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { HEX_MODES } from "@/lib/mapbox-isochrone";
 import { MODE_COLORS } from "@/lib/isochrone";
+import { H3_RESOLUTION } from "@/lib/constants";
 import { reverseGeocode } from "@/lib/geocode";
 import { useSubwayStations } from "@/components/isochrone/hooks/use-subway-stations";
 import { useFairnessLayer } from "@/components/isochrone/hooks/use-fairness-layer";
+
+/** Street rendering modes on the /explore map — a visual sandbox so we can
+ *  compare cosmetic glow against colored-by-time treatments without
+ *  shipping one blindly. Wired through a top-right toggle on the map. */
+export type StreetMode = "off" | "plain" | "glow" | "colored";
 
 /**
  * MTA official brand colors by subway line.
@@ -192,6 +199,22 @@ export function IsochroneMap({
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const geocodeCache = useRef<Map<string, string>>(new Map());
 
+  // Street rendering mode — visual sandbox (off / plain / glow / colored).
+  // Persisted to localStorage so the preview choice survives page refreshes
+  // while Andrew is iterating.
+  const [streetMode, setStreetMode] = useState<StreetMode>(() => {
+    if (typeof window === "undefined") return "plain";
+    try {
+      const v = localStorage.getItem("nyc-transit-street-mode");
+      return (["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)
+        ? (v as StreetMode)
+        : "plain";
+    } catch { return "plain"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("nyc-transit-street-mode", streetMode); } catch { /* ignore */ }
+  }, [streetMode]);
+
   // Initialize dark map
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -370,7 +393,8 @@ export function IsochroneMap({
         }, firstSymbol);
       } catch { /* skip */ }
 
-      // Street grid — rendered ON TOP of hex fill so streets cut through the color
+      // Street grid — rendered ON TOP of hex fill so streets cut through the color.
+      // Paint properties are driven by the streetMode effect below.
       try {
         m.addLayer({
           id: "street-overlay",
@@ -384,6 +408,35 @@ export function IsochroneMap({
           },
         }); // no "before" — renders on top
       } catch { /* skip */ }
+
+      // Colored-streets overlay (streetMode="colored"). Populated from
+      // queryRenderedFeatures sampled against the hex time grid — empty
+      // unless the user opts in via the toggle.
+      m.addSource("street-colored", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      m.addLayer({
+        id: "street-colored-glow",
+        type: "line",
+        source: "street-colored",
+        paint: {
+          "line-color": COLOR_RAMP,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 3, 13, 5, 16, 8],
+          "line-opacity": 0,
+          "line-blur": 3,
+        },
+      });
+      m.addLayer({
+        id: "street-colored-core",
+        type: "line",
+        source: "street-colored",
+        paint: {
+          "line-color": COLOR_RAMP,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 13, 1.4, 16, 2.4],
+          "line-opacity": 0,
+        },
+      });
 
       // Neighborhood lines — on top of everything
       try {
@@ -639,6 +692,130 @@ export function IsochroneMap({
     m.setFilter("iso-outline", ["<=", ["get", "time"], maxMinutes]);
   }, [maxMinutes, mapReady]);
 
+  // Drive the street-overlay paint and colored-street layer opacity from
+  // the streetMode toggle. "colored" flips on the data-driven COLOR_RAMP
+  // layers; the sampling effect below populates the feature collection.
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+
+    const setVisible = (id: string, visible: boolean) => {
+      if (!m.getLayer(id)) return;
+      m.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+    };
+
+    // street-overlay must stay "visible" in "colored" mode so
+    // queryRenderedFeatures can still see road features for sampling —
+    // a layer hidden via visibility:none is excluded from that query.
+    // Off is the only mode that truly hides it.
+    setVisible("street-overlay", streetMode !== "off");
+
+    if (streetMode === "plain") {
+      m.setPaintProperty("street-overlay", "line-color", "rgba(255,255,255,0.25)");
+      m.setPaintProperty("street-overlay", "line-blur", 0);
+    } else if (streetMode === "glow") {
+      m.setPaintProperty("street-overlay", "line-color", "rgba(255,255,255,0.55)");
+      m.setPaintProperty("street-overlay", "line-blur", 2);
+    } else if (streetMode === "colored") {
+      m.setPaintProperty("street-overlay", "line-color", "rgba(255,255,255,0)");
+      m.setPaintProperty("street-overlay", "line-blur", 0);
+    }
+
+    const coloredOn = streetMode === "colored";
+    setVisible("street-colored-glow", coloredOn);
+    setVisible("street-colored-core", coloredOn);
+    m.setPaintProperty("street-colored-glow", "line-opacity", coloredOn ? 0.55 : 0);
+    m.setPaintProperty("street-colored-core", "line-opacity", coloredOn ? 0.95 : 0);
+  }, [streetMode, mapReady]);
+
+  // Sample road vector tile features against the current hex grid and emit
+  // a GeoJSON source colored by travel time. Runs only in "colored" mode,
+  // triggered on compute complete and on map idle (after pan/zoom).
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady) return;
+    if (streetMode !== "colored") return;
+
+    if (cells.length === 0) return;
+
+    // Build an h3 index → time lookup once per cell update. Lookup cost is
+    // O(1) per street midpoint sample.
+    const h3Times = new Map<string, number>();
+    for (const cell of cells) {
+      let t: number;
+      if (viewMode !== "fastest") {
+        const v = cell.times[viewMode];
+        if (v === null || v === undefined) continue;
+        t = v;
+      } else {
+        let best = Infinity;
+        for (const mode of activeModes) {
+          const v = cell.times[mode];
+          if (v !== null && v !== undefined && v < best) best = v;
+        }
+        if (best === Infinity) continue;
+        t = best;
+      }
+      h3Times.set(cell.h3Index, Math.round(t * 10) / 10);
+    }
+
+    let disposed = false;
+
+    const sampleStreets = () => {
+      if (disposed || !mapRef.current) return;
+      const roads = m.queryRenderedFeatures({ layers: ["street-overlay"] });
+      const features: GeoJSON.Feature[] = [];
+      const seen = new Set<string | number>();
+      for (const f of roads) {
+        if (f.id !== undefined) {
+          if (seen.has(f.id)) continue;
+          seen.add(f.id);
+        }
+        const geom = f.geometry;
+        if (!geom) continue;
+
+        // Pull a representative midpoint: middle vertex of a LineString,
+        // middle vertex of the longest segment for MultiLineString.
+        let midLng = 0, midLat = 0;
+        if (geom.type === "LineString" && geom.coordinates.length >= 2) {
+          const mid = geom.coordinates[Math.floor(geom.coordinates.length / 2)];
+          [midLng, midLat] = mid;
+        } else if (geom.type === "MultiLineString" && geom.coordinates.length > 0) {
+          let longest = geom.coordinates[0];
+          for (const seg of geom.coordinates) if (seg.length > longest.length) longest = seg;
+          const mid = longest[Math.floor(longest.length / 2)];
+          [midLng, midLat] = mid;
+        } else {
+          continue;
+        }
+
+        const h3 = latLngToCell(midLat, midLng, H3_RESOLUTION);
+        const time = h3Times.get(h3);
+        if (time === undefined || time > maxMinutesRef.current) continue;
+
+        features.push({
+          type: "Feature",
+          geometry: geom as GeoJSON.Geometry,
+          properties: { time },
+        });
+
+        // Cap to keep the GeoJSON payload and GL upload bounded.
+        if (features.length >= 4000) break;
+      }
+
+      const src = m.getSource("street-colored") as mapboxgl.GeoJSONSource | undefined;
+      src?.setData({ type: "FeatureCollection", features });
+    };
+
+    // Initial sample + re-sample on idle (after pan/zoom settles).
+    sampleStreets();
+    m.on("idle", sampleStreets);
+    return () => {
+      disposed = true;
+      m.off("idle", sampleStreets);
+    };
+  }, [streetMode, cells, activeModes, viewMode, mapReady]);
+
   useSubwayStations(mapRef, mapReady, onStationClick);
 
   useFairnessLayer({
@@ -651,9 +828,44 @@ export function IsochroneMap({
     fairnessRange,
   });
 
+  const streetModes: { value: StreetMode; label: string; hint: string }[] = [
+    { value: "off",     label: "Off",     hint: "Hide all street lines" },
+    { value: "plain",   label: "Plain",   hint: "White streets, 25% opacity (current)" },
+    { value: "glow",    label: "Glow",    hint: "Brighter white with blur halo" },
+    { value: "colored", label: "Colored", hint: "Streets colored by travel time" },
+  ];
+
   return (
     <div className="relative flex-1 h-full">
       <div ref={mapContainer} className="w-full h-full cursor-crosshair" />
+
+      {/* Street-mode visualizer — top-right, below the "?" info button which
+          lives at top-4 right-4 in explore/page.tsx. This stacks below it. */}
+      <div className="absolute top-16 right-4 z-30 pointer-events-auto">
+        <div className="flex flex-col gap-1 bg-surface-card/90 border border-white/15 backdrop-blur-md rounded-lg p-2 shadow-lg">
+          <span className="font-display italic uppercase text-[10px] tracking-wider text-white/40 px-1">
+            Streets
+          </span>
+          <div className="flex gap-1">
+            {streetModes.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                title={opt.hint}
+                onClick={() => setStreetMode(opt.value)}
+                className={`px-2 py-1 rounded text-[10px] font-body transition-colors cursor-pointer ${
+                  streetMode === opt.value
+                    ? "bg-accent/25 text-accent border border-accent/60"
+                    : "text-white/60 border border-white/10 hover:bg-white/10"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {tooltipData && (
         <div
           className="absolute pointer-events-none z-50"
