@@ -777,6 +777,9 @@ export function IsochroneMap({
     }
 
     let disposed = false;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let rafId: number | null = null;
+    let lastViewKey = "";
 
     // Reach time at a (lng, lat) point, or null if it falls outside the hex
     // grid or the cell is unreachable under the current mode/time budget.
@@ -811,36 +814,78 @@ export function IsochroneMap({
       }
     };
 
+    const FEATURE_CAP = 3000;
+    const CHUNK_SIZE = 400;
+
     const sampleStreets = () => {
       if (disposed || !mapRef.current) return;
+
+      // Bbox+zoom cache: re-idle on the same view is a no-op. Cells/mode
+      // changes bust this because they re-run the effect.
+      const b = m.getBounds();
+      const z = m.getZoom();
+      const viewKey = b
+        ? `${b.getWest().toFixed(4)},${b.getSouth().toFixed(4)},${b.getEast().toFixed(4)},${b.getNorth().toFixed(4)}@${z.toFixed(2)}`
+        : "";
+      if (viewKey && viewKey === lastViewKey) return;
+
       const roads = m.queryRenderedFeatures({ layers: ["street-overlay"] });
       const features: GeoJSON.Feature[] = [];
       const seen = new Set<string | number>();
-      for (const f of roads) {
-        if (f.id !== undefined) {
-          if (seen.has(f.id)) continue;
-          seen.add(f.id);
-        }
-        const geom = f.geometry;
-        if (!geom) continue;
-        if (geom.type === "LineString") {
-          addFeatureSegments(geom.coordinates, features);
-        } else if (geom.type === "MultiLineString") {
-          for (const seg of geom.coordinates) addFeatureSegments(seg, features);
-        }
-        if (features.length >= 8000) break;
-      }
+      let i = 0;
 
-      const src = m.getSource("street-colored") as mapboxgl.GeoJSONSource | undefined;
-      src?.setData({ type: "FeatureCollection", features });
+      const processChunk = () => {
+        if (disposed || !mapRef.current) return;
+        const end = Math.min(i + CHUNK_SIZE, roads.length);
+        for (; i < end; i++) {
+          const f = roads[i];
+          if (f.id !== undefined) {
+            if (seen.has(f.id)) continue;
+            seen.add(f.id);
+          }
+          const geom = f.geometry;
+          if (!geom) continue;
+          if (geom.type === "LineString") {
+            addFeatureSegments(geom.coordinates, features);
+          } else if (geom.type === "MultiLineString") {
+            for (const seg of geom.coordinates) addFeatureSegments(seg, features);
+          }
+          if (features.length >= FEATURE_CAP) {
+            i = roads.length;
+            break;
+          }
+        }
+        if (i < roads.length) {
+          rafId = requestAnimationFrame(processChunk);
+          return;
+        }
+        rafId = null;
+        lastViewKey = viewKey;
+        const src = m.getSource("street-colored") as mapboxgl.GeoJSONSource | undefined;
+        src?.setData({ type: "FeatureCollection", features });
+      };
+
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(processChunk);
     };
 
-    // Initial sample + re-sample on idle (after pan/zoom settles).
+    // Debounce idle so a quick pan-then-pan doesn't trigger back-to-back
+    // samples. 150ms ≈ one frame past settle — imperceptible, but avoids
+    // sampling a view the user is about to leave.
+    const scheduleSample = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(sampleStreets, 150);
+    };
+
+    // Initial sample runs immediately (first paint), then idle re-samples
+    // are debounced.
     sampleStreets();
-    m.on("idle", sampleStreets);
+    m.on("idle", scheduleSample);
     return () => {
       disposed = true;
-      m.off("idle", sampleStreets);
+      if (idleTimer) clearTimeout(idleTimer);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      m.off("idle", scheduleSample);
     };
   }, [streetMode, cells, activeModes, viewMode, mapReady]);
 
