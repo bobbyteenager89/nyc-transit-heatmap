@@ -31,6 +31,8 @@ export function encodeShareableState(
  * Returns null if the string is malformed or wrong version.
  */
 const VALID_MODES: TransportMode[] = ["subway", "bus", "car", "bike", "ownbike", "walk", "ferry"];
+const CATEGORIES = ["work", "social", "fitness", "errands", "other"] as const;
+type Category = (typeof CATEGORIES)[number];
 const MAX_DESTINATIONS = 20;
 const MAX_STRING_LEN = 200;
 
@@ -80,7 +82,7 @@ export function decodeShareableState(
         name: sanitizeString(d.n) || "Unknown",
         address: sanitizeString(d.a),
         location: { lat: d.lat, lng: d.lng },
-        category: (["work", "social", "fitness", "errands", "other"] as const).includes(d.c as any) ? d.c : "other",
+        category: (CATEGORIES as readonly string[]).includes(d.c) ? (d.c as Category) : "other",
         frequency: freq,
       });
     }

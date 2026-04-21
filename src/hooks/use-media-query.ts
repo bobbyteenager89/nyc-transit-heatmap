@@ -7,11 +7,12 @@ import { useEffect, useState } from "react";
  * SSR-safe: returns defaultValue until the client hydrates.
  */
 export function useMediaQuery(query: string, defaultValue = false): boolean {
-  const [matches, setMatches] = useState(defaultValue);
+  const [matches, setMatches] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : defaultValue
+  );
 
   useEffect(() => {
     const mq = window.matchMedia(query);
-    setMatches(mq.matches);
 
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mq.addEventListener("change", handler);
