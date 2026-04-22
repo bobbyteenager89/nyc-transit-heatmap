@@ -58,7 +58,8 @@ export function DestinationInput({ destinations, onAdd, onRemove }: DestinationI
           </div>
           <button
             onClick={() => onRemove(dest.id)}
-            className="text-[10px] text-white/30 hover:text-white/60 cursor-pointer ml-2 flex-shrink-0"
+            aria-label={`Remove ${dest.name}`}
+            className="text-[10px] text-white/30 hover:text-white/60 cursor-pointer ml-2 flex-shrink-0 min-w-10 min-h-10 flex items-center justify-center active:scale-[0.96] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a]"
           >
             ×
           </button>
@@ -78,7 +79,8 @@ export function DestinationInput({ destinations, onAdd, onRemove }: DestinationI
               <button
                 key={c.key}
                 onClick={() => setCategory(c.key)}
-                className={`text-[10px] px-2 py-1 rounded border cursor-pointer transition-all ${
+                aria-label={`Select ${c.label} category`}
+                className={`text-[10px] px-2 py-1 rounded border cursor-pointer transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
                   category === c.key
                     ? "border-accent/50 bg-accent/10 text-accent"
                     : "border-white/10 text-white/40 hover:text-white/60"
@@ -94,7 +96,8 @@ export function DestinationInput({ destinations, onAdd, onRemove }: DestinationI
               <button
                 key={f}
                 onClick={() => setFrequency(f)}
-                className={`text-[10px] w-6 h-6 rounded border cursor-pointer transition-all ${
+                aria-label={`${f} times per week`}
+                className={`text-[10px] min-w-10 min-h-10 rounded border cursor-pointer transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
                   frequency === f
                     ? "border-accent/50 bg-accent/10 text-accent"
                     : "border-white/10 text-white/40 hover:text-white/60"

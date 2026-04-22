@@ -122,7 +122,8 @@ export function ModeLegend({ activeModes, onToggle, showAdvanced = false }: Mode
             onClick={locked ? undefined : () => onToggle(key)}
             disabled={locked}
             title={locked ? "Walk is always included" : isActive ? `Click to turn off ${label}` : `Click to turn on ${label}`}
-            className={`relative flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg border transition-all text-center min-h-[68px] ${
+            aria-label={locked ? "Walk is always included" : isActive ? `Turn off ${label}` : `Turn on ${label}`}
+            className={`relative flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg border transition-all text-center min-h-[68px] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
               isActive
                 ? "border-accent/60 bg-accent/15 text-accent shadow-[0_0_0_1px_rgba(34,211,238,0.2)]"
                 : "border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/25"
