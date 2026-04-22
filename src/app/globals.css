@@ -27,6 +27,7 @@ h1, h2, h3, .display-text {
   font-style: italic;
   letter-spacing: 0.02em;
   line-height: 1;
+  text-wrap: balance;
 }
 
 /* Prevent iOS text size adjustment on orientation change */

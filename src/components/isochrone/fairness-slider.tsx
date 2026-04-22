@@ -41,7 +41,8 @@ export function FairnessSlider({ value, onChange }: FairnessSliderProps) {
           <button
             key={pt}
             onClick={() => onChange(pt)}
-            className={`text-xs font-body cursor-pointer transition-colors ${
+            aria-label={`Set fairness range to ${pt} minutes`}
+            className={`text-xs font-body cursor-pointer transition-colors min-w-10 min-h-10 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
               value >= pt ? "text-amber-500" : "text-amber-500/30"
             }`}
           >

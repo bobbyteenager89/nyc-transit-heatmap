@@ -287,7 +287,8 @@ export function HexMap({
               <button
                 key={c.key}
                 onClick={() => setPinCategory(c.key)}
-                className={`text-xs border rounded px-2 py-1 uppercase font-bold cursor-pointer transition-colors ${
+                aria-label={`Select ${c.label} category`}
+                className={`text-xs border rounded px-2 py-1 uppercase font-bold cursor-pointer transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
                   pinCategory === c.key ? "border-accent bg-accent/20 text-accent" : "border-white/20 text-white/60"
                 }`}
               >

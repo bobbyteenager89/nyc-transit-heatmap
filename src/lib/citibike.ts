@@ -2,6 +2,14 @@ import type { CitiBikeStation, LatLng } from "./types";
 import { manhattanDistanceMi } from "./travel-time";
 import { CITIBIKE_STATION_INFO_URL, BIKE_DOCK_RANGE_MI } from "./constants";
 
+interface GbfsStation {
+  station_id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  capacity?: number;
+}
+
 export class CitiBikeData {
   private stations: CitiBikeStation[];
 
@@ -13,12 +21,12 @@ export class CitiBikeData {
     const res = await fetch(CITIBIKE_STATION_INFO_URL);
     if (!res.ok) return new CitiBikeData([]);
     const json = await res.json();
-    const stations: CitiBikeStation[] = json.data.stations.map((s: any) => ({
+    const stations: CitiBikeStation[] = (json.data.stations as GbfsStation[]).map((s) => ({
       id: s.station_id,
       name: s.name,
       lat: s.lat,
       lng: s.lon,
-      capacity: s.capacity,
+      capacity: s.capacity ?? 0,
     }));
     return new CitiBikeData(stations);
   }

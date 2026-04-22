@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="h-dvh overflow-hidden">
+      <body className="h-dvh overflow-hidden antialiased">
         {children}
         <Analytics />
         <SpeedInsights />

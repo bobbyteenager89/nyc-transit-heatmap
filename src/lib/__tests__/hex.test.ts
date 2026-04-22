@@ -34,7 +34,7 @@ describe("hexCellToGeoJSON", () => {
     const cells = generateHexCenters(NYC_BOUNDS, 8);
     const geojson = hexCellToGeoJSON(cells.slice(0, 5).map((c) => ({
       ...c,
-      times: { walk: 10, car: 5, bike: 8, subway: 7, ferry: null },
+      times: { walk: 10, car: 5, bike: 8, subway: 7, ferry: null, bus: null, ownbike: null },
       fastest: "car" as const,
       compositeScore: 300,
       destBreakdown: {},

@@ -925,8 +925,9 @@ export function IsochroneMap({
                 key={opt.value}
                 type="button"
                 title={opt.hint}
+                aria-label={opt.hint}
                 onClick={() => setStreetMode(opt.value)}
-                className={`px-2 py-1 rounded text-[10px] font-body transition-colors cursor-pointer ${
+                className={`px-2 py-1 rounded text-[10px] font-body transition-colors cursor-pointer active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
                   streetMode === opt.value
                     ? "bg-accent/25 text-accent border border-accent/60"
                     : "text-white/60 border border-white/10 hover:bg-white/10"
