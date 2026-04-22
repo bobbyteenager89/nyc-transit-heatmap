@@ -118,7 +118,7 @@ export function DestinationInput({ destinations, onAdd, onRemove }: DestinationI
       ) : (
         <button
           onClick={() => setShowForm(true)}
-          className="w-full border border-white/15 rounded-lg py-2 text-xs text-white/40 hover:text-white/60 hover:border-white/30 cursor-pointer transition-all"
+          className="w-full border border-white/15 rounded-lg py-2 text-xs text-white/40 hover:text-white/60 hover:border-white/30 cursor-pointer transition-colors"
         >
           + Add Destination
         </button>
