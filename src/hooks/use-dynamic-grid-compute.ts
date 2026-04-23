@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
-import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import {
   CORE_NYC_BOUNDS,
@@ -132,8 +131,6 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
       setComputeProgress(0);
       setGridBounds(CORE_NYC_BOUNDS);
       try {
-        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
         const computeForBounds = async (
           bounds: BoundingBox,
           onProgress?: (n: number) => void
@@ -167,12 +164,9 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
         };
 
         const currentBounds = CORE_NYC_BOUNDS;
-        const [hexResult, contours] = await Promise.all([
-          computeForBounds(currentBounds, (p) => setComputeProgress(p)),
-          fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token),
-        ]);
+        const hexResult = await computeForBounds(currentBounds, (p) => setComputeProgress(p));
         setCells(hexResult);
-        setApiContours(contours);
+        setApiContours([]);
 
         // Border-hit detection + auto-expansion. Limited to 2 extra passes.
         let attempts = 0;

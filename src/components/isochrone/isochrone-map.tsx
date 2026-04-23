@@ -334,7 +334,52 @@ export function IsochroneMap({
         },
       }, firstSymbol);
 
-      // --- Hex fill source (subway, ferry) ---
+      // --- Overlay layers (added before hex fill so hexes render on top) ---
+
+      // Street grid — paint properties driven by streetMode effect below.
+      // Added before firstSymbol so map labels stay on top.
+      try {
+        m.addLayer({
+          id: "street-overlay",
+          type: "line",
+          source: "composite",
+          "source-layer": "road",
+          filter: ["in", "class", "street", "primary", "secondary", "tertiary", "motorway", "trunk"],
+          paint: {
+            "line-color": "rgba(255,255,255,0.25)",
+            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 1, 16, 2],
+          },
+        }, firstSymbol);
+      } catch { /* skip */ }
+
+      // Colored-streets overlay (streetMode="colored").
+      m.addSource("street-colored", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      m.addLayer({
+        id: "street-colored-glow",
+        type: "line",
+        source: "street-colored",
+        paint: {
+          "line-color": COLOR_RAMP,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 3, 13, 5, 16, 8],
+          "line-opacity": 0,
+          "line-blur": 3,
+        },
+      }, firstSymbol);
+      m.addLayer({
+        id: "street-colored-core",
+        type: "line",
+        source: "street-colored",
+        paint: {
+          "line-color": COLOR_RAMP,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 13, 1.4, 16, 2.4],
+          "line-opacity": 0,
+        },
+      }, firstSymbol);
+
+      // --- Hex fill source — added after street layers so hexes render above streets ---
       m.addSource("iso-hexes", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
@@ -362,9 +407,7 @@ export function IsochroneMap({
         filter: ["<=", ["get", "time"], 60],
       }, firstSymbol);
 
-      // --- Overlay layers ---
-
-      // Water mask
+      // Water mask — above hexes so water areas stay dark
       try {
         m.addLayer({
           id: "water-mask",
@@ -398,51 +441,6 @@ export function IsochroneMap({
         }, firstSymbol);
       } catch { /* skip */ }
 
-      // Street grid — rendered ON TOP of hex fill so streets cut through the color.
-      // Paint properties are driven by the streetMode effect below.
-      try {
-        m.addLayer({
-          id: "street-overlay",
-          type: "line",
-          source: "composite",
-          "source-layer": "road",
-          filter: ["in", "class", "street", "primary", "secondary", "tertiary", "motorway", "trunk"],
-          paint: {
-            "line-color": "rgba(255,255,255,0.25)",
-            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 1, 16, 2],
-          },
-        }); // no "before" — renders on top
-      } catch { /* skip */ }
-
-      // Colored-streets overlay (streetMode="colored"). Populated from
-      // queryRenderedFeatures sampled against the hex time grid — empty
-      // unless the user opts in via the toggle.
-      m.addSource("street-colored", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-      m.addLayer({
-        id: "street-colored-glow",
-        type: "line",
-        source: "street-colored",
-        paint: {
-          "line-color": COLOR_RAMP,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 3, 13, 5, 16, 8],
-          "line-opacity": 0,
-          "line-blur": 3,
-        },
-      });
-      m.addLayer({
-        id: "street-colored-core",
-        type: "line",
-        source: "street-colored",
-        paint: {
-          "line-color": COLOR_RAMP,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 13, 1.4, 16, 2.4],
-          "line-opacity": 0,
-        },
-      });
-
       // Neighborhood lines — on top of everything
       try {
         m.addLayer({
@@ -452,7 +450,7 @@ export function IsochroneMap({
           "source-layer": "admin",
           filter: [">=", "admin_level", 2],
           paint: { "line-color": "rgba(255,255,255,0.25)", "line-width": 1.5, "line-dasharray": [3, 2] },
-        }); // no "before" — renders on top
+        });
       } catch { /* skip */ }
 
       // Click handler

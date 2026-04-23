@@ -129,10 +129,6 @@ export function ModeLegend({ activeModes, onToggle, showAdvanced = false }: Mode
                 : "border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/25"
             } ${locked ? "cursor-default" : "cursor-pointer"}`}
           >
-            {/* "On" indicator dot — top-right corner when active */}
-            {isActive && (
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent" />
-            )}
             <Icon className="w-5 h-5" />
             <span className="font-display italic uppercase text-[10px] tracking-wider leading-tight">
               {label}

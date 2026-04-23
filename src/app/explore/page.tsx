@@ -13,7 +13,6 @@ import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { computeHexGrid } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
-import { fetchAllIsochrones } from "@/lib/mapbox-isochrone";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
 import { FriendInput } from "@/components/isochrone/friend-input";
 import { FairnessSlider } from "@/components/isochrone/fairness-slider";
@@ -147,45 +146,37 @@ export default function ExplorePage() {
       if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
       setFriendComputing(true);
       try {
-        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+        const rawCenters = generateHexCenters(gridBounds, H3_RESOLUTION);
+        const hexCenters = rawCenters.map((c) => ({
+          h3Index: c.h3Index,
+          lat: c.center.lat,
+          lng: c.center.lng,
+        }));
 
-        // Run hex compute AND API isochrones for friend in parallel
-        const [hexResult, contours] = await Promise.all([
-          (async () => {
-            const rawCenters = generateHexCenters(gridBounds, H3_RESOLUTION);
-            const hexCenters = rawCenters.map((c) => ({
-              h3Index: c.h3Index,
-              lat: c.center.lat,
-              lng: c.center.lng,
-            }));
+        const result = await computeHexGrid(
+          {
+            hexCenters,
+            origin: loc,
+            destinations: [],
+            modes: ALL_MODES,
+            stationGraph,
+            stationMatrix,
+            citiBikeStations: citiBikeData.getAllStations(),
+            ferryTerminals: ferryData.data.terminals,
+            ferryAdjacency: ferryData.adjacency,
+            busStops: busData.stops,
+          },
+          () => {}
+        );
 
-            const result = await computeHexGrid(
-              {
-                hexCenters,
-                origin: loc,
-                destinations: [],
-                modes: ALL_MODES,
-                stationGraph,
-                stationMatrix,
-                citiBikeStations: citiBikeData.getAllStations(),
-                ferryTerminals: ferryData.data.terminals,
-                ferryAdjacency: ferryData.adjacency,
-                busStops: busData.stops,
-              },
-              () => {} // no progress bar for friend compute
-            );
-
-            const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
-            return result.cells.map((cell) => {
-              const geo = geoLookup.get(cell.h3Index)!;
-              return { ...cell, center: geo.center, boundary: geo.boundary };
-            });
-          })(),
-          fetchAllIsochrones(loc, ["walk", "bike", "car"], 60, token, "b"),
-        ]);
+        const geoLookup = new Map(rawCenters.map((c) => [c.h3Index, c]));
+        const hexResult = result.cells.map((cell) => {
+          const geo = geoLookup.get(cell.h3Index)!;
+          return { ...cell, center: geo.center, boundary: geo.boundary };
+        });
 
         setFriendCells(hexResult);
-        setFriendContours(contours);
+        setFriendContours([]);
       } catch (err) {
         console.error("Friend compute failed:", err);
       } finally {
@@ -495,9 +486,6 @@ export default function ExplorePage() {
         </div>
       </PanelSection>
 
-      {/* Transit trivia */}
-      <TransitTrivia />
-
       {/* Shared: Transport modes */}
       <PanelSection title="Transport Modes">
         <ModeLegend activeModes={activeModes} onToggle={toggleMode} showAdvanced={showAdvanced} />
@@ -546,6 +534,9 @@ export default function ExplorePage() {
           </label>
         )}
       </PanelSection>
+
+      {/* Transit trivia */}
+      <TransitTrivia />
 
       {/* View as: render filter (separate from compute toggles above) */}
       {cells.length > 0 && (

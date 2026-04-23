@@ -52,7 +52,7 @@ export function TransitTrivia() {
         Transit Trivia
       </p>
       <p
-        className="font-body text-[11px] text-white/60 leading-relaxed transition-opacity duration-400"
+        className="font-body text-[11px] text-white/60 leading-relaxed transition-opacity duration-400 min-h-[36px]"
         style={{ opacity: visible ? 1 : 0 }}
       >
         {TRIVIA[index]}
