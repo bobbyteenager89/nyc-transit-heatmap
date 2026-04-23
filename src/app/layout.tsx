@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { VitalsLogger } from "@/components/dev/vitals-logger";
 import "./globals.css";
 
 const TITLE = "Isochrone NYC — How far can you go?";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Analytics />
         <SpeedInsights />
+        <VitalsLogger />
       </body>
     </html>
   );
