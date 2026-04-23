@@ -159,9 +159,11 @@ const COLOR_RAMP: mapboxgl.Expression = [
   // Jump to band 5: 40-49 min — crimson
   40, "#a00030",
   49, "#800020",
-  // Jump to band 6: 50+ min — dark crimson to near-black
-  50, "#5a0010",
-  60, "#2a0000",
+  // Band 6: 50+ min — deep purple. Shifting from near-black crimson to a
+  // purple ramp recovers visibility against the dark Mapbox basemap while
+  // preserving the "deeper = farther" semantic (still monotonic darkness).
+  50, "#6a1b6a",
+  60, "#4a0a4a",
 ];
 
 export function IsochroneMap({
@@ -860,7 +862,13 @@ export function IsochroneMap({
           return;
         }
         rafId = null;
-        lastViewKey = viewKey;
+        // Only cache non-empty results. On URL-param cold-start the
+        // street-overlay layer may not be rendered yet, so the first sample
+        // can return 0 features; caching that would make subsequent idle
+        // events early-return and leave streets uncolored until manual pan.
+        if (features.length > 0) {
+          lastViewKey = viewKey;
+        }
         const src = m.getSource("street-colored") as mapboxgl.GeoJSONSource | undefined;
         src?.setData({ type: "FeatureCollection", features });
       };

@@ -9,7 +9,7 @@ export function MapLegend() {
     { from: "#ff7700", to: "#ff4500", label: "30" },
     { from: "#e81800", to: "#c8101a", label: "40" },
     { from: "#a00030", to: "#800020", label: "50" },
-    { from: "#5a0010", to: "#2a0000", label: "50+" },
+    { from: "#6a1b6a", to: "#4a0a4a", label: "50+" },
   ];
 
   return (
