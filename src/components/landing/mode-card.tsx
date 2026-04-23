@@ -28,8 +28,8 @@ export function ModeCard({
         "card-enter",
         enterDelay,
         "relative border-2 p-8 flex flex-col gap-4 overflow-hidden",
-        "transition-all duration-300 ease-out group",
-        "hover:-translate-y-1",
+        "transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out group",
+        "hover:-translate-y-1 active:scale-[0.98]",
         primary
           ? "border-white/30 bg-white/5 hover:bg-white/10 hover:border-accent hover:shadow-[0_0_32px_rgba(34,211,238,0.15)]"
           : "border-white/15 bg-white/[0.02] hover:bg-white/5 hover:border-white/25 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]",

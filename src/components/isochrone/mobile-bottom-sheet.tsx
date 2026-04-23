@@ -15,7 +15,7 @@ export function MobileBottomSheet({
 }: MobileBottomSheetProps) {
   return (
     <div
-      className={`bg-surface border-t border-white/10 rounded-t-2xl transition-all duration-300 ${
+      className={`bg-surface border-t border-white/10 rounded-t-2xl transition-[max-height] duration-300 ${
         expanded ? "max-h-[75dvh]" : "max-h-[120px]"
       } overflow-hidden`}
     >

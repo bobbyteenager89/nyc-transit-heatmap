@@ -61,7 +61,7 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
             </span>
             <div className="flex-1 h-2.5 bg-white/5 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-300"
+                className="h-full rounded-full transition-[width] duration-300"
                 style={{
                   width: `${(count / maxCount) * 100}%`,
                   backgroundColor: color,

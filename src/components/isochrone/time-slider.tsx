@@ -32,7 +32,7 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
       <div className="flex items-baseline justify-between mb-3">
         <span className="font-display italic uppercase text-xs text-white/50">Reach Time</span>
         <div>
-          <span className="font-display italic text-2xl text-white">{value}</span>
+          <span className="font-display italic text-2xl text-white tabular-nums">{value}</span>
           <span className="font-body text-xs text-white/40 ml-1">min</span>
         </div>
       </div>

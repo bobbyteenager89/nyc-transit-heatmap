@@ -23,7 +23,7 @@ export function ModeTabs({ active, onChange }: ModeTabsProps) {
           key={key}
           onClick={() => startTransition(() => onChange(key))}
           title={desc}
-          className={`flex-1 min-h-[44px] py-2 px-3 rounded-md font-display italic uppercase text-xs cursor-pointer transition-all ${
+          className={`flex-1 min-h-[44px] py-2 px-3 rounded-md font-display italic uppercase text-xs cursor-pointer transition-colors active:scale-[0.96] ${
             active === key
               ? "bg-accent/15 text-accent border border-accent/30"
               : "text-white/40 hover:text-white/60 border border-transparent"

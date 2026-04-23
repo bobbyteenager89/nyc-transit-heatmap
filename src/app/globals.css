@@ -20,6 +20,7 @@ body {
   color: #ffffff;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
 }
 
 h1, h2, h3, .display-text {
