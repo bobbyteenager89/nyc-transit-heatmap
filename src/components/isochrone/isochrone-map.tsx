@@ -206,13 +206,13 @@ export function IsochroneMap({
   // Persisted to localStorage so the preview choice survives page refreshes
   // while Andrew is iterating.
   const [streetMode, setStreetMode] = useState<StreetMode>(() => {
-    if (typeof window === "undefined") return "colored";
+    if (typeof window === "undefined") return "glow";
     try {
       const v = localStorage.getItem("nyc-transit-street-mode");
       return (["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)
         ? (v as StreetMode)
-        : "colored";
-    } catch { return "colored"; }
+        : "glow";
+    } catch { return "glow"; }
   });
   const streetModeRef = useRef(streetMode);
   streetModeRef.current = streetMode;
