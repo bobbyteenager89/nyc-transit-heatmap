@@ -63,7 +63,7 @@ export function PlayButton({ currentValue, onChange, disabled }: PlayButtonProps
     <button
       onClick={playing ? stop : play}
       disabled={disabled}
-      className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 cursor-pointer transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/30 flex-shrink-0"
+      className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 cursor-pointer transition-colors active:scale-[0.96] disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/30 flex-shrink-0"
       aria-label={playing ? "Stop animation" : "Play time lapse"}
     >
       {playing ? (

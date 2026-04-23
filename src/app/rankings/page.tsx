@@ -1,24 +1,24 @@
-import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { join } from "path";
-import type { Metadata } from "next";
 import Link from "next/link";
-import { RankingsList } from "@/components/rankings/rankings-list";
-import type { RankedEntry } from "@/components/rankings/rankings-list";
+import RankingsList, { type RankedEntry } from "./rankings-list";
 
-export const metadata: Metadata = {
-  title: "NYC Neighborhood Rankings — Isochrone NYC",
+export const revalidate = 3600;
+
+export const metadata = {
+  title: "Neighborhood Rankings — Isochrone NYC",
   description:
     "Which NYC neighborhoods have the best transit access? Ranked by average subway travel time to 5 major hubs.",
 };
 
-async function getRankings(): Promise<RankedEntry[]> {
+function loadRankings(): RankedEntry[] {
   const filePath = join(process.cwd(), "public", "data", "rankings.json");
-  const raw = await readFile(filePath, "utf-8");
-  return JSON.parse(raw);
+  const raw = readFileSync(filePath, "utf-8");
+  return JSON.parse(raw) as RankedEntry[];
 }
 
-export default async function RankingsPage() {
-  const rankings = await getRankings();
+export default function RankingsPage() {
+  const rankings = loadRankings();
 
   return (
     <div className="min-h-screen bg-[#0a0a12] text-white">
@@ -39,7 +39,8 @@ export default async function RankingsPage() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-display italic uppercase text-white mb-2">
-          Neighborhood<br />
+          Neighborhood
+          <br />
           <span className="text-accent">Rankings</span>
         </h1>
         <p className="font-body text-sm text-white/40 mb-6">

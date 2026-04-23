@@ -4,22 +4,67 @@
 
 ---
 
-## Current State (2026-04-22, Session 26)
+## Current State (2026-04-23, Session 27)
 
-- Branch: `main` — clean, PR #2 merged + deployed. Live: https://nyc-transit-heatmap.vercel.app. Tests: 120/120.
-- S26 shipped: SEO scaffold (robots.txt, sitemap, dynamic apple-icon), cold-start colored-streets fix (don't cache empty sample results), 50-60min purple contrast (#6a1b6a→#4a0a4a), web-vitals dev logger for local INP measurement.
-- All 8 routes 200 on prod. Carried items from S23 closed.
-- Soft-launch plan landed at `~/.claude/plans/let-s-build-a-plan-functional-newell.md`: S26 done, S27 (branches+mobile) and S28 (attribution+launch) pending.
+- Branch: `feat/s27-merge-mobile` — clean, pushed, PR #3 open (not merged). Prod still on S26.
+- S27 shipped: `ssr-rankings` (ISR /rankings, colocated rankings-list) + `phase2-landing-polish` (animated preview cards, card-enter) merged via cherry-pick. Mobile polish (44px targets, touch-action:pan-x on slider). `/make-interfaces-feel-better` pass (transition-all → specific, scale-on-press, tabular-nums, text-wrap:pretty).
+- 120/120 tests. PR #3: https://github.com/bobbyteenager89/nyc-transit-heatmap/pull/3
 
 ---
 
 ## Next Session Kickoff
-**Mode:** shallow
-**First action:** Await Andrew's additional branch name, then execute S27: merge `ssr-rankings` + `phase2-landing-polish` + the new branch, run mobile polish pass (44px hit areas, touch-action on slider, test Find wizard at 375px).
+**Mode:** execute
+**First action:** Merge PR #3 to main (squash), verify deploy, then start S28: attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data), data-load failure UX (surface GBFS/ferry/bus errors), record demo GIF, draft Twitter/LinkedIn copy, soft launch.
 **Open questions:**
 - none
-**Decisions pending:** Andrew mentioned one more branch to share before S27 starts.
-**Ready plan:** `~/.claude/plans/let-s-build-a-plan-functional-newell.md` — S26 ✓, S27 + S28 pending
+**Decisions pending:** none
+**Ready plan:** `~/.claude/plans/let-s-build-a-plan-functional-newell.md` — S27 ✓, S28 pending
+
+---
+
+## 2026-04-23 — Session 27: Branch merges + mobile polish + make-interfaces-feel-better
+
+### Accomplished
+- **`ssr-rankings` cherry-picked** — `/rankings` now ISR (`revalidate = 3600`), sync `readFileSync`, `RankingsList` colocated at `src/app/rankings/rankings-list.tsx`. Removed old `src/components/rankings/rankings-list.tsx`. Resolved conflict in `page.tsx`.
+- **`phase2-landing-polish` cherry-picked** — landing cards show animated SVG previews (`PreviewIsochrone` rings pulse, `PreviewHex` hex shimmer, `PreviewRankings` bar-grow). `card-enter` staggered animations; old inline SVG icons removed. Resolved conflicts in `page.tsx`, `mode-card.tsx`, `globals.css`.
+- **Deleted stale branch** `s24-inp-colored-streets` (already merged to main).
+- **Mobile polish** — `touch-action: pan-x` on range input, thumb 24→28px, snap buttons get `min-w/min-h-[44px]`, mode tabs `min-h-[44px]`, chips `min-h-[44px] py-3`.
+- **`/make-interfaces-feel-better` pass** — `text-wrap: pretty` on body; `tabular-nums` on time display; `transition-all` → specific props in 7 files (`transition-colors`, `transition-[width]`, `transition-[max-height]`, `transition-[transform,background-color,border-color,box-shadow]`); `active:scale-[0.96]` on 5 buttons; `active:scale-[0.98]` on landing ModeCards.
+- **4 commits → PR #3** (`feat/s27-merge-mobile`). 120/120 tests, clean build, smoke test 200s.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/rankings/page.tsx` | ISR revalidate 1h, readFileSync, colocated import |
+| `src/app/rankings/rankings-list.tsx` (new) | Client component — checkbox selection + compare nav |
+| `src/components/rankings/rankings-list.tsx` (deleted) | Replaced by colocated version above |
+| `src/app/page.tsx` | card-enter animation, preview components, no SVG icon functions |
+| `src/components/landing/mode-card.tsx` | preview prop, card-enter, hover:-translate-y-1, active:scale-[0.98] |
+| `src/components/landing/preview-isochrone.tsx` (new) | Animated ring-pulse SVG |
+| `src/components/landing/preview-hex.tsx` (new) | Animated hex-shimmer SVG |
+| `src/components/landing/preview-rankings.tsx` (new) | Animated bar-grow SVG |
+| `src/app/globals.css` | card-enter + ring-pulse + hex-shimmer + bar-grow keyframes; text-wrap:pretty on body |
+| `src/components/isochrone/time-slider.tsx` | touch-action:pan-x, thumb 28px, 44px snap buttons, tabular-nums |
+| `src/components/isochrone/mode-tabs.tsx` | min-h-[44px], transition-colors, active:scale-[0.96] |
+| `src/components/ui/chip.tsx` | min-h-[44px], py-3, active:scale-[0.96] |
+| `src/components/isochrone/mobile-bottom-sheet.tsx` | transition-[max-height] |
+| `src/components/isochrone/play-button.tsx` | transition-colors, active:scale-[0.96] |
+| `src/components/isochrone/reach-stats.tsx` | transition-[width] |
+
+### Commits
+- `bd03dfe` — feat(rankings): server-render /rankings page for LCP/SEO improvement
+- `121a912` — feat(landing): Phase 2 — animated card previews and hover reveals
+- `8bd6449` — chore: remove old components/rankings/rankings-list
+- `d4a64f8` — fix(mobile): 44px touch targets on slider, mode tabs, and chips
+- `5c1e1b2` — polish: make-interfaces-feel-better pass
+
+### Next Steps
+- [x] S27: Merge `ssr-rankings` + `phase2-landing-polish` branches
+- [x] S27: Mobile polish — 44px hit areas on mode toggles, time-slider thumb size
+- [ ] Merge PR #3 → main, verify deploy
+- [ ] S28: Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] S28: Data-load failure UX (surface GBFS/ferry/bus loader errors instead of silent fail)
+- [ ] S28: Record demo GIF + draft Twitter/LinkedIn copy + soft launch
 
 ---
 
