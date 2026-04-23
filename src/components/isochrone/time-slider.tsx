@@ -44,14 +44,15 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
         step={1}
         value={value}
         onChange={handleChange}
+        style={{ touchAction: "pan-x" }}
         className="w-full h-1.5 appearance-none rounded-full cursor-pointer
           bg-gradient-to-r from-green-400 via-yellow-400 to-red-500
           [&::-webkit-slider-thumb]:appearance-none
-          [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+          [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7
           [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full
           [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]
           [&::-webkit-slider-thumb]:cursor-pointer
-          [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
+          [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7
           [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full
           [&::-moz-range-thumb]:border-none
           [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.5)]
@@ -64,7 +65,7 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
           <button
             key={pt}
             onClick={() => onChange(pt)}
-            className={`text-[10px] font-body cursor-pointer transition-colors ${
+            className={`min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] font-body cursor-pointer transition-colors ${
               value >= pt ? "text-white/50" : "text-white/20"
             }`}
           >
