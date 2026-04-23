@@ -4,21 +4,23 @@
 
 ---
 
-## Current State (2026-04-23, Session 27)
-
-- Branch: `feat/s27-merge-mobile` — clean, pushed, PR #3 open (not merged). Prod still on S26.
-- S27 shipped: `ssr-rankings` (ISR /rankings, colocated rankings-list) + `phase2-landing-polish` (animated preview cards, card-enter) merged via cherry-pick. Mobile polish (44px targets, touch-action:pan-x on slider). `/make-interfaces-feel-better` pass (transition-all → specific, scale-on-press, tabular-nums, text-wrap:pretty).
-- 120/120 tests. PR #3: https://github.com/bobbyteenager89/nyc-transit-heatmap/pull/3
+## Current State
+**Last session:** 2026-04-23 — S28: Bug fixes + hide find/rankings from landing
+**Next:**
+- Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- Data-load failure UX (surface GBFS/ferry/bus errors)
+- Record demo GIF + draft Twitter/LinkedIn copy + soft launch
+**Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
-**Mode:** execute
-**First action:** Merge PR #3 to main (squash), verify deploy, then start S28: attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data), data-load failure UX (surface GBFS/ferry/bus errors), record demo GIF, draft Twitter/LinkedIn copy, soft launch.
+**Mode:** shallow
+**First action:** Continue S28 work — attribution footer, data-load failure UX, demo GIF + soft launch copy
 **Open questions:**
 - none
 **Decisions pending:** none
-**Ready plan:** `~/.claude/plans/let-s-build-a-plan-functional-newell.md` — S27 ✓, S28 pending
+**Ready plan:** none
 
 ---
 
@@ -185,3 +187,35 @@
 |------|---------|
 | `src/components/isochrone/isochrone-map.tsx` | Default streetMode plain→colored, hex opacity, COLOR_RAMP |
 | `src/components/isochrone/map-legend.tsx` | Band gradients synced |
+
+---
+
+## 2026-04-23 — Session 28: Bug fixes + hide find/rankings from landing
+
+### Accomplished
+- **Defaulted street mode to glow** — changed lazy `useState` initializer in `isochrone-map.tsx` from `"colored"` → `"glow"` across all 3 return paths (localStorage read, existing value, fallback).
+- **Fixed 401 noise from Mapbox Isochrone API** — removed all `fetchAllIsochrones` calls (walk/bike/car isochrones on every pin drop). Token doesn't have isochrone API access; calls were silently failing with 401 on every compute. Affected `explore/page.tsx`, `use-dynamic-grid-compute.ts`.
+- **Removed dot indicator from mode legend** — stripped cyan `absolute` dot from active mode button (border color still indicates active state clearly).
+- **Fixed transit trivia position + stable sizing** — moved `<TransitTrivia />` from between time-slider and Transport Modes to after Transport Modes. Added `min-h-[36px]` to text `<p>` so container height doesn't shift as short/long trivia strings cycle.
+- **Fixed hexagon z-index (Mapbox layer order)** — street layers were added without `beforeId` (rendering above all labels). Restructured: streets added before hexes (both using `firstSymbol`), so hexes render above streets but below map labels. Water-mask/park-overlay still added after hexes to correctly mask them.
+- **Hidden /find and /rankings from landing** — removed two `ModeCard` entries + `PreviewHex`/`PreviewRankings` imports; only Explore card remains. Simplified grid layout to single card.
+- **Preflight ✓** (clean build, TypeScript clean). **Smoke test ✓** (5/5 routes 200).
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/isochrone/isochrone-map.tsx` | Default glow; Mapbox layer order fix (streets before hexes, both `firstSymbol`) |
+| `src/app/page.tsx` | Remove find/rankings ModeCards + preview imports; single Explore card |
+| `src/app/explore/page.tsx` | Remove `fetchAllIsochrones` calls; move `<TransitTrivia />` |
+| `src/components/isochrone/transit-trivia.tsx` | `min-h-[36px]` on text `<p>` |
+| `src/components/isochrone/mode-legend.tsx` | Remove active-state cyan dot |
+| `src/hooks/use-dynamic-grid-compute.ts` | Remove `fetchAllIsochrones` import + calls |
+
+### Commits
+- `d9cfdbb` — Default street mode to glow instead of colored
+- `16ac909` — Fix explore bugs + hide find/rankings from landing
+
+### Next Steps
+- [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] Data-load failure UX (surface GBFS/ferry/bus errors instead of silent fail)
+- [ ] Record demo GIF + draft Twitter/LinkedIn copy + soft launch
