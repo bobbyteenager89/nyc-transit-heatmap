@@ -5,22 +5,22 @@
 ---
 
 ## Current State
-**Last session:** 2026-04-23 — S28: Bug fixes + hide find/rankings from landing
+**Last session:** 2026-04-24 — S29: Design-system audit + Claude Design brief (handoff ready)
 **Next:**
-- Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
-- Data-load failure UX (surface GBFS/ferry/bus errors)
-- Record demo GIF + draft Twitter/LinkedIn copy + soft launch
-**Branch:** main / clean
+- Await Claude Design proposal (tokens + Explore surface redesign), then implement
+- While waiting: S28 backlog still open — attribution footer, data-load UX, demo GIF + soft launch
+**Branch:** main / dirty (design-system/ untracked, will commit during /done)
 
 ---
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Continue S28 work — attribution footer, data-load failure UX, demo GIF + soft launch copy
+**First action:** Decide branch — either (a) integrate Claude Design output if ready, or (b) resume S28 backlog (attribution footer, data-load failure UX, demo GIF, soft launch)
 **Open questions:**
-- none
-**Decisions pending:** none
-**Ready plan:** none
+- Did Claude Design return a token proposal + Explore redesign?
+- Any of the S28 items shift priority given design direction?
+**Decisions pending:** Claude Design direction (dark-glass refine vs new system)
+**Ready plan:** `design-system/brief.md` is the spec seed when Claude Design output lands
 
 ---
 
@@ -219,3 +219,29 @@
 - [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
 - [ ] Data-load failure UX (surface GBFS/ferry/bus errors instead of silent fail)
 - [ ] Record demo GIF + draft Twitter/LinkedIn copy + soft launch
+
+---
+
+## 2026-04-24 — Session 29: Design-system audit + Claude Design brief
+
+### Accomplished
+- **Kicked off full app redesign** with Claude Design. Session scope: set up the design system so Claude Design has ground-truth inputs to propose from.
+- **Extracted design tokens** to `design-system/tokens.md` — canonical `@theme inline` vars, 7-mode transport palette, 12-stop travel-time ramp, 25+ MTA line colors, opacity ladder, radius/shadow/motion usage patterns. Flagged semantic gaps (no success/warning/muted/focus tokens; no shadow ramp) and which values are hardcoded vs tokenized.
+- **Inventoried 40 component files** (Explore agent) → `design-system/components.md`. Grouped by surface (Landing / Explore / Find-Wizard / Find-Results / Rankings / Compare / Shared). Flagged 3-tier consolidation list: Button/Slider/Callout primitives (T1), Modal/Dropdown/Loading (T2), Wizard brutalist theme isolation + ModeLegend-vs-ModeToggles merge (T3).
+- **Drafted `design-system/brief.md`** — project mission, audience, tone, what's working (preserve: dark map, Arial Black italics, cyan accent, 44px touch, Wizard brutalist), what's weak (inconsistent CTAs, no elevation system, Explore sidebar density, Rankings/Compare feel disconnected), priority deliverables (token proposal → Explore redesign → primitives → Landing re-hero → attribution → Rankings/Compare refresh).
+- **Captured 5 desktop route screenshots** via claude-in-chrome at 1440×900 — landing, /explore, /find wizard, /rankings, /compare. Catalog at `design-system/screenshots/README.md` describes each + notes manual Chrome-DevTools workflow for mobile (Chrome MCP resize doesn't trigger Tailwind `md:` breakpoint).
+- **Preflight + smoke-test ✓** — 120/120 tests, clean build, 9/9 routes 200 on prod, zero console errors, /api/og returning image/png.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `design-system/tokens.md` (new) | Full design-token extraction with consolidation flags |
+| `design-system/components.md` (new) | 40-file inventory with tiered consolidation recommendations |
+| `design-system/brief.md` (new) | Claude Design intake — mission, audience, goals, constraints, voice |
+| `design-system/screenshots/README.md` (new) | Screenshot catalog + mobile capture instructions |
+
+### Next Steps
+- [ ] Hand off `design-system/*.md` + 5 desktop screenshots to Claude Design chat
+- [ ] When Claude Design returns proposal: review token + Explore redesign, decide scope
+- [ ] S28 backlog still open: attribution footer, data-load UX, demo GIF, soft launch
+- [ ] Optional: manually capture mobile screenshots via Chrome DevTools device toolbar if Claude Design needs them
