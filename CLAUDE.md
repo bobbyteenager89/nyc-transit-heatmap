@@ -7,6 +7,7 @@
 - MTA GTFS data (pre-parsed at build time)
 - Citi Bike GBFS (fetched at runtime)
 - `@vercel/analytics` + `@vercel/speed-insights` for usage + Core Web Vitals tracking
+- `web-vitals` (dev-only) — local INP/LCP/CLS console logger via `src/components/dev/vitals-logger.tsx`
 
 ## Commands
 - `npm run dev` — local dev server
@@ -22,6 +23,8 @@
 - `src/app/rankings/page.tsx` — Neighborhood rankings (25 hoods scored by subway access)
 - `src/app/compare/page.tsx` — Side-by-side comparison (2-3 neighborhoods, shareable URL)
 - `src/app/api/og/route.tsx` — Dynamic OG image generation (edge, @vercel/og)
+- `src/app/apple-icon.tsx` — Dynamic 180×180 apple-touch-icon (ImageResponse, brand-matched)
+- `src/app/robots.ts` + `src/app/sitemap.ts` — Next.js file-convention SEO (allow-all + 5-route sitemap)
 - `src/components/results/hex-map.tsx` — Mapbox hex map with H3 fill layer, water mask, animated reveal
 - `src/components/results/results-sidebar.tsx` — results panel with destinations, modes, sharing
 - `src/components/wizard/wizard-shell.tsx` — 4-step wizard (Work → Gym → Social → Extras)

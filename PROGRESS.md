@@ -4,22 +4,61 @@
 
 ---
 
-## Current State (2026-04-21, Session 25)
+## Current State (2026-04-22, Session 26)
 
-- Branch: `main` — clean, pushed. Live: https://nyc-transit-heatmap.vercel.app. Tests: 120/120.
-- S25 shipped: ESLint/TS fixes, test fixture type drift, a11y + interface polish (aria-labels, scale-on-press, focus rings), dep patches, sweep CLI fix. All merged + deployed.
-- Carried: force first colored-street sample on URL-param load; 50-60 min band visibility vs dark basemap.
-- iPhone INP check: Speed Insights paywalled. S24 fix is live but unconfirmed on real device.
+- Branch: `main` — clean, PR #2 merged + deployed. Live: https://nyc-transit-heatmap.vercel.app. Tests: 120/120.
+- S26 shipped: SEO scaffold (robots.txt, sitemap, dynamic apple-icon), cold-start colored-streets fix (don't cache empty sample results), 50-60min purple contrast (#6a1b6a→#4a0a4a), web-vitals dev logger for local INP measurement.
+- All 8 routes 200 on prod. Carried items from S23 closed.
+- Soft-launch plan landed at `~/.claude/plans/let-s-build-a-plan-functional-newell.md`: S26 done, S27 (branches+mobile) and S28 (attribution+launch) pending.
 
 ---
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Pick up carried items — cold-start colored-street sample on URL-param load and 50-60 min band check. Or iPhone INP test if phone available.
+**First action:** Await Andrew's additional branch name, then execute S27: merge `ssr-rankings` + `phase2-landing-polish` + the new branch, run mobile polish pass (44px hit areas, touch-action on slider, test Find wizard at 375px).
 **Open questions:**
 - none
-**Decisions pending:** Whether to merge/close the 3 queued branches (bike-to-station-combo, phase2-landing-polish, ssr-rankings)
-**Ready plan:** none
+**Decisions pending:** Andrew mentioned one more branch to share before S27 starts.
+**Ready plan:** `~/.claude/plans/let-s-build-a-plan-functional-newell.md` — S26 ✓, S27 + S28 pending
+
+---
+
+## 2026-04-22 — Session 26: Soft-launch readiness — SEO scaffold, cold-start fix, 50-60min contrast
+
+### Accomplished
+- **Launch plan landed** via `/plan` — soft-launch strategy at `~/.claude/plans/let-s-build-a-plan-functional-newell.md`. 3 Explore agents ran in parallel to audit readiness, assess 3 queued branches, and deep-dive carried bugs.
+- **SEO scaffold (launch blockers):** `src/app/robots.ts` (allow-all + sitemap pointer), `src/app/sitemap.ts` (5 routes w/ priority + weekly changefreq), `src/app/apple-icon.tsx` (dynamic 180×180 via ImageResponse — brand-matched ISO/NYC split w/ cyan #22d3ee). Skipped redundant `metadataBase` override on `/p/[slug]` (root layout propagates via Next.js inheritance; pattern proven by `/explore/layout.tsx`).
+- **Cold-start colored-streets fix** (carried S23) — root cause was caching an empty sample when `street-overlay` layer hadn't rendered yet. Neither Explore agent option (A: bypass cache first read, B: split effect) addressed it. Real fix: only cache non-empty results at isochrone-map.tsx L863. 3-line change.
+- **50-60min band contrast** (carried S23) — shifted `#5a0010→#2a0000` (near-black crimson, invisible on dark basemap) to `#6a1b6a→#4a0a4a` (deep purple). Preserves darkness monotonicity. Updated `map-legend.tsx` to match.
+- **web-vitals dev logger** — `npm install web-vitals`, created `src/components/dev/vitals-logger.tsx` gated on `NODE_ENV === "development"`, dynamic-import to keep prod bundle clean. Logs INP/LCP/CLS with rating emoji. Enables local iPhone INP measurement via Safari Web Inspector (Speed Insights paywalled on free tier).
+- **3 commits → PR #2** (`feat/s26-launch-blockers`): SEO scaffold, carried fixes, dev logger. Preview passed Vercel checks, squash-merged to main, branch deleted.
+- **Preflight + smoke-test passed.** All 5 pages + 3 new routes (`/robots.txt`, `/sitemap.xml`, `/apple-icon`) return 200 on prod. No console errors. `/explore?lat=...&t=30&m=...` cold-start renders colored streets on zoom (fix verified).
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/robots.ts` (new) | Allow-all + sitemap reference |
+| `src/app/sitemap.ts` (new) | 5 public routes with priority/changeFrequency |
+| `src/app/apple-icon.tsx` (new) | Dynamic 180×180 brand icon via `next/og` ImageResponse |
+| `src/app/layout.tsx` | Mount `<VitalsLogger />` after `<SpeedInsights />` |
+| `src/components/dev/vitals-logger.tsx` (new) | Dev-only INP/LCP/CLS console logger |
+| `src/components/isochrone/isochrone-map.tsx` | L863 only-cache-non-empty; L163 COLOR_RAMP purple shift |
+| `src/components/isochrone/map-legend.tsx` | Legend band 6: `#6a1b6a→#4a0a4a` to match ramp |
+| `package.json` + `package-lock.json` | `web-vitals@^5.2.0` added |
+
+### Commits
+- `541c141` — feat(seo): add robots.txt, sitemap, apple-touch-icon
+- `6261e77` — fix(isochrone): cold-start colored-street sampling + 50-60min contrast
+- `662598c` — feat(dev): web-vitals INP/LCP/CLS logger (dev-only)
+- `3fb4470` — S26: Launch blockers + carried bug fixes (#2) [squash merge]
+
+### Next Steps
+- [ ] S27: Merge `ssr-rankings` + `phase2-landing-polish` + Andrew's additional branch (name TBD)
+- [ ] S27: Mobile polish — 44px hit areas on mode toggles, time-slider thumb size, Find wizard touch testing
+- [ ] S28: Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] S28: Data-load failure UX (surface GBFS/ferry/bus loader errors instead of silent fail)
+- [ ] S28: Record demo GIF + draft Twitter/LinkedIn copy + soft launch
+- [ ] Deferred post-launch: `bike-to-station-combo` branch, onboarding localStorage persistence, `/about` page
 
 ---
 
