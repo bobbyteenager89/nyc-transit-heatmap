@@ -1,6 +1,8 @@
-# NYC Transit Heatmap — Claude Design Brief
+# NYC Transit Heatmap — Strategic Context
 
-> Intake doc for Claude Design. First draft — edit before sharing.
+> **This is the strategic context doc — not a prompt.** Don't paste this into Claude Design directly.
+>
+> For paste-able prompts, see `prompts/` (sequenced 00–06). This doc is the source material those prompts reference.
 
 ---
 
