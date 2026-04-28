@@ -385,6 +385,48 @@ export default function ExplorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinations]);
 
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  const handleUseMyLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGeoError("Geolocation not supported by your browser.");
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoLoading(false);
+        const { latitude: lat, longitude: lng } = pos.coords;
+        // Broad NYC envelope check
+        if (lat < 40.49 || lat > 40.92 || lng < -74.26 || lng > -73.68) {
+          setGeoError("Your location appears to be outside NYC.");
+          return;
+        }
+        const loc = { lat, lng };
+        setOrigin(loc);
+        setOriginAddress("");
+        runCompute(loc);
+        updateURL(loc, maxMinutes, activeModes);
+        reverseGeocode(loc, process.env.NEXT_PUBLIC_MAPBOX_TOKEN!)
+          .then((addr) => {
+            setOriginAddress(addr);
+            updateURL(loc, maxMinutes, activeModes, addr);
+          })
+          .catch(() => {
+            const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            setOriginAddress(fallback);
+          });
+      },
+      () => {
+        setGeoLoading(false);
+        setGeoError("Location access denied.");
+      },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  }, [runCompute, updateURL, maxMinutes, activeModes]);
+
   const [, startTransition] = useTransition();
 
   const toggleMode = useCallback((mode: TransportMode) => {
@@ -474,6 +516,38 @@ export default function ExplorePage() {
           initialValue={originAddress}
           autoFocus
         />
+        <button
+          onClick={handleUseMyLocation}
+          disabled={geoLoading || !dataReady}
+          style={{
+            fontFamily: "var(--font-data)",
+            fontSize: 11,
+            letterSpacing: "0.08em",
+            color: geoLoading ? "rgba(255,255,255,0.30)" : "rgba(34,211,238,0.80)",
+            background: "transparent",
+            border: "none",
+            padding: "2px 0",
+            cursor: geoLoading ? "default" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+          }}
+        >
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.2" />
+            <circle cx="5.5" cy="5.5" r="1.5" fill="currentColor" />
+            <line x1="5.5" y1="0" x2="5.5" y2="2" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="5.5" y1="9" x2="5.5" y2="11" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="0" y1="5.5" x2="2" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="9" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
+          </svg>
+          {geoLoading ? "Locating…" : "Use my location"}
+        </button>
+        {geoError && (
+          <p style={{ fontFamily: "var(--font-data)", fontSize: 11, color: "rgba(255,100,100,0.80)", marginTop: 2 }}>
+            {geoError}
+          </p>
+        )}
         {!dataReady && (
           <p className="font-body text-xs text-white/40 animate-pulse">
             Loading transit data…

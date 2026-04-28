@@ -539,7 +539,6 @@ export function IsochroneMap({
       });
 
       // Subway stations are loaded by useSubwayStations once mapReady flips.
-
       setMapReady(true);
     });
 
@@ -659,20 +658,25 @@ export function IsochroneMap({
       source.setData(geojson);
     }
 
+    const currentOpacity = m.getPaintProperty("iso-fill", "fill-opacity") as number;
+
+    // Target opacities depend on streetMode. In "colored" the hex sits
+    // at 0.50 — saturated enough that 1-5 min gradient around a subway
+    // stop reads clearly, while still letting streets stay primary.
+    const fillTarget = streetModeRef.current === "colored" ? 0.50 : 0.65;
+    const outlineTarget = streetModeRef.current === "colored" ? 0.20 : 0.3;
+
     // Animate reveal on new compute
     const isNewCompute = cells.length !== prevCellCountRef.current && cells.length > 0;
+    // Defensive: if cells exist but opacity is stuck near 0 (e.g. after React Strict Mode
+    // double-mount or URL param page load), re-trigger the reveal animation
+    const needsReveal = !isNewCompute && cells.length > 0 && geojson.features.length > 0 && currentOpacity < fillTarget * 0.1;
     prevCellCountRef.current = cells.length;
 
-    if (isNewCompute) {
+    if (isNewCompute || needsReveal) {
       cancelAnimationFrame(animationRef.current);
       m.setPaintProperty("iso-fill", "fill-opacity", 0);
       m.setPaintProperty("iso-outline", "line-opacity", 0);
-
-      // Target opacities depend on streetMode. In "colored" the hex sits
-      // at 0.50 — saturated enough that 1-5 min gradient around a subway
-      // stop reads clearly, while still letting streets stay primary.
-      const fillTarget = streetModeRef.current === "colored" ? 0.50 : 0.65;
-      const outlineTarget = streetModeRef.current === "colored" ? 0.20 : 0.3;
 
       const start = performance.now();
       const duration = 800;
