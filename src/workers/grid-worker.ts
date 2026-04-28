@@ -31,6 +31,14 @@ function manhattanDist(a: LatLng, b: LatLng): number {
   return Math.abs(a.lat - b.lat) * DEG_LAT_MI + Math.abs(a.lng - b.lng) * DEG_LNG_MI;
 }
 
+// Euclidean straight-line distance in miles. Used for car travel, where
+// highway routing is more direct than grid walking.
+function euclideanDist(a: LatLng, b: LatLng): number {
+  const dLat = (a.lat - b.lat) * DEG_LAT_MI;
+  const dLng = (a.lng - b.lng) * DEG_LNG_MI;
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+}
+
 function walkMin(from: LatLng, to: LatLng): number {
   return (manhattanDist(from, to) / WALK_SPEED) * 60;
 }
@@ -60,7 +68,7 @@ function driveMin(from: LatLng, to: LatLng): number {
   const inManhattan = from.lat <= MANHATTAN_BOUNDARY_LAT && from.lng >= -74.02 && from.lng <= -73.9 &&
     to.lat <= MANHATTAN_BOUNDARY_LAT && to.lng >= -74.02 && to.lng <= -73.9;
   const speed = inManhattan ? DRIVE_SPEED_MANHATTAN : DRIVE_SPEED_OUTER;
-  return (manhattanDist(from, to) / speed) * 60;
+  return (euclideanDist(from, to) / speed) * 60;
 }
 
 // --- Spatial grid index for fast nearest-neighbor lookups ---
