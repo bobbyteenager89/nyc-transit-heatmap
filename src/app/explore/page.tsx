@@ -758,7 +758,9 @@ export default function ExplorePage() {
           >
             {viewMode === "fastest"
               ? "Color = fastest of all active modes"
-              : `Color = ${VIEW_MODE_LABELS[viewMode]} only — cells unreachable by ${VIEW_MODE_LABELS[viewMode]} are hidden`}
+              : (viewMode === "bus" || viewMode === "ferry")
+                ? `Walk + ${VIEW_MODE_LABELS[viewMode]} where it's faster — highlighted cells show where ${VIEW_MODE_LABELS[viewMode]} beats walking`
+                : `Color = ${VIEW_MODE_LABELS[viewMode]} only — cells unreachable by ${VIEW_MODE_LABELS[viewMode]} are hidden`}
           </p>
         </PanelSection>
       )}

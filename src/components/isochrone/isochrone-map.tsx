@@ -76,8 +76,18 @@ function cellsToHexGeoJSON(
   if (viewMode !== "fastest") {
     const features: GeoJSON.Feature[] = [];
     for (const cell of cells) {
-      const t = cell.times[viewMode];
-      if (t === null || t === undefined) continue;
+      // Bus and ferry always involve walking — "view as bus" means
+      // "walk + take bus where it's faster than walking". Use the better
+      // of the two times so the full walkable area is filled in.
+      const walkTime = cell.times.walk ?? Infinity;
+      const modeTime = cell.times[viewMode] ?? Infinity;
+      const t = (viewMode === "bus" || viewMode === "ferry")
+        ? Math.min(walkTime, modeTime)
+        : modeTime;
+      if (t === Infinity) continue;
+      const displayMode = (viewMode === "bus" || viewMode === "ferry") && modeTime < walkTime
+        ? viewMode
+        : (viewMode === "bus" || viewMode === "ferry") ? "walk" : viewMode;
       features.push({
         type: "Feature",
         geometry: {
@@ -86,7 +96,7 @@ function cellsToHexGeoJSON(
         },
         properties: {
           time: Math.round(t * 10) / 10,
-          fastest_mode: viewMode,
+          fastest_mode: displayMode,
           subway: cell.times.subway ?? -1,
           bus: cell.times.bus ?? -1,
           ferry: cell.times.ferry ?? -1,
