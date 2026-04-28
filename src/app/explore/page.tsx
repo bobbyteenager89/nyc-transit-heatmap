@@ -421,16 +421,45 @@ export default function ExplorePage() {
     <>
       {/* Header + Mode Tabs */}
       <div className="px-1 pt-2 pb-1 hidden md:block">
-        <h1 className="text-2xl leading-none text-white">
-          Isochrone<br /><span className="text-accent">NYC</span>
-        </h1>
-        <p className="font-body text-xs text-white/40 mt-1">NYC Transit Heatmap</p>
+        <div
+          style={{
+            fontFamily: "var(--font-ui)",
+            fontSize: 22,
+            fontWeight: 700,
+            lineHeight: 1,
+            letterSpacing: "-0.02em",
+            color: "#f5f6fa",
+          }}
+        >
+          Isochrone{" "}
+          <span style={{ color: "var(--color-accent, #22d3ee)" }}>NYC</span>
+        </div>
+        <p
+          style={{
+            fontFamily: "var(--font-data)",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.46)",
+            marginTop: 6,
+          }}
+        >
+          NYC Transit Heatmap
+        </p>
       </div>
 
       <ModeTabs active={exploreMode} onChange={setExploreMode} />
 
       {/* Mode description */}
-      <p className="font-body text-xs text-white/30 px-1">
+      <p
+        className="px-1"
+        style={{
+          fontFamily: "var(--font-ui)",
+          fontSize: 12,
+          color: "rgba(255,255,255,0.40)",
+          lineHeight: 1.5,
+        }}
+      >
         {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
         {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
         {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
@@ -529,7 +558,19 @@ export default function ExplorePage() {
               return next;
             });
           }}
-          className="mt-2 text-[10px] uppercase tracking-wider text-white/40 hover:text-white/70 transition-colors"
+          style={{
+            marginTop: 6,
+            fontFamily: "var(--font-data)",
+            fontSize: 10,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.40)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            transition: "color 0.15s",
+          }}
         >
           {showAdvanced ? "− Hide advanced" : "+ Advanced modes"}
         </button>
@@ -551,9 +592,9 @@ export default function ExplorePage() {
                   if (origin) updateURL(origin, maxMinutes, next, originAddress);
                 }
               }}
-              className="w-3.5 h-3.5 rounded border border-white/20 bg-transparent accent-accent cursor-pointer"
+              className="w-3.5 h-3.5 rounded border border-white/20 bg-transparent cursor-pointer accent-[--color-accent]"
             />
-            <span className="text-[10px] uppercase tracking-wider text-white/40 group-hover:text-white/60 transition-colors">
+            <span style={{ fontFamily: "var(--font-data)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.40)" }}>
               I have my own bike
             </span>
           </label>
@@ -568,11 +609,27 @@ export default function ExplorePage() {
               key={mode}
               type="button"
               onClick={() => setStreetMode(mode)}
-              className={`flex-1 py-1.5 rounded text-[11px] font-body capitalize transition-colors ${
-                streetMode === mode
-                  ? "bg-accent/25 text-accent border border-accent/60"
-                  : "text-white/60 border border-white/10 hover:bg-white/10"
-              }`}
+              style={{
+                flex: 1,
+                padding: "5px 0",
+                borderRadius: 6,
+                fontFamily: "var(--font-data)",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontWeight: 500,
+                transition: "background 0.15s, color 0.15s",
+                cursor: "pointer",
+                border: streetMode === mode
+                  ? "1px solid rgba(34,211,238,0.6)"
+                  : "1px solid rgba(255,255,255,0.1)",
+                background: streetMode === mode
+                  ? "rgba(34,211,238,0.15)"
+                  : "transparent",
+                color: streetMode === mode
+                  ? "var(--color-accent, #22d3ee)"
+                  : "rgba(255,255,255,0.55)",
+              }}
             >
               {mode.charAt(0).toUpperCase() + mode.slice(1)}
             </button>
@@ -591,17 +648,40 @@ export default function ExplorePage() {
               <button
                 key={m}
                 onClick={() => setViewMode(m)}
-                className={`px-2.5 py-1.5 text-[11px] rounded border transition-colors ${
-                  viewMode === m
-                    ? "bg-accent/20 border-accent text-accent"
-                    : "border-white/20 text-white/60 hover:bg-white/10"
-                }`}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: 6,
+                  fontFamily: "var(--font-data)",
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "background 0.15s, color 0.15s",
+                  border: viewMode === m
+                    ? "1px solid rgba(34,211,238,0.7)"
+                    : "1px solid rgba(255,255,255,0.12)",
+                  background: viewMode === m
+                    ? "rgba(34,211,238,0.15)"
+                    : "transparent",
+                  color: viewMode === m
+                    ? "var(--color-accent, #22d3ee)"
+                    : "rgba(255,255,255,0.55)",
+                }}
               >
                 {VIEW_MODE_LABELS[m]}
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-white/40 mt-2 leading-tight">
+          <p
+            style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: 10,
+              color: "rgba(255,255,255,0.35)",
+              lineHeight: 1.4,
+              marginTop: 4,
+            }}
+          >
             {viewMode === "fastest"
               ? "Color = fastest of all active modes"
               : `Color = ${VIEW_MODE_LABELS[viewMode]} only — cells unreachable by ${VIEW_MODE_LABELS[viewMode]} are hidden`}
@@ -727,7 +807,7 @@ export default function ExplorePage() {
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-[420px] flex-shrink-0 flex-col bg-surface overflow-y-auto gap-3 p-4">
+      <aside className="hidden md:flex w-[360px] flex-shrink-0 flex-col bg-surface overflow-y-auto gap-[14px] p-[14px]">
         {sidebarControls}
       </aside>
 

@@ -47,29 +47,70 @@ export function ReachStats({ cells, activeModes, maxMinutes }: ReachStatsProps) 
   if (counts.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      <p className="font-body text-[10px] text-white/30 mb-1">
-        Area reachable within {maxMinutes} min by mode
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <p
+        style={{
+          fontFamily: "var(--font-data)",
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.28)",
+          marginBottom: 2,
+        }}
+      >
+        Reachable in {maxMinutes} min
       </p>
       {counts.map(({ mode, count, color }) => {
-        // Each H3 res-10 hex ≈ 0.00581 sq mi (15,047 sq m)
         const sqMi = (count * 0.00581).toFixed(1);
+        const pct = (count / maxCount) * 100;
         return (
-          <div key={mode} className="flex items-center gap-2">
-            <span className="font-display italic uppercase text-[10px] w-14 text-white/60 flex-shrink-0">
+          <div
+            key={mode}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "70px 1fr 56px",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.46)",
+                lineHeight: 1,
+              }}
+            >
               {MODE_LABELS[mode]}
             </span>
-            <div className="flex-1 h-2.5 bg-white/5 rounded-full overflow-hidden">
+            <div
+              style={{
+                height: 4,
+                background: "rgba(255,255,255,0.06)",
+                borderRadius: 2,
+                overflow: "hidden",
+              }}
+            >
               <div
-                className="h-full rounded-full transition-[width] duration-300"
                 style={{
-                  width: `${(count / maxCount) * 100}%`,
+                  width: `${pct}%`,
+                  height: "100%",
                   backgroundColor: color,
-                  opacity: 0.8,
+                  transition: "width 300ms ease",
                 }}
               />
             </div>
-            <span className="font-body text-[10px] text-white/40 w-14 text-right tabular-nums">
+            <span
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 10,
+                color: "rgba(255,255,255,0.46)",
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {sqMi} mi²
             </span>
           </div>

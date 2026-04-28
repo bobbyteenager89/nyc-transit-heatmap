@@ -2,7 +2,20 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { VitalsLogger } from "@/components/dev/vitals-logger";
+import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-ui",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-data",
+});
 
 const TITLE = "Isochrone NYC — How far can you go?";
 const DESCRIPTION =
@@ -38,7 +51,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="h-dvh overflow-hidden antialiased">
+      <body className={`h-dvh overflow-hidden antialiased ${interTight.variable} ${jetbrainsMono.variable}`}>
         {children}
         <Analytics />
         <SpeedInsights />

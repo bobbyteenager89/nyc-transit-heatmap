@@ -17,17 +17,34 @@ const TABS: { key: ExploreMode; label: string; desc: string }[] = [
 
 export function ModeTabs({ active, onChange }: ModeTabsProps) {
   return (
-    <div className="flex gap-1 bg-white/[0.03] rounded-lg p-1">
+    <div
+      className="flex"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+    >
       {TABS.map(({ key, label, desc }) => (
         <button
           key={key}
           onClick={() => startTransition(() => onChange(key))}
           title={desc}
-          className={`flex-1 min-h-[44px] py-2 px-3 rounded-md font-display italic uppercase text-xs cursor-pointer transition-colors active:scale-[0.96] ${
-            active === key
-              ? "bg-accent/15 text-accent border border-accent/30"
-              : "text-white/40 hover:text-white/60 border border-transparent"
-          }`}
+          style={{
+            flex: 1,
+            padding: "10px 8px",
+            fontFamily: "var(--font-data)",
+            fontSize: 11,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            fontWeight: 500,
+            color: active === key ? "#f5f6fa" : "rgba(255,255,255,0.45)",
+            background: "none",
+            border: "none",
+            borderBottom: active === key
+              ? "2px solid var(--color-accent, #22d3ee)"
+              : "2px solid transparent",
+            marginBottom: -1,
+            cursor: "pointer",
+            transition: "color 0.15s",
+            minHeight: 40,
+          }}
         >
           {label}
         </button>

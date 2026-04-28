@@ -3,96 +3,6 @@
 import type { TransportMode } from "@/lib/types";
 import { MODE_COLORS } from "@/lib/isochrone";
 
-function SubwayIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="3" width="16" height="14" rx="3" />
-      <line x1="12" y1="3" x2="12" y2="17" />
-      <circle cx="8" cy="13" r="1" fill="currentColor" />
-      <circle cx="16" cy="13" r="1" fill="currentColor" />
-      <line x1="8" y1="17" x2="6" y2="21" />
-      <line x1="16" y1="17" x2="18" y2="21" />
-    </svg>
-  );
-}
-
-function WalkIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="4" r="2" />
-      <path d="M14 10l-1 4-3 4" />
-      <path d="M10 10l1 4 3 4" />
-      <path d="M10 10l-2 6" />
-      <path d="M14 10l2 6" />
-      <line x1="10" y1="10" x2="14" y2="10" />
-    </svg>
-  );
-}
-
-function BikeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="6" cy="17" r="3" />
-      <circle cx="18" cy="17" r="3" />
-      <path d="M6 17l3-7h4l2 4h3" />
-      <path d="M9 10l3-4" />
-    </svg>
-  );
-}
-
-function CarIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 11l1.5-5h11L19 11" />
-      <rect x="3" y="11" width="18" height="7" rx="2" />
-      <circle cx="7" cy="15" r="1.5" fill="currentColor" />
-      <circle cx="17" cy="15" r="1.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function BusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="3" width="16" height="14" rx="2" />
-      <line x1="4" y1="10" x2="20" y2="10" />
-      <circle cx="8" cy="20" r="1.5" fill="currentColor" />
-      <circle cx="16" cy="20" r="1.5" fill="currentColor" />
-      <line x1="8" y1="17" x2="8" y2="18.5" />
-      <line x1="16" y1="17" x2="16" y2="18.5" />
-    </svg>
-  );
-}
-
-function FerryIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 18c2-1 4-1 6 0s4 1 6 0 4-1 6 0" />
-      <path d="M6 14l-2 4" />
-      <path d="M18 14l2 4" />
-      <rect x="7" y="8" width="10" height="6" rx="1" />
-      <line x1="12" y1="4" x2="12" y2="8" />
-      <path d="M10 4h4" />
-    </svg>
-  );
-}
-
-const ICON_MAP: Record<TransportMode, React.FC<{ className?: string }>> = {
-  subway: SubwayIcon,
-  bus: BusIcon,
-  walk: WalkIcon,
-  bike: BikeIcon,
-  ownbike: BikeIcon,
-  car: CarIcon,
-  ferry: FerryIcon,
-};
-
-// All modes the user can see in the legend. Walk is locked ON — you can't
-// realistically turn off walking (you have to walk to/from everything). Every
-// other mode is toggleable. "bike" is Citi Bike under the hood (walk-to-dock,
-// ride, walk-from-dock) — relabeled for clarity.
-// `ownbike` is an "advanced" mode — hidden from the default legend and only
-// shown when the user opts in via the Advanced settings toggle.
 const MODE_CHIPS: { key: TransportMode; label: string; locked?: boolean; advanced?: boolean }[] = [
   { key: "walk", label: "Walk", locked: true },
   { key: "subway", label: "Subway" },
@@ -111,26 +21,57 @@ interface ModeLegendProps {
 
 export function ModeLegend({ activeModes, onToggle, showAdvanced = false }: ModeLegendProps) {
   const visibleChips = MODE_CHIPS.filter((c) => showAdvanced || !c.advanced);
+
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
       {visibleChips.map(({ key, label, locked }) => {
         const isActive = activeModes.includes(key);
-        const Icon = ICON_MAP[key];
+        const color = MODE_COLORS[key];
+
         return (
           <button
             key={key}
             onClick={locked ? undefined : () => onToggle(key)}
             disabled={locked}
-            title={locked ? "Walk is always included" : isActive ? `Click to turn off ${label}` : `Click to turn on ${label}`}
+            title={locked ? "Walk is always included" : isActive ? `Turn off ${label}` : `Turn on ${label}`}
             aria-label={locked ? "Walk is always included" : isActive ? `Turn off ${label}` : `Turn on ${label}`}
-            className={`relative flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg border transition-colors text-center min-h-[68px] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
-              isActive
-                ? "border-accent/60 bg-accent/15 text-accent shadow-[0_0_0_1px_rgba(34,211,238,0.2)]"
-                : "border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/25"
-            } ${locked ? "cursor-default" : "cursor-pointer"}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: `1px solid ${isActive ? color : "rgba(255,255,255,0.12)"}`,
+              background: isActive
+                ? `color-mix(in srgb, ${color} 12%, transparent)`
+                : "transparent",
+              cursor: locked ? "default" : "pointer",
+              transition: "border-color 0.15s, background 0.15s",
+              minHeight: 36,
+            }}
           >
-            <Icon className="w-5 h-5" />
-            <span className="font-display italic uppercase text-[10px] tracking-wider leading-tight">
+            {/* Colored square dot */}
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 2,
+                backgroundColor: color,
+                flexShrink: 0,
+                opacity: isActive ? 1 : 0.5,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontWeight: 500,
+                color: isActive ? "#f5f6fa" : "rgba(255,255,255,0.46)",
+                lineHeight: 1,
+              }}
+            >
               {label}
             </span>
           </button>

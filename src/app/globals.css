@@ -1,14 +1,18 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-surface: #12131a;
-  --color-surface-card: #1a1b24;
-  --color-border: rgba(255, 255, 255, 0.1);
+  --color-surface: #11131a;
+  --color-surface-card: #161922;
+  --color-border: rgba(255, 255, 255, 0.06);
   --color-accent: #22d3ee;
   --color-pink: #fcdde8;
   --color-red: #e21822;
+  /* Legacy display font — still used by Find/Rankings/Compare */
   --font-display: "Arial Black", Impact, sans-serif;
   --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Isochrone NYC design system fonts (loaded via next/font) */
+  --font-ui: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
 }
 
 * {
