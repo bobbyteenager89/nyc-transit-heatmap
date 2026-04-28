@@ -402,7 +402,7 @@ export default function ExplorePage() {
     [apiContours, friendContours]
   );
 
-  const mapCenter: LatLng = origin ?? { lat: 40.728, lng: -73.958 };
+  const mapCenter: LatLng = origin ?? { lat: 40.694, lng: -73.990 };
 
   const sidebarControls = (
     <>

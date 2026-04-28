@@ -453,6 +453,13 @@ export function IsochroneMap({
         });
       } catch { /* skip */ }
 
+      // Cursor management: pin when ready to place, grabbing when panning.
+      const canvas = m.getCanvas();
+      const PIN_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='32' viewBox='0 0 24 32'%3E%3Cpath fill='%2322d3ee' stroke='%230e1117' stroke-width='1.5' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z'/%3E%3Ccircle cx='12' cy='9' r='3' fill='%230e1117'/%3E%3C/svg%3E") 12 30, crosshair`;
+      canvas.style.cursor = PIN_CURSOR;
+      m.on("dragstart", () => { canvas.style.cursor = "grabbing"; });
+      m.on("dragend",   () => { canvas.style.cursor = PIN_CURSOR; });
+
       // Click handler
       m.on("click", (e) => {
         const waterFeatures = m.queryRenderedFeatures(e.point, { layers: ["water-mask"] });
@@ -509,7 +516,7 @@ export function IsochroneMap({
       });
 
       m.on("mouseleave", "iso-fill", () => {
-        m.getCanvas().style.cursor = "";
+        canvas.style.cursor = PIN_CURSOR;
         setTooltipData(null);
       });
 
@@ -538,7 +545,7 @@ export function IsochroneMap({
       });
 
       m.on("mouseleave", "fairness-fill", () => {
-        m.getCanvas().style.cursor = "";
+        canvas.style.cursor = PIN_CURSOR;
         setTooltipData(null);
       });
 
@@ -916,7 +923,7 @@ export function IsochroneMap({
 
   return (
     <div className="relative flex-1 h-full">
-      <div ref={mapContainer} className="w-full h-full cursor-crosshair" />
+      <div ref={mapContainer} className="w-full h-full" />
 
       {/* Street-mode visualizer — top-right, below the "?" info button which
           lives at top-4 right-4 in explore/page.tsx. This stacks below it. */}
