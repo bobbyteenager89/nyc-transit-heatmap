@@ -9,7 +9,7 @@ import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
-import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
+// import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { computeHexGrid } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
@@ -93,7 +93,7 @@ export default function ExplorePage() {
   const [fairnessRange, setFairnessRange] = useState(5);
   const [exploreMode, setExploreMode] = useState<ExploreMode>("reach");
   const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [mobileExpanded, setMobileExpanded] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [meetupCopied, setMeetupCopied] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
@@ -136,7 +136,6 @@ export default function ExplorePage() {
   const runCompute = useCallback(
     async (loc: LatLng) => {
       await runComputeRaw(loc);
-      setMobileExpanded(false);
     },
     [runComputeRaw]
   );
@@ -596,19 +595,6 @@ export default function ExplorePage() {
     </>
   );
 
-  const mobileSummary = (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="font-display italic text-sm text-white truncate max-w-[200px]">
-          {originAddress || "Drop a pin"}
-        </p>
-        <p className="font-body text-xs text-white/40">
-          {maxMinutes} min · {activeModes.length} mode{activeModes.length !== 1 ? "s" : ""}
-        </p>
-      </div>
-      <span className="text-accent text-xs font-display italic uppercase">Details ↑</span>
-    </div>
-  );
 
   return (
     <div className="flex flex-col md:flex-row h-full">
@@ -759,16 +745,7 @@ export default function ExplorePage() {
         />
       </main>
 
-      {/* Mobile bottom sheet */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
-        <MobileBottomSheet
-          expanded={mobileExpanded}
-          onToggle={() => setMobileExpanded((p) => !p)}
-          summary={mobileSummary}
-        >
-          {sidebarControls}
-        </MobileBottomSheet>
-      </div>
+      {/* Mobile overlay — wired in Task 5 */}
     </div>
   );
 }
