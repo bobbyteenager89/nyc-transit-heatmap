@@ -48,11 +48,13 @@ interface IsochroneMapProps {
   apiContours: IsochroneContour[];
   activeModes: TransportMode[];
   maxMinutes: number;
+  streetMode: StreetMode;
+  onStreetModeChange: (mode: StreetMode) => void;
   onMapClick?: (location: LatLng) => void;
   onStationClick?: (station: { name: string; lat: number; lng: number }) => void;
   friendOrigin?: LatLng | null;
   friendCells?: HexCell[];
-  fairnessRange?: number; // max acceptable time diff in minutes (default 5)
+  fairnessRange?: number;
   viewMode?: ViewMode;
 }
 
@@ -172,6 +174,8 @@ export function IsochroneMap({
   apiContours,
   activeModes,
   maxMinutes,
+  streetMode,
+  onStreetModeChange,
   onMapClick,
   onStationClick,
   friendOrigin,
@@ -202,23 +206,8 @@ export function IsochroneMap({
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const geocodeCache = useRef<Map<string, string>>(new Map());
 
-  // Street rendering mode — visual sandbox (off / plain / glow / colored).
-  // Persisted to localStorage so the preview choice survives page refreshes
-  // while Andrew is iterating.
-  const [streetMode, setStreetMode] = useState<StreetMode>("glow");
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem("nyc-transit-street-mode");
-      if ((["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)) {
-        setStreetMode(v as StreetMode);
-      }
-    } catch { /* ignore */ }
-  }, []);
   const streetModeRef = useRef(streetMode);
   streetModeRef.current = streetMode;
-  useEffect(() => {
-    try { localStorage.setItem("nyc-transit-street-mode", streetMode); } catch { /* ignore */ }
-  }, [streetMode]);
 
   // Initialize dark map
   useEffect(() => {
@@ -914,44 +903,9 @@ export function IsochroneMap({
     fairnessRange,
   });
 
-  const streetModes: { value: StreetMode; label: string; hint: string }[] = [
-    { value: "off",     label: "Off",     hint: "Hide all street lines" },
-    { value: "plain",   label: "Plain",   hint: "White streets, 25% opacity (current)" },
-    { value: "glow",    label: "Glow",    hint: "Brighter white with blur halo" },
-    { value: "colored", label: "Colored", hint: "Streets colored by travel time" },
-  ];
-
   return (
     <div className="relative flex-1 h-full">
       <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Street-mode visualizer — top-right, below the "?" info button which
-          lives at top-4 right-4 in explore/page.tsx. This stacks below it. */}
-      <div className="absolute top-16 right-4 z-30 pointer-events-auto">
-        <div className="flex flex-col gap-1 bg-surface-card/90 border border-white/15 backdrop-blur-md rounded-lg p-2 shadow-lg">
-          <span className="font-display italic uppercase text-[10px] tracking-wider text-white/40 px-1">
-            Streets
-          </span>
-          <div className="flex gap-1">
-            {streetModes.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                title={opt.hint}
-                aria-label={opt.hint}
-                onClick={() => setStreetMode(opt.value)}
-                className={`px-2 py-1 rounded text-[10px] font-body transition-colors cursor-pointer active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#12131a] ${
-                  streetMode === opt.value
-                    ? "bg-accent/25 text-accent border border-accent/60"
-                    : "text-white/60 border border-white/10 hover:bg-white/10"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {tooltipData && (
         <div

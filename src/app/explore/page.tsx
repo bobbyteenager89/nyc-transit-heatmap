@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
+import type { StreetMode } from "@/components/isochrone/isochrone-map";
 import { TimeSlider } from "@/components/isochrone/time-slider";
 import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
@@ -96,6 +97,18 @@ export default function ExplorePage() {
   const [exploreMode, setExploreMode] = useState<ExploreMode>("reach");
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [streetMode, setStreetMode] = useState<StreetMode>("glow");
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("nyc-transit-street-mode");
+      if ((["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)) {
+        setStreetMode(v as StreetMode);
+      }
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem("nyc-transit-street-mode", streetMode); } catch { /* ignore */ }
+  }, [streetMode]);
   const [meetupCopied, setMeetupCopied] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
@@ -547,6 +560,26 @@ export default function ExplorePage() {
         )}
       </PanelSection>
 
+      {/* Street style */}
+      <PanelSection title="Street Style">
+        <div className="flex gap-1.5">
+          {(["off", "plain", "glow", "colored"] as StreetMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setStreetMode(mode)}
+              className={`flex-1 py-1.5 rounded text-[11px] font-body capitalize transition-colors ${
+                streetMode === mode
+                  ? "bg-accent/25 text-accent border border-accent/60"
+                  : "text-white/60 border border-white/10 hover:bg-white/10"
+              }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+      </PanelSection>
+
       {/* Transit trivia */}
       <TransitTrivia />
 
@@ -645,6 +678,25 @@ export default function ExplorePage() {
           onToggle={toggleMode}
           showAdvanced={false}
         />
+      </PanelSection>
+
+      <PanelSection title="Street Style">
+        <div className="flex gap-1.5">
+          {(["off", "plain", "glow", "colored"] as StreetMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setStreetMode(mode)}
+              className={`flex-1 py-1.5 rounded text-[11px] font-body capitalize transition-colors ${
+                streetMode === mode
+                  ? "bg-accent/25 text-accent border border-accent/60"
+                  : "text-white/60 border border-white/10 hover:bg-white/10"
+              }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
       </PanelSection>
 
       {origin && !computing && cells.length > 0 && (
@@ -814,6 +866,8 @@ export default function ExplorePage() {
           apiContours={allContours}
           activeModes={activeModes}
           maxMinutes={maxMinutes}
+          streetMode={streetMode}
+          onStreetModeChange={setStreetMode}
           onMapClick={handleMapClick}
           onStationClick={handleStationClick}
           friendOrigin={friendOrigin}
