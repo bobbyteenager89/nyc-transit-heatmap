@@ -5,20 +5,21 @@
 ---
 
 ## Current State
-**Last session:** 2026-04-28 — S32: Bug fixes — hex auto-render, geolocation, bus data rebuild, ViewAs walk-blend
+**Last session:** 2026-04-28 — S33: / now is the Explore experience; /explore→/ redirect; "drop a pin" opacity fixed
 **Next:**
+- Verify mobile flow on actual phone (Chrome dev tools couldn't shrink past ~700px)
 - Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
-- Data-load failure UX
 - Demo GIF + soft launch
+- Optionally run CEO review (20d stale, T3)
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Attribution footer is simplest (no deps), demo GIF + soft launch is highest impact — pick one
+**First action:** Verify mobile UX on phone, then pick attribution footer (simple) or demo GIF + soft launch (highest impact)
 **Open questions:** none
-**Decisions pending:** none
+**Decisions pending:** Run T3 CEO review on the route consolidation? (20d stale — orchestrator deferred)
 **Ready plan:** none
 
 ---
@@ -197,3 +198,49 @@
 - [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
 - [ ] Data-load failure UX (surface GBFS/ferry/bus errors instead of silent fail)
 - [ ] Record demo GIF + draft Twitter/LinkedIn copy + soft launch
+
+---
+
+## 2026-04-28 — Session 33: / becomes Explore; opacity fix; /explore redirect
+
+### Accomplished
+- **Made `/` the Explore experience** — landing card with 3 mode tiles replaced by the full Explore (drop-a-pin → reach map). Find + Rankings stay live at `/find` and `/rankings` but unlinked + dropped from sitemap.
+- **Extracted client component** — moved 1064-line `src/app/explore/page.tsx` → `src/components/explore/explore-content.tsx` so root `/page.tsx` can be a server component with `generateMetadata` for dynamic OG.
+- **`/explore` → `/` 308 redirect** preserving query params (verified: `/explore?lat=40.758&lng=-73.985&t=30` → `/?lat=40.758&lng=-73.985&t=30`). Existing share links / OG cards keep working.
+- **"Drop a pin to start" legibility fix** — heading `text-white/20` → `/70`, helper `text-white/30` → `/50`. Was nearly invisible against the dark map.
+- **Removed `src/app/explore/layout.tsx`** — its `generateMetadata` logic merged into the new root `page.tsx`.
+- **Sitemap collapsed** to a single canonical route (`/`).
+- **Mobile redesign already shipped** in earlier commits (f250d93, e363666) — instruction card → result card → menu drawer flow is wired. Could not verify at 375px because Chrome's window resize on macOS doesn't shrink the inner viewport below ~1700px; will verify on phone next session.
+- **Plan doc committed** — `docs/superpowers/plans/2026-04-27-mobile-map-first.md` (583 lines) was untracked, now committed as 979e16c.
+- **Deployed to prod** — `vercel --prod`, smoke checks pass (`/` 200, `/explore?...` 308 with location preserved).
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/page.tsx` | Replace landing-card UI with server component: `generateMetadata` (dynamic OG from query params) + render `<ExploreContent />` |
+| `src/app/explore/page.tsx` | Replace 1064-line client component with `permanentRedirect` handler that preserves query params |
+| `src/components/explore/explore-content.tsx` | New — extracted from old `/explore/page.tsx`. Includes `text-white/70` opacity bump on "Drop a pin" overlay |
+| `src/app/explore/layout.tsx` | Deleted — metadata logic moved to root `/page.tsx` |
+| `src/app/sitemap.ts` | Drop `/explore /find /rankings /compare`, leaving only `/` |
+| `docs/superpowers/plans/2026-04-27-mobile-map-first.md` | Committed (was previously untracked) |
+
+### Commits
+- `979e16c` — docs: mobile map-first redesign plan
+- `9ddae48` — feat: make / the Explore experience; bump 'drop a pin' opacity
+
+### Verification
+- Build: ✅ clean (Next 16.2.4, Turbopack, 4.1s compile, TypeScript clean)
+- Tests: ✅ 120/120 passing
+- Smoke (prod): ✅ `/` 200, `/explore?...` 308 → `/?...` preserved
+- Desktop visual: ✅ "Drop a pin" overlay legible, sidebar wired
+- Mobile visual: ⏳ deferred to phone-side verification
+
+### Review Sweep
+All T0-T2 reviews current (preflight, smoke, code/security/perf suite, design, health). T3 CEO review 20d stale — deferred (route consolidation could merit it next session).
+
+### Next Steps
+- [ ] Phone-test mobile flow (drop-pin / menu drawer / result card)
+- [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] Data-load failure UX
+- [ ] Record demo GIF + draft Twitter/LinkedIn copy + soft launch
+- [ ] Optional: run T3 CEO review on the / consolidation
