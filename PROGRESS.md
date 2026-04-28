@@ -5,17 +5,18 @@
 ---
 
 ## Current State
-**Last session:** 2026-04-27 — S31: Isochrone NYC design system implemented + deployed (Claude Design handoff)
+**Last session:** 2026-04-28 — S32: Bug fixes — hex auto-render, geolocation, bus data rebuild, ViewAs walk-blend
 **Next:**
-- S28 backlog: attribution footer, data-load failure UX, demo GIF + soft launch
-- Consider extending design system to Rankings/Compare surfaces
+- Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- Data-load failure UX
+- Demo GIF + soft launch
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Pick from S28 backlog — attribution footer is simplest (no deps), demo GIF + soft launch is highest impact
+**First action:** Attribution footer is simplest (no deps), demo GIF + soft launch is highest impact — pick one
 **Open questions:** none
 **Decisions pending:** none
 **Ready plan:** none
@@ -62,6 +63,35 @@
 - [ ] Data-load failure UX
 - [ ] Record demo GIF + soft launch
 - [ ] Consider extending design system to Rankings/Compare surfaces
+
+---
+
+## 2026-04-28 — Session 32: Bug fixes — hex auto-render, geolocation, bus data, ViewAs walk-blend
+
+### Accomplished
+- **Fixed hex fill not rendering on URL param page load** — added `needsReveal` defensive check in cells effect: if `cells.length > 0` and `fill-opacity` is stuck near 0 (React Strict Mode double-mount or URL-load timing), re-triggers the 800ms reveal animation
+- **Added "Use my location" button** — crosshair icon below address field, calls `navigator.geolocation`, validates against NYC envelope (40.49–40.92 lat, -74.26 to -73.68 lng), drops pin, reverse geocodes, triggers compute; shows loading/error states inline
+- **Rebuilt bus-stops.json from full GTFS** — old file had 733 sparsely-sampled stops (nearest Park Slope stop was 0.33mi, just outside 0.3mi threshold). New file: 5,978 stops from Brooklyn (4,599) + Queens (1,419) GTFS feeds with full route membership from stop_times join. B41 went from 9 → 107 stops, B67 from 6 → 84.
+- **Fixed Bus/Ferry ViewAs showing no hexes** — was filtering to `times.bus/ferry` only (null for most cells). Changed to `min(walk, mode)` so full walkable area fills in; mode-colored cells show where transit beats walking.
+- **Extended walk-blend to Subway ViewAs** — same logic: subway is also walk+train, not a pure door-to-door mode.
+- **Added `scripts/rebuild-bus-stops.ts`** — reproducible GTFS → bus-stops.json pipeline
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/isochrone/isochrone-map.tsx` | `needsReveal` defensive fix; walk-blend ViewAs for subway/bus/ferry |
+| `src/app/explore/page.tsx` | Use My Location button + handlers; updated ViewAs legend text |
+| `public/data/bus-stops.json` | Rebuilt: 733 → 5,978 stops with full route data |
+| `scripts/rebuild-bus-stops.ts` | New GTFS pipeline script |
+
+### Preflight
+- Build: ✅ clean (4.9s compile, TypeScript clean)
+- Smoke test: ✅ deployed, all routes 200
+
+### Next Steps
+- [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] Data-load failure UX
+- [ ] Demo GIF + soft launch
 
 ---
 
