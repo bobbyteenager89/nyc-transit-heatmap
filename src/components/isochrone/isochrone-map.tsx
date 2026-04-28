@@ -205,15 +205,15 @@ export function IsochroneMap({
   // Street rendering mode — visual sandbox (off / plain / glow / colored).
   // Persisted to localStorage so the preview choice survives page refreshes
   // while Andrew is iterating.
-  const [streetMode, setStreetMode] = useState<StreetMode>(() => {
-    if (typeof window === "undefined") return "glow";
+  const [streetMode, setStreetMode] = useState<StreetMode>("glow");
+  useEffect(() => {
     try {
       const v = localStorage.getItem("nyc-transit-street-mode");
-      return (["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)
-        ? (v as StreetMode)
-        : "glow";
-    } catch { return "glow"; }
-  });
+      if ((["off", "plain", "glow", "colored"] as StreetMode[]).includes(v as StreetMode)) {
+        setStreetMode(v as StreetMode);
+      }
+    } catch { /* ignore */ }
+  }, []);
   const streetModeRef = useRef(streetMode);
   streetModeRef.current = streetMode;
   useEffect(() => {
