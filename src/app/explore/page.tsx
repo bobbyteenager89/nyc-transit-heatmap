@@ -9,7 +9,9 @@ import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
-// import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
+import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
+import { MobileInstruction } from "@/components/isochrone/mobile-instruction";
+import { MobileResultCard } from "@/components/isochrone/mobile-result-card";
 import { computeHexGrid } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
@@ -283,6 +285,17 @@ export default function ExplorePage() {
       setOriginAddress(station.name);
       runCompute(loc);
       updateURL(loc, maxMinutes, activeModes, station.name);
+    },
+    [runCompute, updateURL, maxMinutes, activeModes]
+  );
+
+  const handleQuickStart = useCallback(
+    (name: string, lat: number, lng: number) => {
+      const latlng = { lat, lng };
+      setOrigin(latlng);
+      setOriginAddress(name);
+      runCompute(latlng);
+      updateURL(latlng, maxMinutes, activeModes, name);
     },
     [runCompute, updateURL, maxMinutes, activeModes]
   );
@@ -596,6 +609,69 @@ export default function ExplorePage() {
   );
 
 
+  const mobileMenuContent = (
+    <>
+      <PanelSection title="Location">
+        <AddressAutocomplete
+          label="Address"
+          placeholder="Start typing an address…"
+          onSelect={handleAddressSelect}
+          initialValue={originAddress}
+          autoFocus={false}
+        />
+        {!dataReady && (
+          <p className="font-body text-xs text-white/40 animate-pulse">
+            Loading transit data…
+          </p>
+        )}
+      </PanelSection>
+
+      <PanelSection>
+        <div className="flex items-center gap-2">
+          <PlayButton
+            currentValue={maxMinutes}
+            onChange={handleMaxMinutesChange}
+            disabled={!origin || computing || cells.length === 0}
+          />
+          <div className="flex-1">
+            <TimeSlider value={maxMinutes} onChange={handleMaxMinutesChange} />
+          </div>
+        </div>
+      </PanelSection>
+
+      <PanelSection title="Transport Modes">
+        <ModeLegend
+          activeModes={activeModes}
+          onToggle={toggleMode}
+          showAdvanced={false}
+        />
+      </PanelSection>
+
+      {origin && !computing && cells.length > 0 && (
+        <PanelSection>
+          {(() => {
+            const slug = encodeShareSlug({
+              lat: origin.lat,
+              lng: origin.lng,
+              t: maxMinutes,
+              m: activeModes,
+              address: originAddress || undefined,
+            });
+            const url = `/p/${slug}`;
+            const label = originAddress || "this spot";
+            return (
+              <ShareSheet
+                url={url}
+                title={`${maxMinutes}-minute reach from ${label}`}
+                text={`See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`}
+              />
+            );
+          })()}
+        </PanelSection>
+      )}
+    </>
+  );
+
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* Desktop sidebar */}
@@ -628,7 +704,7 @@ export default function ExplorePage() {
         )}
 
         {!origin && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          <div className="absolute inset-0 hidden md:flex items-center justify-center z-10 pointer-events-none">
             <div className="text-center px-4 animate-fade-in">
               {/* Pulsing pin icon */}
               <div className="mx-auto mb-4 relative w-10 h-10">
@@ -745,7 +821,34 @@ export default function ExplorePage() {
         />
       </main>
 
-      {/* Mobile overlay — wired in Task 5 */}
+      {/* Mobile: instruction card — shown when no origin set */}
+      {!origin && (
+        <div className="md:hidden">
+          <MobileInstruction onQuickStart={handleQuickStart} />
+        </div>
+      )}
+
+      {/* Mobile: result card — shown after compute */}
+      {origin && cells.length > 0 && !computing && (
+        <div className="md:hidden">
+          <MobileResultCard
+            address={originAddress}
+            maxMinutes={maxMinutes}
+            modeCount={activeModes.length}
+            onMenuOpen={() => setMobileMenuOpen(true)}
+          />
+        </div>
+      )}
+
+      {/* Mobile: menu drawer */}
+      <div className="md:hidden">
+        <MobileBottomSheet
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        >
+          {mobileMenuContent}
+        </MobileBottomSheet>
+      </div>
     </div>
   );
 }

@@ -253,19 +253,6 @@ export default function FindPage() {
   // Results phase
   const mapCenter = bestCell?.center ?? DEFAULT_CENTER;
 
-  const mobileFindSummary = (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="font-display italic text-sm text-white truncate max-w-[200px]">
-          {bestAddress || "Computing…"}
-        </p>
-        <p className="font-body text-xs text-white/40">
-          {destinations.length} destination{destinations.length !== 1 ? "s" : ""} · {modes.length} mode{modes.length !== 1 ? "s" : ""}
-        </p>
-      </div>
-      <span className="text-accent text-xs font-display italic uppercase">Details ↑</span>
-    </div>
-  );
 
   const sidebarContent = (
     <ResultsSidebar
@@ -323,17 +310,34 @@ export default function FindPage() {
         />
       </main>
 
-      {/* Mobile bottom sheet — only mounted on <md viewports */}
-      {!isDesktop && (
-        <div className="fixed inset-x-0 bottom-0 z-40">
-          <MobileBottomSheet
-            expanded={mobileExpanded}
-            onToggle={() => setMobileExpanded((p) => !p)}
-            summary={mobileFindSummary}
+      {/* Mobile: floating pill — tap to open drawer */}
+      {!isDesktop && !mobileExpanded && (
+        <div className="fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button
+            onClick={() => setMobileExpanded(true)}
+            className="w-full bg-surface-card/95 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 text-left"
           >
-            {sidebarContent}
-          </MobileBottomSheet>
+            <div className="min-w-0">
+              <p className="font-display italic text-sm text-white truncate">
+                {bestAddress || "Computing…"}
+              </p>
+              <p className="font-body text-xs text-white/40 mt-0.5">
+                {destinations.length} dest · {modes.length} modes
+              </p>
+            </div>
+            <span className="text-accent text-xs font-display italic uppercase flex-shrink-0">Details ↑</span>
+          </button>
         </div>
+      )}
+
+      {/* Mobile: menu drawer */}
+      {!isDesktop && (
+        <MobileBottomSheet
+          open={mobileExpanded}
+          onClose={() => setMobileExpanded(false)}
+        >
+          {sidebarContent}
+        </MobileBottomSheet>
       )}
     </div>
   );
