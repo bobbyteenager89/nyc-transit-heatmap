@@ -5,23 +5,63 @@
 ---
 
 ## Current State
-**Last session:** 2026-04-27 — S30: Claude Design intake rewrite (8 sequenced prompts) + 7 reference screenshots captured
+**Last session:** 2026-04-27 — S31: Isochrone NYC design system implemented + deployed (Claude Design handoff)
 **Next:**
-- Run `prompts/00-setup.md` verification → `01-direction.md` in Claude Design
-- Pick a direction, iterate through 02→06
-- S28 backlog still open: attribution footer, data-load UX, demo GIF, soft launch
-**Branch:** main / clean after this commit
+- S28 backlog: attribution footer, data-load failure UX, demo GIF + soft launch
+- Consider extending design system to Rankings/Compare surfaces
+**Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Run `design-system/prompts/00-setup.md` verification reply in Claude Design, then paste `01-direction.md`. Pick a direction from the 3 returned, then proceed to `02-tokens.md`.
-**Open questions:**
-- Did Claude Design return 3 distinct directions per Round 1? Which direction (or remix) was picked?
-- Any S28 items shifting priority given design direction?
-**Decisions pending:** Visual direction (MTA-canonical / Editorial / Time-gradient — see `prompts/01-direction.md`)
-**Ready plan:** `design-system/prompts/` — sequenced intake (README + 00-setup + 01–06)
+**First action:** Pick from S28 backlog — attribution footer is simplest (no deps), demo GIF + soft launch is highest impact
+**Open questions:** none
+**Decisions pending:** none
+**Ready plan:** none
+
+---
+
+---
+
+## 2026-04-27 — Session 31: Isochrone NYC design system implementation
+
+### Accomplished
+- **Fetched + analyzed Claude Design handoff bundle** — extracted gzip/tar archive from Anthropic API, read README + chat transcript + all JSX source files (`tokens.jsx`, `surface-explore.jsx`, `primitives.jsx`)
+- **Implemented full design system** from `Isochrone NYC.html` into production codebase (8 files changed, 467 insertions)
+- **Inter Tight + JetBrains Mono** via `next/font/google` — loaded in `layout.tsx`, CSS variables `--font-ui` / `--font-data` in `@theme inline`, applied to all explore components
+- **ModeTabs → underline style** — removed pill container, `borderBottom: 2px solid var(--accent)` per active tab
+- **ModeLegend → 2-col ModePill** — removed SVG icons, replaced with 8×8 colored square dot, colored border + `color-mix()` tint when active
+- **TimeSlider → custom drag** — replaced `<input type="range">` with Pointer Events API + `setPointerCapture`, 32px mono readout, gradient track (green→purple, 12 stops), tick marks
+- **ReachStats → 3-col ReachBars** — `gridTemplateColumns: "70px 1fr 56px"`, 4px bars with mode colors, JetBrains Mono labels
+- **PanelSection** — lighter hairline border (`rgba(255,255,255,0.06)`), tighter 14px padding, mono section titles
+- **Sidebar** — narrowed from 420px → 360px, new wordmark (Inter Tight 700, cyan "NYC"), mono version label
+- **Deployed to production** — `vercel --prod`, all routes 200 on prod
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/app/layout.tsx` | Added Inter Tight + JetBrains Mono via next/font/google |
+| `src/app/globals.css` | Added `--font-ui` + `--font-data` Tailwind tokens, updated surface colors |
+| `src/app/explore/page.tsx` | Sidebar 360px, new wordmark, section labels updated, Street Style + View As redesigned |
+| `src/components/isochrone/mode-tabs.tsx` | Underline tab style, JetBrains Mono labels |
+| `src/components/isochrone/mode-legend.tsx` | 2-col ModePill, colored dot, no SVG icons |
+| `src/components/isochrone/time-slider.tsx` | Custom Pointer Events drag, 32px mono readout, gradient track |
+| `src/components/isochrone/reach-stats.tsx` | 3-col grid, 4px bars, JetBrains Mono |
+| `src/components/ui/panel-section.tsx` | Lighter hairline border, 14px padding, mono title |
+
+### Preflight
+- Build: ✅ clean (4.1s compile, TypeScript clean)
+- Tests: ✅ 120/120
+- Mobile 375px: ✅ fullscreen map + instruction card
+- Desktop 1440px: ✅ sidebar visible with all new components
+- Smoke test: ✅ 4/4 routes 200 on prod
+
+### Next Steps
+- [ ] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
+- [ ] Data-load failure UX
+- [ ] Record demo GIF + soft launch
+- [ ] Consider extending design system to Rankings/Compare surfaces
 
 ---
 

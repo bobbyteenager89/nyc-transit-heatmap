@@ -2,6 +2,7 @@
 
 ## Tech Stack
 - Next.js 16 (App Router), TypeScript, Tailwind CSS v4
+- `next/font/google` — Inter Tight (`--font-ui`) + JetBrains Mono (`--font-data`) loaded via next/font, CSS vars in `@theme inline`
 - Mapbox GL JS for map rendering
 - Web Worker for grid computation
 - MTA GTFS data (pre-parsed at build time)
@@ -54,12 +55,15 @@
 - **Modes**: 7 transport modes — subway, bus, walk, car, bike (Citi Bike), ownbike, ferry
 
 ## Design
-- Dark glass theme: surface (#12131a), cards (#1a1b24), accent cyan (#22d3ee)
-- Landing page: dark with map background. Find page: pink/red brutalist (legacy)
-- Explore page: dark glass sidebar with rounded card sections, dark Mapbox map
-- Arial Black italic uppercase for headings, Helvetica Neue for body
+- Dark glass theme: surface (#11131a), cards (#161922), accent cyan (#22d3ee)
+- Landing/Find page: Arial Black italic uppercase for headings (legacy brutalist — do not change)
+- **Explore page (Isochrone NYC design system):** Inter Tight 700 for wordmark, JetBrains Mono for all labels/data, hairline borders `rgba(255,255,255,0.06)`, sidebar 360px
+  - ModeTabs: underline style, no pill container
+  - ModeLegend: 2-col grid, 8×8 colored square dots, `color-mix()` tint when active, no SVG icons
+  - TimeSlider: custom Pointer Events drag (not `<input type="range">`), 32px mono readout, 12-stop gradient track
+  - ReachStats: 3-col grid `70px 1fr 56px`, 4px colored bars
 - Mode colors: subway (#118ab2), bus (#f97316), walk (#ffbe0b), bike (#06d6a0), car (#9b5de5), ferry (#00b4d8)
-- Hex fill gradient: green (0 min) → yellow (15 min) → orange (30 min) → red (60 min)
+- Time ramp: green (#39ff14) → yellow → orange → red → purple (#4a0a4a) over 12 stops
 
 ## Environment
 - Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local`
