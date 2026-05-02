@@ -877,6 +877,20 @@ export default function ExplorePage() {
           })()}
         </PanelSection>
       )}
+
+      <div className="mt-2 pb-1 border-t border-white/[0.06] pt-3" style={{ fontFamily: "var(--font-data)", fontSize: 10, letterSpacing: "0.06em", color: "rgba(255,255,255,0.28)", lineHeight: 1.7 }}>
+        <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Data</span>{" · "}
+        <a href="https://www.mta.info/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">MTA</a>
+        {" · "}
+        <a href="https://citibikenyc.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">Citi Bike</a>
+        {" · "}
+        <a href="https://opendata.cityofnewyork.us/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">NYC Open Data</a>
+        {"  "}
+        <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Map</span>{" · "}
+        <a href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">© Mapbox</a>
+        {" · "}
+        <a href="https://www.openstreetmap.org/about" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">© OpenStreetMap</a>
+      </div>
     </>
   );
 
@@ -885,6 +899,19 @@ export default function ExplorePage() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-[360px] flex-shrink-0 flex-col bg-surface overflow-y-auto gap-[14px] p-[14px]">
         {sidebarControls}
+        <div className="mt-2 pb-1 border-t border-white/[0.06] pt-3" style={{ fontFamily: "var(--font-data)", fontSize: 10, letterSpacing: "0.06em", color: "rgba(255,255,255,0.28)", lineHeight: 1.7 }}>
+          <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Data</span>{" · "}
+          <a href="https://www.mta.info/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">MTA</a>
+          {" · "}
+          <a href="https://citibikenyc.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">Citi Bike</a>
+          {" · "}
+          <a href="https://opendata.cityofnewyork.us/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">NYC Open Data</a>
+          <br />
+          <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Map</span>{" · "}
+          <a href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">© Mapbox</a>
+          {" · "}
+          <a href="https://www.openstreetmap.org/about" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">© OpenStreetMap</a>
+        </div>
       </aside>
 
       {/* Map */}

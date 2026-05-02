@@ -348,7 +348,7 @@ export function IsochroneMap({
             "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 1, 16, 2],
           },
         }, firstSymbol);
-      } catch { /* skip */ }
+      } catch (err) { console.warn("[IsochroneMap] street-overlay layer unavailable", err); }
 
       // Colored-streets overlay (streetMode="colored").
       m.addSource("street-colored", {
@@ -414,7 +414,7 @@ export function IsochroneMap({
           "source-layer": "water",
           paint: { "fill-color": "#0a0a12", "fill-opacity": 1 },
         }, firstSymbol);
-      } catch { /* skip */ }
+      } catch (err) { console.warn("[IsochroneMap] water-mask layer unavailable", err); }
 
       // Waterways
       try {
@@ -425,7 +425,7 @@ export function IsochroneMap({
           "source-layer": "waterway",
           paint: { "line-color": "#0a0a12", "line-width": 8, "line-opacity": 1 },
         }, firstSymbol);
-      } catch { /* skip */ }
+      } catch (err) { console.warn("[IsochroneMap] waterway-mask layer unavailable", err); }
 
       // Parks
       try {
@@ -437,7 +437,7 @@ export function IsochroneMap({
           filter: ["in", "class", "park", "cemetery", "pitch"],
           paint: { "fill-color": "#0d2818", "fill-opacity": 0.7 },
         }, firstSymbol);
-      } catch { /* skip */ }
+      } catch (err) { console.warn("[IsochroneMap] park-overlay layer unavailable", err); }
 
       // Neighborhood lines — on top of everything
       try {
@@ -449,7 +449,7 @@ export function IsochroneMap({
           filter: [">=", "admin_level", 2],
           paint: { "line-color": "rgba(255,255,255,0.25)", "line-width": 1.5, "line-dasharray": [3, 2] },
         });
-      } catch { /* skip */ }
+      } catch (err) { console.warn("[IsochroneMap] neighborhood-lines layer unavailable", err); }
 
       // Cursor management: pin when ready to place, grabbing when panning.
       const canvas = m.getCanvas();
