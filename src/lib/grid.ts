@@ -32,8 +32,49 @@ function getOrCreateWorker(): Worker {
 }
 
 /** Build a lightweight fingerprint from transit data to detect when LOAD_DATA needs to be re-sent. */
-function dataSignature(input: HexWorkerInput): string {
+function dataSignature(input: { stationGraph: StationGraph; stationMatrix: StationMatrix; citiBikeStations: CitiBikeStation[]; ferryTerminals?: { id: string; name: string; lat: number; lng: number; routes: string[] }[]; busStops?: { id: string; name: string; lat: number; lng: number; routes: string[] }[] }): string {
   return `${Object.keys(input.stationGraph.stations).length}:${input.stationMatrix.stationIds.length}:${input.citiBikeStations.length}:${input.ferryTerminals?.length ?? 0}:${input.busStops?.length ?? 0}`;
+}
+
+export type WarmupInput = Pick<HexWorkerInput,
+  "stationGraph" | "stationMatrix" | "citiBikeStations" | "ferryTerminals" | "ferryAdjacency" | "busStops"
+>;
+
+/**
+ * Pre-spin the grid worker and send LOAD_DATA before the user clicks anything.
+ * Removes the worker-bootstrap + structured-clone serialization component of
+ * the first-interaction stall: by the time the user clicks a quick-pick, the
+ * worker is initialized and the transit data is loaded, so the click only
+ * triggers COMPUTE (a small message).
+ *
+ * Safe to call multiple times — short-circuits if the worker already holds
+ * matching data. If the user clicks during the warm-up window, computeHexGrid
+ * will overwrite worker.onmessage and proceed normally (the warmup listener
+ * simply never fires, no state is corrupted).
+ */
+export function warmGridWorker(input: WarmupInput): void {
+  const sig = dataSignature(input);
+  if (dataLoaded && sig === loadedDataSignature) return;
+
+  const worker = getOrCreateWorker();
+  const handler = (e: MessageEvent) => {
+    if (e.data?.type === "data_loaded") {
+      dataLoaded = true;
+      loadedDataSignature = sig;
+      if (worker.onmessage === handler) worker.onmessage = null;
+    }
+  };
+  worker.onmessage = handler;
+
+  worker.postMessage({
+    type: "LOAD_DATA",
+    stationGraph: input.stationGraph,
+    stationMatrix: input.stationMatrix,
+    citiBikeStations: input.citiBikeStations,
+    ferryTerminals: input.ferryTerminals ?? [],
+    ferryAdjacency: input.ferryAdjacency ?? {},
+    busStops: input.busStops ?? [],
+  });
 }
 
 export function computeHexGrid(

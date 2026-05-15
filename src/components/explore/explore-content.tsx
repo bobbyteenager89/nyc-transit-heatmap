@@ -13,7 +13,7 @@ import { MapLegend } from "@/components/isochrone/map-legend";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
 import { MobileInstruction } from "@/components/isochrone/mobile-instruction";
 import { MobileResultCard } from "@/components/isochrone/mobile-result-card";
-import { computeHexGrid } from "@/lib/grid";
+import { computeHexGrid, warmGridWorker } from "@/lib/grid";
 import { reverseGeocode } from "@/lib/geocode";
 import { generateHexCenters } from "@/lib/hex";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
@@ -124,6 +124,22 @@ export default function ExplorePage() {
     busData,
     dataReady,
   } = useTransitData();
+
+  // Pre-spin the grid worker + send LOAD_DATA as soon as transit data is
+  // ready. Without this, the first quick-pick / pin-drop click pays the cost
+  // of worker bootstrap + structured-clone serialization synchronously inside
+  // the click handler — measured at 8.5s INP in prod (S35).
+  useEffect(() => {
+    if (!dataReady || !stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
+    warmGridWorker({
+      stationGraph,
+      stationMatrix,
+      citiBikeStations: citiBikeData.getAllStations(),
+      ferryTerminals: ferryData.data.terminals,
+      ferryAdjacency: ferryData.adjacency,
+      busStops: busData.stops,
+    });
+  }, [dataReady, stationGraph, stationMatrix, citiBikeData, ferryData, busData]);
 
   // URL param writer
   const { updateURL } = useUrlState();
