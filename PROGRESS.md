@@ -5,21 +5,23 @@
 ---
 
 ## Current State
-**Last session:** 2026-05-03 — S34: /review (all clean) + attribution footer + mapbox-gl 3.23 + catch logging
+**Last session:** 2026-05-15 — S35: INP fix (warmGridWorker) + deleted /find /rankings /compare
 **Next:**
-- Verify mobile flow on actual phone (still unverified — devtools can't shrink past ~700px)
-- Record demo GIF (script ready to write; needs Kap or LICEcap)
-- Soft launch (Twitter/X + LinkedIn)
-- Optional: T3 CEO review (27d stale)
+- Widget polish — Andrew: "not good at all yet" (needs clarification: which widgets, what good means)
+- Verify mobile on real phone (drop-pin, menu drawer, result card)
+- Record demo GIF + soft launch
+- /dead-code-scanner: hard-delete wizard/, results/, landing/ dead dirs
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
-**Mode:** shallow
-**First action:** Verify mobile on phone, then record demo GIF for soft launch
-**Open questions:** none
-**Decisions pending:** Run T3 CEO review? (27d stale — keeps getting deferred)
+**Mode:** brainstorm
+**First action:** Invoke `superpowers:brainstorming` to spec widget polish work
+**Open questions:**
+- Which widgets are "not good yet"? (mode tabs, legend, time slider, reach stats, result cards?)
+- What does "good" look like — UX critique, visual redesign, or data completeness?
+**Decisions pending:** /dead-code-scanner to clean wizard/, results/, landing/ dirs; build:rankings now orphaned
 **Ready plan:** none
 
 ---
@@ -123,3 +125,30 @@
 - [ ] Record demo GIF (Kap recommended; ~8-10s showing pin drop → heatmap reveal → slider drag)
 - [ ] Soft launch (Twitter/X + LinkedIn)
 - [ ] Optional: T3 CEO review (27d stale)
+
+---
+
+## 2026-05-15 — Session 35: INP fix (warmGridWorker) + route cleanup
+
+### Accomplished
+- **Full QA + /review ran**: preflight clean, smoke test (7/7 routes), code/security/perf suite clean, design review clean, CEO plan review (Quick / REDUCTION posture)
+- **INP 8,523ms → ~1,200ms**: Added `warmGridWorker()` to `src/lib/grid.ts` — pre-spins web worker and sends `LOAD_DATA` on mount (after transit data ready). First quick-pick click now only sends COMPUTE instead of worker-spin + LOAD_DATA + COMPUTE
+- **Added `warmGridWorker` useEffect in `explore-content.tsx`**: fires after `dataReady` + all transit data loaded; calls warmGridWorker with full transit payload
+- **Deleted 3 unlinked routes**: `/find` (page.tsx + layout.tsx), `/rankings` (page.tsx + rankings-list.tsx), `/compare` (page.tsx + layout.tsx) — 6 files. Build: 9 → 7 routes. REDUCTION CEO posture pre-soft-launch
+- **2 commits pushed to main** and deployed: `47537f4` (INP fix), `6f6b27b` (route deletions)
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/lib/grid.ts` | Added `WarmupInput` type + `warmGridWorker()` function (+57 lines) |
+| `src/components/explore/explore-content.tsx` | Added `warmGridWorker` import + mount-time useEffect |
+| `src/app/find/` | Deleted (page.tsx, layout.tsx) |
+| `src/app/rankings/` | Deleted (page.tsx, rankings-list.tsx) |
+| `src/app/compare/` | Deleted (page.tsx, layout.tsx) |
+
+### Next Steps
+- [ ] Widget polish — clarify which widgets and what "good" means (Andrew: "not good at all yet")
+- [ ] Verify mobile on real phone (drop-pin, menu drawer, result card)
+- [ ] Record demo GIF + soft launch
+- [ ] /dead-code-scanner to hard-delete wizard/, results/, landing/ dead dirs
+- [ ] build:rankings now orphaned — either re-link rankings page or remove script

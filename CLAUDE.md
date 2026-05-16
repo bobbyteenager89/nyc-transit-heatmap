@@ -21,9 +21,6 @@
 - `src/app/page.tsx` — `/` IS the Isochrone Explorer (server component: `generateMetadata` + renders `<ExploreContent />`)
 - `src/components/explore/explore-content.tsx` — main client component (1064 lines): drop-a-pin → 6-mode reach heatmap, address autocomplete, time slider, modes, sidebar
 - `src/app/explore/page.tsx` — `permanentRedirect` to `/` preserving query params (kept for OG share-link compatibility)
-- `src/app/find/page.tsx` — Find My Neighborhood (UNLINKED — kept reachable but not in sitemap)
-- `src/app/rankings/page.tsx` — Neighborhood rankings (UNLINKED — kept reachable but not in sitemap)
-- `src/app/compare/page.tsx` — Side-by-side comparison (UNLINKED — kept reachable but not in sitemap)
 - `src/app/api/og/route.tsx` — Dynamic OG image generation (edge, @vercel/og)
 - `src/app/apple-icon.tsx` — Dynamic 180×180 apple-touch-icon (ImageResponse, brand-matched)
 - `src/app/robots.ts` + `src/app/sitemap.ts` — Next.js file-convention SEO (allow-all + single canonical route `/`)
@@ -41,6 +38,7 @@
 - `src/components/isochrone/` — isochrone-map (dark Mapbox heatmap), time-slider, mode-legend, reach-stats
 - `src/lib/bus.ts` — bus stop data loader
 - `src/lib/` — core logic (travel time, cost, subway, citibike, geocode, ferry, bus)
+- `src/lib/grid.ts` — `computeHexGrid()` (kicks off worker) + `warmGridWorker()` (pre-loads LOAD_DATA on mount for INP)
 - `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
 - `scripts/build-rankings.ts` — pre-compute neighborhood rankings at build time
