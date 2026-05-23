@@ -5,23 +5,21 @@
 ---
 
 ## Current State
-**Last session:** 2026-05-15 — S35: INP fix (warmGridWorker) + deleted /find /rankings /compare
+**Last session:** 2026-05-23 — S36: 2,282 LOC dead-code purge + ReachStats data completeness (union, %, nearest-stop) + 20 tests
 **Next:**
-- Widget polish — Andrew: "not good at all yet" (needs clarification: which widgets, what good means)
-- Verify mobile on real phone (drop-pin, menu drawer, result card)
-- Record demo GIF + soft launch
-- /dead-code-scanner: hard-delete wizard/, results/, landing/ dead dirs
+- Verify mobile at 375px (drop-pin, menu drawer, result card) — requires real phone
+- Record demo GIF + soft launch (Twitter/LinkedIn)
+- Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6, react 19.2.6, vitest 4.1.7)
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
-**Mode:** brainstorm
-**First action:** Invoke `superpowers:brainstorming` to spec widget polish work
+**Mode:** shallow
+**First action:** Phone QA + demo GIF — verify 375px flow, record with Kap, then soft launch
 **Open questions:**
-- Which widgets are "not good yet"? (mode tabs, legend, time slider, reach stats, result cards?)
-- What does "good" look like — UX critique, visual redesign, or data completeness?
-**Decisions pending:** /dead-code-scanner to clean wizard/, results/, landing/ dirs; build:rankings now orphaned
+- none
+**Decisions pending:** none
 **Ready plan:** none
 
 ---
@@ -147,8 +145,42 @@
 | `src/app/compare/` | Deleted (page.tsx, layout.tsx) |
 
 ### Next Steps
-- [ ] Widget polish — clarify which widgets and what "good" means (Andrew: "not good at all yet")
+- [x] Widget polish — ReachStats data completeness (union total, % of grid, nearest-stop hints)
+- [x] /dead-code-scanner: hard-delete wizard/, results/, landing/, setup/ dirs (2,282 LOC)
+- [x] build:rankings orphan — removed script + rankings.json from build
 - [ ] Verify mobile on real phone (drop-pin, menu drawer, result card)
 - [ ] Record demo GIF + soft launch
-- [ ] /dead-code-scanner to hard-delete wizard/, results/, landing/ dead dirs
-- [ ] build:rankings now orphaned — either re-link rankings page or remove script
+
+---
+
+## 2026-05-23 — Session 36: Dead-code purge + ReachStats data completeness
+
+### Accomplished
+- **Hard-deleted 2,282 LOC** across wizard/ (5 files), results/ (6 files), landing/ (4 files), setup/ (2 files) — zero surviving imports confirmed via grep
+- **Removed `build:rankings` orphan** — deleted `scripts/build-rankings.ts` + `public/data/rankings.json` + stripped the pre-build step from `package.json`
+- **Extracted `src/lib/reach-stats.ts`** — pure-function library for all ReachStats math: `reachableCellCount`, `unionReach` (dedup), `perModeReach` (sorted desc), `nearestStopWalkMinutes`, `nearestStopsForAllModes`. Cell area derived from `getHexagonAreaAvg(H3_RESOLUTION, "km2")` × 0.386102 mi²/km²
+- **Rewrote `src/components/isochrone/reach-stats.tsx`** — added union-total row (any mode), % of grid alongside mi², nearest-stop walk-hint subtext per mode (subway/bus/ferry/bike)
+- **Wired `nearestStops` useMemo** in `explore-content.tsx` — feeds origin + transit data → `nearestStopsForAllModes` → prop to ReachStats
+- **Added 20 unit tests** (`src/lib/__tests__/reach-stats.test.ts`) — 140/140 passing total
+- **Ran /review** — fixed 3 warnings: `H3_RESOLUTION_FOR_GRID` duplicate → import from constants, nearest-stop text 9px→10px, union/per-mode rows got `role="group"` + `aria-label` a11y
+- **3 commits pushed to main**, Vercel auto-deployed
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/lib/reach-stats.ts` | NEW — pure-function reach stats library |
+| `src/lib/__tests__/reach-stats.test.ts` | NEW — 20 unit tests |
+| `src/components/isochrone/reach-stats.tsx` | Rewritten — union row, % grid, nearest-stop hints, a11y |
+| `src/components/explore/explore-content.tsx` | Added nearestStops useMemo + prop pass |
+| `src/components/wizard/` | Deleted (5 files) |
+| `src/components/results/` | Deleted (6 files) |
+| `src/components/landing/` | Deleted (4 files) |
+| `src/components/setup/` | Deleted (2 files) |
+| `scripts/build-rankings.ts` | Deleted |
+| `public/data/rankings.json` | Deleted |
+| `package.json` | Removed build:rankings + pre-build step |
+
+### Next Steps
+- [ ] Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
+- [ ] Record demo GIF + soft launch (Twitter/LinkedIn)
+- [ ] Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6)
