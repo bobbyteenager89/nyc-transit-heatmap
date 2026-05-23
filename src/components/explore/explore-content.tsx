@@ -8,6 +8,7 @@ import { TimeSlider } from "@/components/isochrone/time-slider";
 import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
+import { nearestStopsForAllModes } from "@/lib/reach-stats";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
@@ -473,6 +474,19 @@ export default function ExplorePage() {
     [apiContours, friendContours]
   );
 
+  const nearestStops = useMemo(() => {
+    if (!origin || !stationGraph || !citiBikeData || !ferryData || !busData) return null;
+    return nearestStopsForAllModes(origin, {
+      subwayStations: Object.values(stationGraph.stations).map((s) => ({
+        lat: s.lat,
+        lng: s.lng,
+      })),
+      busStops: busData.stops,
+      ferryTerminals: ferryData.data.terminals,
+      citiBikeStations: citiBikeData.getAllStations(),
+    });
+  }, [origin, stationGraph, citiBikeData, ferryData, busData]);
+
   const mapCenter: LatLng = origin ?? { lat: 40.694, lng: -73.990 };
 
   const sidebarControls = (
@@ -785,7 +799,12 @@ export default function ExplorePage() {
       {origin && !computing && cells.length > 0 && (
         <>
           <PanelSection title="Your Reach">
-            <ReachStats cells={cells} activeModes={activeModes} maxMinutes={maxMinutes} />
+            <ReachStats
+              cells={cells}
+              activeModes={activeModes}
+              maxMinutes={maxMinutes}
+              nearestStops={nearestStops}
+            />
           </PanelSection>
 
           <PanelSection>
