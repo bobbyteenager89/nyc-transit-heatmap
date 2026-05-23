@@ -3,12 +3,11 @@ import type { HexCell, LatLng, TransportMode, CitiBikeStation } from "./types";
 import type { BusStop } from "./bus";
 import type { FerryTerminal } from "./ferry";
 import { walkTime } from "./travel-time";
-
-export const H3_RESOLUTION_FOR_GRID = 10;
+import { H3_RESOLUTION } from "./constants";
 
 const KM2_TO_MI2 = 0.3861021585424458;
 
-export const CELL_AREA_MI2 = getHexagonAreaAvg(H3_RESOLUTION_FOR_GRID, "km2") * KM2_TO_MI2;
+export const CELL_AREA_MI2 = getHexagonAreaAvg(H3_RESOLUTION, "km2") * KM2_TO_MI2;
 
 export interface PerModeReach {
   mode: TransportMode;

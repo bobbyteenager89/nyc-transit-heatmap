@@ -76,6 +76,8 @@ export function ReachStats({ cells, activeModes, maxMinutes, nearestStops }: Rea
           marginBottom: 4,
         }}
         data-testid="union-total"
+        role="group"
+        aria-label={`Total reach across all active modes: ${union.areaMi2.toFixed(1)} square miles, ${union.pctOfGrid.toFixed(0)} percent of grid`}
       >
         <span
           style={{
@@ -109,7 +111,16 @@ export function ReachStats({ cells, activeModes, maxMinutes, nearestStops }: Rea
         const nearest =
           nearestStops && isNearestStopMode(mode) ? nearestStops[mode] : null;
         return (
-          <div key={mode} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div
+            key={mode}
+            style={{ display: "flex", flexDirection: "column", gap: 2 }}
+            role="group"
+            aria-label={`${MODE_LABELS[mode]} reach: ${areaMi2.toFixed(1)} square miles, ${pctOfGrid.toFixed(0)} percent of grid${
+              nearest !== null && nearest !== undefined
+                ? `, nearest stop ${formatWalkHint(nearest)}`
+                : ""
+            }`}
+          >
             <div
               style={{
                 display: "grid",
@@ -165,14 +176,15 @@ export function ReachStats({ cells, activeModes, maxMinutes, nearestStops }: Rea
               <span
                 style={{
                   fontFamily: "var(--font-data)",
-                  fontSize: 9,
-                  color: "rgba(255,255,255,0.32)",
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.4)",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   paddingLeft: 78,
-                  lineHeight: 1,
+                  lineHeight: 1.2,
                 }}
                 data-testid={`nearest-${mode}`}
+                aria-hidden="true"
               >
                 Nearest stop: {formatWalkHint(nearest)}
               </span>
