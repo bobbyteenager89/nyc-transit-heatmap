@@ -11,7 +11,7 @@ let loadedDataSignature = "";
 
 export interface HexWorkerInput {
   hexCenters: { h3Index: string; lat: number; lng: number }[];
-  origin: LatLng | null; // null for wizard mode (no single origin)
+  origin: LatLng | null;
   destinations: Destination[];
   modes: TransportMode[];
   stationGraph: StationGraph;

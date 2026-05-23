@@ -12,8 +12,7 @@
 
 ## Commands
 - `npm run dev` — local dev server
-- `npm run build` — production build (runs build:rankings first)
-- `npm run build:rankings` — regenerate public/data/rankings.json from station data
+- `npm run build` — production build
 - `npm test` — run vitest tests
 - `npm run build:subway` — rebuild subway graph from GTFS data
 
@@ -24,14 +23,11 @@
 - `src/app/api/og/route.tsx` — Dynamic OG image generation (edge, @vercel/og)
 - `src/app/apple-icon.tsx` — Dynamic 180×180 apple-touch-icon (ImageResponse, brand-matched)
 - `src/app/robots.ts` + `src/app/sitemap.ts` — Next.js file-convention SEO (allow-all + single canonical route `/`)
-- `src/components/results/hex-map.tsx` — Mapbox hex map with H3 fill layer, water mask, animated reveal
-- `src/components/results/results-sidebar.tsx` — results panel with destinations, modes, sharing
-- `src/components/wizard/wizard-shell.tsx` — 4-step wizard (Work → Gym → Social → Extras)
 - `src/components/shared/address-autocomplete.tsx` — Mapbox geocoding autocomplete
 - `src/components/shared/drop-pin-map.tsx` — click-to-drop-pin map for location selection
+- `src/components/share/share-sheet.tsx` — share link generation + clipboard copy
 - `src/lib/gym-chains.ts` — gym chain database (10 chains, 60+ NYC locations)
 - `src/lib/cost.ts` — transit cost comparison (pay-per-ride, OMNY, unlimited, Citi Bike)
-- `src/components/results/monthly-footer.tsx` — cost comparison cards in results view
 - `src/lib/hex.ts` — H3 hex grid generation + GeoJSON conversion
 - `src/lib/ferry.ts` — ferry terminal data loader + Floyd-Warshall adjacency
 - `src/lib/isochrone.ts` — time band grouping, mode colors, isochrone layer generation
@@ -41,12 +37,12 @@
 - `src/lib/grid.ts` — `computeHexGrid()` (kicks off worker) + `warmGridWorker()` (pre-loads LOAD_DATA on mount for INP)
 - `src/workers/grid-worker.ts` — web worker with spatial indexing, station-pair cache, chunked processing
 - `scripts/build-subway-graph.ts` — GTFS → station graph build script
-- `scripts/build-rankings.ts` — pre-compute neighborhood rankings at build time
-- `public/data/` — pre-built subway data + rankings.json (committed)
+- `public/data/` — pre-built subway + bus + ferry data (committed)
 
-## Heatmap Modes
-- **Isochrone NYC** (`/explore`): dark map with Mapbox native heatmap layers per transport mode, time slider 1-60 min, shareable URLs
-- **Find My Neighborhood** (`/find`): score heatmap showing total monthly transit hours (green=low, red=high)
+## Explore Modes (ModeTabs)
+- **Reach** (default): drop-a-pin → multimodal isochrone heatmap, shareable URLs
+- **Live**: add destinations w/ frequency → composite score heatmap (best neighborhood to live)
+- **Meet**: two origins → fairness-weighted overlap → shareable meetup link (recipient page at `/p/[slug]`)
 - **Multi-location**: destinations with `locations[]` use closest location per grid point
 - **Bus**: walk to stop → wait (7 min avg) → ride (8 mph avg) → walk from stop. 733 stops across Manhattan, Brooklyn, Queens
 - **Ferry**: walk to terminal → ride (adjacency graph, 7 routes, 21 terminals) → walk out
@@ -55,7 +51,6 @@
 
 ## Design
 - Dark glass theme: surface (#11131a), cards (#161922), accent cyan (#22d3ee)
-- Landing/Find page: Arial Black italic uppercase for headings (legacy brutalist — do not change)
 - **Explore page (Isochrone NYC design system):** Inter Tight 700 for wordmark, JetBrains Mono for all labels/data, hairline borders `rgba(255,255,255,0.06)`, sidebar 360px
   - ModeTabs: underline style, no pill container
   - ModeLegend: 2-col grid, 8×8 colored square dots, `color-mix()` tint when active, no SVG icons
