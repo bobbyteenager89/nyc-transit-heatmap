@@ -130,9 +130,15 @@ export default function ExplorePage() {
   // ready. Without this, the first quick-pick / pin-drop click pays the cost
   // of worker bootstrap + structured-clone serialization synchronously inside
   // the click handler — measured at 8.5s INP in prod (S35).
+  //
+  // The LOAD_DATA postMessage payload is ~1.8MB (stationMatrix 956KB + busStops
+  // 945KB + others). structuredClone of that runs on the main thread and was
+  // blocking the autoFocus'd address input for ~320ms when users typed while
+  // the page hydrated (S37). Defer to requestIdleCallback so the warmup yields
+  // to user input. Falls back to setTimeout for Safari.
   useEffect(() => {
     if (!dataReady || !stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
-    warmGridWorker({
+    const fire = () => warmGridWorker({
       stationGraph,
       stationMatrix,
       citiBikeStations: citiBikeData.getAllStations(),
@@ -140,6 +146,21 @@ export default function ExplorePage() {
       ferryAdjacency: ferryData.adjacency,
       busStops: busData.stops,
     });
+    const ric = (window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    }).requestIdleCallback;
+    if (ric) {
+      const handle = ric(fire, { timeout: 2000 });
+      return () => {
+        const cic = (window as Window & {
+          cancelIdleCallback?: (handle: number) => void;
+        }).cancelIdleCallback;
+        cic?.(handle);
+      };
+    }
+    const t = setTimeout(fire, 250);
+    return () => clearTimeout(t);
   }, [dataReady, stationGraph, stationMatrix, citiBikeData, ferryData, busData]);
 
   // URL param writer
@@ -487,7 +508,12 @@ export default function ExplorePage() {
     });
   }, [origin, stationGraph, citiBikeData, ferryData, busData]);
 
-  const mapCenter: LatLng = origin ?? { lat: 40.694, lng: -73.990 };
+  // Memoized so unrelated parent re-renders don't allocate a new object →
+  // IsochroneMap's center-effect would otherwise fire flyTo on every render.
+  const mapCenter = useMemo<LatLng>(
+    () => origin ?? { lat: 40.694, lng: -73.99 },
+    [origin]
+  );
 
   const sidebarControls = (
     <>
@@ -992,9 +1018,10 @@ export default function ExplorePage() {
               {/* Quick-start location buttons */}
               <div className="flex flex-wrap justify-center gap-2 pointer-events-auto">
                 {[
-                  { name: "Times Square", lat: 40.758, lng: -73.9855 },
+                  { name: "Lower East Side", lat: 40.7185, lng: -73.987 },
+                  { name: "Cobble Hill", lat: 40.687, lng: -73.997 },
                   { name: "Williamsburg", lat: 40.7081, lng: -73.9571 },
-                  { name: "Astoria", lat: 40.7724, lng: -73.9301 },
+                  { name: "Times Square", lat: 40.758, lng: -73.9855 },
                 ].map((loc) => (
                   <button
                     key={loc.name}

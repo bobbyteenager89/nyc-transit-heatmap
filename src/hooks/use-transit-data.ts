@@ -39,29 +39,22 @@ export function useTransitData(): TransitData {
   useEffect(() => {
     async function load() {
       try {
-        const [graphRes, matrixRes] = await Promise.all([
-          fetch("/data/station-graph.json"),
-          fetch("/data/station-matrix.json"),
+        const [graphRes, matrixRes, citiRes, ferryRes, busRes] = await Promise.all([
+          fetch("/data/station-graph.json").then((r) => r.json() as Promise<StationGraph>),
+          fetch("/data/station-matrix.json").then((r) => r.json() as Promise<StationMatrix>),
+          CitiBikeData.fetch().catch((err) => {
+            console.warn("Citi Bike data unavailable:", err);
+            return null;
+          }),
+          loadFerryData(),
+          loadBusData(),
         ]);
-        const graph: StationGraph = await graphRes.json();
-        const matrix: StationMatrix = await matrixRes.json();
-        setStationGraph(graph);
-        setStationMatrix(matrix);
-        setSubwayData(new SubwayData(graph, matrix));
-
-        try {
-          const citi = await CitiBikeData.fetch();
-          setCitiBikeData(citi);
-        } catch (err) {
-          console.warn("Citi Bike data unavailable:", err);
-        }
-
-        const ferry = await loadFerryData();
-        setFerryData(ferry);
-
-        const bus = await loadBusData();
-        setBusData(bus);
-
+        setStationGraph(graphRes);
+        setStationMatrix(matrixRes);
+        setSubwayData(new SubwayData(graphRes, matrixRes));
+        if (citiRes) setCitiBikeData(citiRes);
+        setFerryData(ferryRes);
+        setBusData(busRes);
         setDataReady(true);
       } catch (err) {
         console.error("Failed to load transit data:", err);

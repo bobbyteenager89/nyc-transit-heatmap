@@ -6,15 +6,14 @@ import type { HexCell, TransportMode } from "@/lib/types";
 
 /**
  * Build GeoJSON for the fairness zone — cells where both people can reach.
- * Includes ALL cells reachable by both (no fairnessRange filter here).
- * Visibility is controlled via GL setFilter on the slider side.
- * Colored by how "fair" the spot is: green = equal, fading as diff increases.
+ * Emits every cell both can reach in their fastest active mode. Visibility
+ * by maxMinutes AND fairnessRange is delegated to GL setFilter so slider
+ * drags don't re-iterate ~150k cells on the main thread.
  */
 function buildFairnessGeoJSON(
   cellsA: HexCell[],
   cellsB: HexCell[],
-  activeModes: TransportMode[],
-  maxMinutes: number
+  activeModes: TransportMode[]
 ): GeoJSON.FeatureCollection {
   if (cellsA.length === 0 || cellsB.length === 0) {
     return { type: "FeatureCollection", features: [] };
@@ -40,7 +39,6 @@ function buildFairnessGeoJSON(
       if (tB !== null && tB !== undefined && tB < fastB) fastB = tB;
     }
 
-    if (fastA > maxMinutes || fastB > maxMinutes) continue;
     if (fastA === Infinity || fastB === Infinity) continue;
 
     const diff = Math.abs(fastA - fastB);
@@ -88,7 +86,8 @@ export function useFairnessLayer({
   maxMinutes,
   fairnessRange,
 }: UseFairnessLayerArgs) {
-  // Rebuild fairness GeoJSON when inputs change.
+  // Rebuild fairness GeoJSON only when source data changes — NOT on slider tick.
+  // maxMinutes intentionally excluded; it's handled in the GL filter below.
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
@@ -100,19 +99,21 @@ export function useFairnessLayer({
       return;
     }
 
-    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes, maxMinutes);
+    const geojson = buildFairnessGeoJSON(cells, friendCells, activeModes);
     source.setData(geojson);
-  }, [mapRef, mapReady, cells, friendCells, activeModes, maxMinutes]);
+  }, [mapRef, mapReady, cells, friendCells, activeModes]);
 
-  // GL-side filter by fairness range — no JS iteration on slider tick.
+  // GL-side filter by maxMinutes + fairness range — no JS iteration on slider tick.
   useEffect(() => {
     const m = mapRef.current;
     if (!m || !mapReady) return;
-    if (m.getLayer("fairness-fill")) {
-      m.setFilter("fairness-fill", ["<=", ["get", "diff"], fairnessRange]);
-    }
-    if (m.getLayer("fairness-line")) {
-      m.setFilter("fairness-line", ["<=", ["get", "diff"], fairnessRange]);
-    }
-  }, [mapRef, mapReady, fairnessRange]);
+    const filter: mapboxgl.FilterSpecification = [
+      "all",
+      ["<=", ["get", "timeA"], maxMinutes],
+      ["<=", ["get", "timeB"], maxMinutes],
+      ["<=", ["get", "diff"], fairnessRange],
+    ];
+    if (m.getLayer("fairness-fill")) m.setFilter("fairness-fill", filter);
+    if (m.getLayer("fairness-line")) m.setFilter("fairness-line", filter);
+  }, [mapRef, mapReady, maxMinutes, fairnessRange]);
 }

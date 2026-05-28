@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { memo, useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { latLngToCell } from "h3-js";
@@ -177,7 +177,7 @@ const COLOR_RAMP: mapboxgl.Expression = [
   60, "#4a0a4a",
 ];
 
-export function IsochroneMap({
+function IsochroneMapInner({
   center,
   cells,
   apiContours,
@@ -974,3 +974,8 @@ export function IsochroneMap({
     </div>
   );
 }
+
+// React.memo prevents the 976-line render + effect re-evaluation when unrelated
+// parent state flips (geoLoading, showHowItWorks, mobileMenuOpen, etc.).
+// Callbacks are useCallback'd and complex props are useMemo'd in the parent.
+export const IsochroneMap = memo(IsochroneMapInner);

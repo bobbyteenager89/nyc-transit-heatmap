@@ -11,9 +11,10 @@ interface MobileInstructionProps {
 }
 
 const QUICK_STARTS: QuickStart[] = [
-  { name: "Times Square", lat: 40.758, lng: -73.9855 },
+  { name: "Lower East Side", lat: 40.7185, lng: -73.987 },
+  { name: "Cobble Hill", lat: 40.687, lng: -73.997 },
   { name: "Williamsburg", lat: 40.7081, lng: -73.9571 },
-  { name: "Astoria", lat: 40.7724, lng: -73.9301 },
+  { name: "Times Square", lat: 40.758, lng: -73.9855 },
 ];
 
 export function MobileInstruction({ onQuickStart }: MobileInstructionProps) {

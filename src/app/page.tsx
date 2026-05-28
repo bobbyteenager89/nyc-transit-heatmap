@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import ExploreContent from "@/components/explore/explore-content";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   searchParams,
 }: {

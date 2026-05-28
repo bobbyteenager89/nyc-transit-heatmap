@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { computeHexGrid } from "@/lib/grid";
 import { generateHexCenters } from "@/lib/hex";
 import type { IsochroneContour } from "@/lib/mapbox-isochrone";
@@ -122,12 +122,25 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
   const [computing, setComputing] = useState(false);
   const [expanding, setExpanding] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
+  const lastProgressRef = useRef(0);
+
+  // Worker fires ~30 progress messages per compute pass (chunk size 5000 of
+  // ~150k hexes). Each setState re-renders the 1064-line ExploreContent tree.
+  // Throttle to 5% deltas so typing during compute isn't dragged down by
+  // ~30 unnecessary reconciles. Always emit terminal values (0 and 100).
+  const reportProgress = useCallback((p: number) => {
+    if (p === 0 || p === 100 || p - lastProgressRef.current >= 5) {
+      lastProgressRef.current = p;
+      setComputeProgress(p);
+    }
+  }, []);
 
   const runCompute = useCallback(
     async (loc: LatLng) => {
       if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
 
       setComputing(true);
+      lastProgressRef.current = 0;
       setComputeProgress(0);
       setGridBounds(CORE_NYC_BOUNDS);
       try {
@@ -164,7 +177,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
         };
 
         const currentBounds = CORE_NYC_BOUNDS;
-        const hexResult = await computeForBounds(currentBounds, (p) => setComputeProgress(p));
+        const hexResult = await computeForBounds(currentBounds, reportProgress);
         setCells(hexResult);
         setApiContours([]);
 
@@ -177,8 +190,9 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
           if (!expanded) break;
           attempts++;
           setExpanding(true);
+          lastProgressRef.current = 0;
           try {
-            workingCells = await computeForBounds(expanded, (p) => setComputeProgress(p));
+            workingCells = await computeForBounds(expanded, reportProgress);
             workingBounds = expanded;
             setCells(workingCells);
             setGridBounds(expanded);
@@ -193,7 +207,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, maxMinutes]
+    [stationGraph, stationMatrix, citiBikeData, ferryData, busData, destinations, maxMinutes, reportProgress]
   );
 
   return {
