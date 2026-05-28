@@ -5,10 +5,11 @@
 ---
 
 ## Current State
-**Last session:** 2026-05-23 — S36: 2,282 LOC dead-code purge + ReachStats data completeness (union, %, nearest-stop) + 20 tests
+**Last session:** 2026-05-28 — S37: INP fix (warmGridWorker idle-defer + progress throttle + React.memo) + fairness layer setFilter + parallel data loads + location defaults
 **Next:**
-- Verify mobile at 375px (drop-pin, menu drawer, result card) — requires real phone
+- Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
 - Record demo GIF + soft launch (Twitter/LinkedIn)
+- Check Vercel Speed Insights in 1-2 days to confirm INP improvement in prod traffic
 - Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6, react 19.2.6, vitest 4.1.7)
 **Branch:** main / clean
 
@@ -16,7 +17,7 @@
 
 ## Next Session Kickoff
 **Mode:** shallow
-**First action:** Phone QA + demo GIF — verify 375px flow, record with Kap, then soft launch
+**First action:** Phone QA + demo GIF — verify 375px flow on real phone, record with Kap, then soft launch on Twitter/LinkedIn. Also check Vercel Speed Insights to see if S37 INP fixes show in prod metrics.
 **Open questions:**
 - none
 **Decisions pending:** none
@@ -184,3 +185,37 @@
 - [ ] Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
 - [ ] Record demo GIF + soft launch (Twitter/LinkedIn)
 - [ ] Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6)
+
+---
+
+## 2026-05-28 — Session 37: INP fixes + perf audit + parallel data load
+
+### Accomplished
+- **Performance-reviewer agent** audited recurring INP issues — found 4 P1 issues + root cause of 320ms typing regression
+- **Root cause found (typing 320ms INP):** `warmGridWorker` was sending ~1.8MB structured clone (stationMatrix 956KB + busStops 945KB) synchronously on main thread immediately after data load. `autoFocus`'d address input + page load timing = keystrokes queued behind the clone. Chrome attributed it to the input element.
+- **Fix 1 — defer warmGridWorker to `requestIdleCallback`** (`explore-content.tsx`) — clone yields to user input. Safari fallback: `setTimeout(250)`.
+- **Fix 2 — throttle `setComputeProgress` to 5% deltas** (`use-dynamic-grid-compute.ts`) — was firing ~30 setState calls per pin-drop, each re-rendering 1064-line ExploreContent during compute.
+- **Fix 3 — `React.memo(IsochroneMap)`** (`isochrone-map.tsx`) — prevents 976-line render on unrelated parent state flips (geoLoading, mobileMenuOpen, etc.). All callback/complex props already memoized.
+- **Fix 4 — memoize `mapCenter`** (`explore-content.tsx:490`) — was allocating new `{lat,lng}` on every render, triggering spurious `flyTo` in IsochroneMap's center effect.
+- **Fix 5 — fairness layer → GL `setFilter`** (`use-fairness-layer.ts`) — removed `maxMinutes` from GeoJSON rebuild deps; maxMinutes + fairnessRange now delegated to `m.setFilter()`. Eliminates 150k-cell JS iteration on every Meet mode slider tick.
+- **Parallelized transit data fetches** (`use-transit-data.ts`) — citi/ferry/bus were loading sequentially after station-graph; now all in one `Promise.all`.
+- **Removed `force-dynamic` from `/`** (`app/page.tsx`) — static optimization re-enabled.
+- **Swapped quick-start defaults** to Lower East Side, Cobble Hill, Williamsburg, Times Square (both `explore-content.tsx` and `mobile-instruction.tsx`).
+- **Deployed to prod** — `git push origin main` → Vercel auto-deploy. Build clean, 140/140 tests pass.
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/explore/explore-content.tsx` | warmGridWorker idle-defer, mapCenter useMemo, new quick-starts |
+| `src/components/isochrone/isochrone-map.tsx` | React.memo wrapper |
+| `src/components/isochrone/hooks/use-fairness-layer.ts` | GL setFilter for maxMinutes + fairnessRange |
+| `src/components/isochrone/mobile-instruction.tsx` | Updated QUICK_STARTS |
+| `src/hooks/use-dynamic-grid-compute.ts` | setComputeProgress throttled to 5% deltas |
+| `src/hooks/use-transit-data.ts` | Parallelized all fetches into Promise.all |
+| `src/app/page.tsx` | Removed force-dynamic |
+
+### Next Steps
+- [ ] Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
+- [ ] Record demo GIF + soft launch (Twitter/LinkedIn)
+- [ ] Check Vercel Speed Insights in 1-2 days to confirm INP improvement
+- [ ] Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6, react 19.2.6, vitest 4.1.7)
