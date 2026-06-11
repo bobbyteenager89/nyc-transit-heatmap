@@ -8,7 +8,11 @@ import { TimeSlider } from "@/components/isochrone/time-slider";
 import { ModeLegend } from "@/components/isochrone/mode-legend";
 import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
+import { PrideStats } from "@/components/isochrone/pride-stats";
 import { nearestStopsForAllModes } from "@/lib/reach-stats";
+import { computePrideStats } from "@/lib/pride-stats";
+import { buildStationLineIndex } from "@/lib/pride-data";
+import { usePrideTables } from "@/hooks/use-pride-tables";
 import { PlayButton } from "@/components/isochrone/play-button";
 import { MapLegend } from "@/components/isochrone/map-legend";
 import { MobileBottomSheet } from "@/components/isochrone/mobile-bottom-sheet";
@@ -25,6 +29,7 @@ import { ModeTabs } from "@/components/isochrone/mode-tabs";
 import type { ExploreMode } from "@/components/isochrone/mode-tabs";
 import type { LatLng, TransportMode, HexCell, Destination } from "@/lib/types";
 import { encodeShareSlug, decodeShareSlug } from "@/lib/share-slug";
+import { latLngToCell, cellToLatLng } from "h3-js";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { MeetupSummary } from "@/components/isochrone/meetup-summary";
 import { TransitTrivia } from "@/components/isochrone/transit-trivia";
@@ -509,6 +514,53 @@ export default function ExplorePage() {
     });
   }, [origin, stationGraph, citiBikeData, ferryData, busData]);
 
+  // --- Pride stats: population / POIs / subway lines within reach. Computed
+  // client-side (like ReachStats) so the time slider updates them instantly.
+  const prideTables = usePrideTables();
+  const stationLineIndex = useMemo(
+    () => (stationGraph ? buildStationLineIndex(stationGraph) : new Map<string, string[]>()),
+    [stationGraph]
+  );
+  const prideStats = useMemo(
+    () =>
+      prideTables && cells.length > 0
+        ? computePrideStats(cells, activeModes, maxMinutes, prideTables, stationLineIndex)
+        : null,
+    [prideTables, cells, activeModes, maxMinutes, stationLineIndex]
+  );
+
+  // Shareable link. The origin is snapped to its res-8 H3 centroid (~460m) so
+  // the link never carries an exact home address, yet stays reproducible. The
+  // sharer's own stat numbers ride along as query params so the OG card matches
+  // what they saw (the stateless edge OG route can't recompute).
+  const shareLink = useMemo(() => {
+    if (!origin) return null;
+    const [snapLat, snapLng] = cellToLatLng(latLngToCell(origin.lat, origin.lng, 8));
+    const slug = encodeShareSlug({
+      lat: snapLat,
+      lng: snapLng,
+      t: maxMinutes,
+      m: activeModes,
+      address: originAddress || undefined,
+    });
+    const qp = new URLSearchParams();
+    if (prideStats) {
+      if (prideStats.population) qp.set("pop", String(prideStats.population));
+      if (prideStats.restaurants) qp.set("rest", String(prideStats.restaurants));
+      if (prideStats.cafes) qp.set("cafe", String(prideStats.cafes));
+      if (prideStats.bars) qp.set("bar", String(prideStats.bars));
+      if (prideStats.parks) qp.set("park", String(prideStats.parks));
+      if (prideStats.lines.length) qp.set("lines", prideStats.lines.join(","));
+    }
+    const q = qp.toString();
+    const label = originAddress || "this spot";
+    return {
+      url: `/p/${slug}${q ? `?${q}` : ""}`,
+      title: `${maxMinutes}-minute reach from ${label}`,
+      text: `See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`,
+    };
+  }, [origin, maxMinutes, activeModes, originAddress, prideStats]);
+
   // Memoized so unrelated parent re-renders don't allocate a new object →
   // IsochroneMap's center-effect would otherwise fire flyTo on every render.
   const mapCenter = useMemo<LatLng>(
@@ -870,25 +922,16 @@ export default function ExplorePage() {
             />
           </PanelSection>
 
+          {prideStats && (
+            <PanelSection title="What's Within Reach">
+              <PrideStats stats={prideStats} maxMinutes={maxMinutes} />
+            </PanelSection>
+          )}
+
           <PanelSection>
-            {origin && (() => {
-              const slug = encodeShareSlug({
-                lat: origin.lat,
-                lng: origin.lng,
-                t: maxMinutes,
-                m: activeModes,
-                address: originAddress || undefined,
-              });
-              const url = `/p/${slug}`;
-              const label = originAddress || "this spot";
-              return (
-                <ShareSheet
-                  url={url}
-                  title={`${maxMinutes}-minute reach from ${label}`}
-                  text={`See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`}
-                />
-              );
-            })()}
+            {shareLink && (
+              <ShareSheet url={shareLink.url} title={shareLink.title} text={shareLink.text} />
+            )}
           </PanelSection>
         </>
       )}
@@ -962,26 +1005,18 @@ export default function ExplorePage() {
       </PanelSection>
 
       {origin && !computing && cells.length > 0 && (
-        <PanelSection>
-          {(() => {
-            const slug = encodeShareSlug({
-              lat: origin.lat,
-              lng: origin.lng,
-              t: maxMinutes,
-              m: activeModes,
-              address: originAddress || undefined,
-            });
-            const url = `/p/${slug}`;
-            const label = originAddress || "this spot";
-            return (
-              <ShareSheet
-                url={url}
-                title={`${maxMinutes}-minute reach from ${label}`}
-                text={`See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`}
-              />
-            );
-          })()}
-        </PanelSection>
+        <>
+          {prideStats && (
+            <PanelSection title="What's Within Reach">
+              <PrideStats stats={prideStats} maxMinutes={maxMinutes} />
+            </PanelSection>
+          )}
+          {shareLink && (
+            <PanelSection>
+              <ShareSheet url={shareLink.url} title={shareLink.title} text={shareLink.text} />
+            </PanelSection>
+          )}
+        </>
       )}
 
       <div className="mt-2 pb-1 border-t border-white/[0.06] pt-3" style={{ fontFamily: "var(--font-data)", fontSize: 10, letterSpacing: "0.06em", color: "rgba(255,255,255,0.28)", lineHeight: 1.7 }}>
