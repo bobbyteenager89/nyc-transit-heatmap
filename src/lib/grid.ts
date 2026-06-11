@@ -6,6 +6,9 @@ let persistentWorker: Worker | null = null;
 let dataLoaded = false;
 let pendingReject: ((err: Error) => void) | null = null;
 
+/** Signature of a LOAD_DATA message already posted but not yet acknowledged. */
+let loadInFlightSignature: string | null = null;
+
 /** Signature of the transit data that was last loaded into the worker. */
 let loadedDataSignature = "";
 
@@ -55,17 +58,28 @@ export type WarmupInput = Pick<HexWorkerInput,
 export function warmGridWorker(input: WarmupInput): void {
   const sig = dataSignature(input);
   if (dataLoaded && sig === loadedDataSignature) return;
+  // Same data already on its way to the worker — re-posting would rebuild
+  // the spatial indexes and emit a duplicate data_loaded.
+  if (loadInFlightSignature === sig) return;
+  // A compute is in flight and owns worker.onmessage. The warmup runs via
+  // requestIdleCallback, so it can fire AFTER computeHexGrid installed its
+  // handler — overwriting it here ate the data_loaded ack, COMPUTE was never
+  // dispatched, and the UI hung at "Computing… 0%" until the 60s watchdog
+  // killed the worker (S37 regression, hit every share-link load).
+  if (pendingReject) return;
 
   const worker = getOrCreateWorker();
   const handler = (e: MessageEvent) => {
     if (e.data?.type === "data_loaded") {
       dataLoaded = true;
       loadedDataSignature = sig;
+      loadInFlightSignature = null;
       if (worker.onmessage === handler) worker.onmessage = null;
     }
   };
   worker.onmessage = handler;
 
+  loadInFlightSignature = sig;
   worker.postMessage({
     type: "LOAD_DATA",
     stationGraph: input.stationGraph,
@@ -111,6 +125,7 @@ export function computeHexGrid(
       if (data.type === "data_loaded") {
         dataLoaded = true;
         loadedDataSignature = sig;
+        loadInFlightSignature = null;
         // Data loaded — now send the COMPUTE message
         worker.postMessage({
           type: "COMPUTE",
@@ -160,8 +175,14 @@ export function computeHexGrid(
       loadedDataSignature = "";
     };
 
-    if (needsLoad) {
+    if (needsLoad && loadInFlightSignature === sig) {
+      // A warmup LOAD_DATA with the same data is already being processed by
+      // the worker — re-sending it would rebuild the indexes and emit a
+      // second data_loaded, which would dispatch COMPUTE twice. Our onmessage
+      // (installed above) reacts to the in-flight load's data_loaded instead.
+    } else if (needsLoad) {
       // Send LOAD_DATA first — worker will build spatial indexes
+      loadInFlightSignature = sig;
       worker.postMessage({
         type: "LOAD_DATA",
         stationGraph: input.stationGraph,

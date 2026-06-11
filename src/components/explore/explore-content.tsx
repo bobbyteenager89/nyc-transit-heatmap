@@ -174,6 +174,7 @@ export default function ExplorePage() {
     computing,
     expanding,
     computeProgress,
+    computeError,
     runCompute: runComputeRaw,
   } = useDynamicGridCompute({
     stationGraph,
@@ -1005,6 +1006,16 @@ export default function ExplorePage() {
             <span className="font-display italic uppercase text-2xl text-accent animate-pulse">
               Computing… {computeProgress}%
             </span>
+          </div>
+        )}
+
+        {/* Compute failed (timeout / worker death) — without this the overlay
+            just vanishes and the map sits empty with no explanation. */}
+        {computeError && !computing && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface-card/95 border border-red-400/40 backdrop-blur-md shadow-lg">
+              <span className="font-body text-xs text-red-300">{computeError}</span>
+            </div>
           </div>
         )}
 
