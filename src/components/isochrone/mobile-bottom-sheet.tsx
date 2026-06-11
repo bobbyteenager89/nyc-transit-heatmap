@@ -21,7 +21,7 @@ export function MobileBottomSheet({ open, onClose, children }: MobileBottomSheet
           <div className="w-10 h-1 bg-white/20 rounded-full" />
           <button
             onClick={onClose}
-            className="absolute right-4 text-white/40 hover:text-white text-2xl leading-none"
+            className="absolute right-2 top-0 w-11 h-11 flex items-center justify-center text-white/40 hover:text-white text-2xl leading-none"
             aria-label="Close menu"
           >
             ×

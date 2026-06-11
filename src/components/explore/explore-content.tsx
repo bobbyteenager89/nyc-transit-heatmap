@@ -515,6 +515,106 @@ export default function ExplorePage() {
     [origin]
   );
 
+  // Shared between desktop sidebar and mobile bottom sheet.
+  const geoLocationButton = (
+    <>
+      <button
+        onClick={handleUseMyLocation}
+        disabled={geoLoading || !dataReady}
+        style={{
+          fontFamily: "var(--font-data)",
+          fontSize: 11,
+          letterSpacing: "0.08em",
+          color: geoLoading ? "rgba(255,255,255,0.30)" : "rgba(34,211,238,0.80)",
+          background: "transparent",
+          border: "none",
+          padding: "8px 0",
+          cursor: geoLoading ? "default" : "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 5,
+        }}
+      >
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
+          <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.2" />
+          <circle cx="5.5" cy="5.5" r="1.5" fill="currentColor" />
+          <line x1="5.5" y1="0" x2="5.5" y2="2" stroke="currentColor" strokeWidth="1.2" />
+          <line x1="5.5" y1="9" x2="5.5" y2="11" stroke="currentColor" strokeWidth="1.2" />
+          <line x1="0" y1="5.5" x2="2" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
+          <line x1="9" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
+        </svg>
+        {geoLoading ? "Locating…" : "Use my location"}
+      </button>
+      {geoError && (
+        <p style={{ fontFamily: "var(--font-data)", fontSize: 11, color: "rgba(255,100,100,0.80)", marginTop: 2 }}>
+          {geoError}
+        </p>
+      )}
+    </>
+  );
+
+  const modeDescription = (
+    <p
+      className="px-1"
+      style={{
+        fontFamily: "var(--font-ui)",
+        fontSize: 12,
+        color: "rgba(255,255,255,0.40)",
+        lineHeight: 1.5,
+      }}
+    >
+      {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
+      {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
+      {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
+    </p>
+  );
+
+  const meetPanels = (
+    <>
+      {exploreMode === "meet" && (
+        <PanelSection title="Friend's Location">
+          <FriendInput
+            onSelect={handleFriendSelect}
+            onRemove={removeFriend}
+            initialValue={friendAddress}
+            hasResult={friendOrigin !== null}
+          />
+          {friendComputing && (
+            <p className="font-body text-xs text-accent animate-pulse mt-1">Computing friend&apos;s reach…</p>
+          )}
+          {friendCells.length > 0 && (
+            <div className="mt-2">
+              <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
+            </div>
+          )}
+        </PanelSection>
+      )}
+
+      {exploreMode === "meet" && cells.length > 0 && friendCells.length > 0 && (
+        <PanelSection title="Meetup">
+          <MeetupSummary
+            cellsA={cells}
+            cellsB={friendCells}
+            activeModes={activeModes}
+            maxMinutes={maxMinutes}
+            onShare={handleShareMeetup}
+            copied={meetupCopied}
+          />
+        </PanelSection>
+      )}
+    </>
+  );
+
+  const livePanel = exploreMode === "live" && origin && !computing && cells.length > 0 && (
+    <PanelSection title="Your Destinations">
+      <DestinationInput
+        destinations={destinations}
+        onAdd={addDestination}
+        onRemove={removeDestination}
+      />
+    </PanelSection>
+  );
+
   const sidebarControls = (
     <>
       {/* Header + Mode Tabs */}
@@ -548,20 +648,7 @@ export default function ExplorePage() {
 
       <ModeTabs active={exploreMode} onChange={setExploreMode} />
 
-      {/* Mode description */}
-      <p
-        className="px-1"
-        style={{
-          fontFamily: "var(--font-ui)",
-          fontSize: 12,
-          color: "rgba(255,255,255,0.40)",
-          lineHeight: 1.5,
-        }}
-      >
-        {exploreMode === "reach" && "Drop a pin or enter an address to see how far you can travel."}
-        {exploreMode === "live" && "Add your regular destinations to find the best neighborhood to live in."}
-        {exploreMode === "meet" && "Enter two addresses to find the fairest meeting spot."}
-      </p>
+      {modeDescription}
 
       {/* Shared: Address input */}
       <PanelSection title={exploreMode === "meet" ? "Your Location" : "Location"}>
@@ -572,38 +659,7 @@ export default function ExplorePage() {
           initialValue={originAddress}
           autoFocus
         />
-        <button
-          onClick={handleUseMyLocation}
-          disabled={geoLoading || !dataReady}
-          style={{
-            fontFamily: "var(--font-data)",
-            fontSize: 11,
-            letterSpacing: "0.08em",
-            color: geoLoading ? "rgba(255,255,255,0.30)" : "rgba(34,211,238,0.80)",
-            background: "transparent",
-            border: "none",
-            padding: "2px 0",
-            cursor: geoLoading ? "default" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 5,
-          }}
-        >
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
-            <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.2" />
-            <circle cx="5.5" cy="5.5" r="1.5" fill="currentColor" />
-            <line x1="5.5" y1="0" x2="5.5" y2="2" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="5.5" y1="9" x2="5.5" y2="11" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="0" y1="5.5" x2="2" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="9" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" />
-          </svg>
-          {geoLoading ? "Locating…" : "Use my location"}
-        </button>
-        {geoError && (
-          <p style={{ fontFamily: "var(--font-data)", fontSize: 11, color: "rgba(255,100,100,0.80)", marginTop: 2 }}>
-            {geoError}
-          </p>
-        )}
+        {geoLocationButton}
         {!dataReady && (
           <p className="font-body text-xs text-white/40 animate-pulse">
             Loading transit data…
@@ -611,50 +667,9 @@ export default function ExplorePage() {
         )}
       </PanelSection>
 
-      {/* MEET mode: Friend input right after your location */}
-      {exploreMode === "meet" && (
-        <PanelSection title="Friend's Location">
-          <FriendInput
-            onSelect={handleFriendSelect}
-            onRemove={removeFriend}
-            initialValue={friendAddress}
-            hasResult={friendOrigin !== null}
-          />
-          {friendComputing && (
-            <p className="font-body text-xs text-accent animate-pulse mt-1">Computing friend&apos;s reach…</p>
-          )}
-          {friendCells.length > 0 && (
-            <div className="mt-2">
-              <FairnessSlider value={fairnessRange} onChange={setFairnessRange} />
-            </div>
-          )}
-        </PanelSection>
-      )}
-
-      {/* MEET mode: Overlap summary + share button */}
-      {exploreMode === "meet" && cells.length > 0 && friendCells.length > 0 && (
-        <PanelSection title="Meetup">
-          <MeetupSummary
-            cellsA={cells}
-            cellsB={friendCells}
-            activeModes={activeModes}
-            maxMinutes={maxMinutes}
-            onShare={handleShareMeetup}
-            copied={meetupCopied}
-          />
-        </PanelSection>
-      )}
-
-      {/* LIVE mode: Destinations */}
-      {exploreMode === "live" && origin && !computing && cells.length > 0 && (
-        <PanelSection title="Your Destinations">
-          <DestinationInput
-            destinations={destinations}
-            onAdd={addDestination}
-            onRemove={removeDestination}
-          />
-        </PanelSection>
-      )}
+      {/* MEET mode: friend input + overlap summary. LIVE mode: destinations. */}
+      {meetPanels}
+      {livePanel}
 
       {/* Shared: Time slider + play */}
       <PanelSection>
@@ -861,7 +876,11 @@ export default function ExplorePage() {
 
   const mobileMenuContent = (
     <>
-      <PanelSection title="Location">
+      <ModeTabs active={exploreMode} onChange={setExploreMode} />
+
+      {modeDescription}
+
+      <PanelSection title={exploreMode === "meet" ? "Your Location" : "Location"}>
         <AddressAutocomplete
           label="Address"
           placeholder="Start typing an address…"
@@ -869,12 +888,16 @@ export default function ExplorePage() {
           initialValue={originAddress}
           autoFocus={false}
         />
+        {geoLocationButton}
         {!dataReady && (
           <p className="font-body text-xs text-white/40 animate-pulse">
             Loading transit data…
           </p>
         )}
       </PanelSection>
+
+      {meetPanels}
+      {livePanel}
 
       <PanelSection>
         <div className="flex items-center gap-2">
@@ -904,7 +927,7 @@ export default function ExplorePage() {
               key={mode}
               type="button"
               onClick={() => setStreetMode(mode)}
-              className={`flex-1 py-1.5 rounded text-[11px] font-body capitalize transition-colors ${
+              className={`flex-1 py-1.5 min-h-11 rounded text-[11px] font-body capitalize transition-colors ${
                 streetMode === mode
                   ? "bg-accent/25 text-accent border border-accent/60"
                   : "text-white/60 border border-white/10 hover:bg-white/10"
@@ -1046,7 +1069,7 @@ export default function ExplorePage() {
         <button
           type="button"
           onClick={() => setShowHowItWorks(true)}
-          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-surface-card/90 border border-white/15 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-accent hover:border-accent/50 transition-colors"
+          className="absolute top-4 right-4 z-30 w-11 h-11 rounded-full bg-surface-card/90 border border-white/15 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-accent hover:border-accent/50 transition-colors"
           aria-label="How it works"
         >
           <span className="font-display italic text-sm">?</span>
@@ -1058,15 +1081,18 @@ export default function ExplorePage() {
             onClick={() => setShowHowItWorks(false)}
           >
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="how-it-works-title"
               className="max-w-md w-full bg-surface-card border border-white/15 rounded-xl p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between mb-4">
-                <h2 className="font-display italic uppercase text-xl text-white">How it works</h2>
+                <h2 id="how-it-works-title" className="font-display italic uppercase text-xl text-white">How it works</h2>
                 <button
                   type="button"
                   onClick={() => setShowHowItWorks(false)}
-                  className="text-white/40 hover:text-white text-xl leading-none"
+                  className="-mt-2 -mr-2 w-11 h-11 flex items-center justify-center text-white/40 hover:text-white text-xl leading-none"
                   aria-label="Close"
                 >
                   ×
@@ -1076,7 +1102,7 @@ export default function ExplorePage() {
                 <div>
                   <p className="font-display italic uppercase text-xs text-accent mb-1">Your reach</p>
                   <p>
-                    The default view shows the <span className="text-white">fastest</span> way to get
+                    The default view shows the <span className="text-white">fastest</span>{" "}way to get
                     anywhere — walk, subway, bus, ferry, and Citi Bike are blended together. Toggle car
                     on if that&apos;s an option for you.
                   </p>
