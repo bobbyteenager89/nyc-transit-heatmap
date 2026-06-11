@@ -49,10 +49,12 @@ describe("computePrideStats", () => {
     expect(computePrideStats([cellAt(a, 5), cellAt(a, 6)], ["subway"], 30, tables, new Map()).population).toBe(5000);
   });
 
-  it("collects distinct, sorted subway lines from reachable stations", () => {
+  it("collects distinct, sorted subway lines from walk-reachable stations", () => {
     const res10 = latLngToCell(40.73, -73.99, 10);
     const stationLineIndex = new Map<string, string[]>([[res10, ["F", "M", "F"]]]);
-    const stats = computePrideStats([cellAt(res10, 12)], ["subway"], 30, emptyTables, stationLineIndex);
+    const cell = cellAt(res10, 12);
+    cell.times.walk = 10; // within 15-min walk cutoff
+    const stats = computePrideStats([cell], ["subway"], 30, emptyTables, stationLineIndex);
     expect(stats.lines).toEqual(["F", "M"]);
   });
 
@@ -72,11 +74,20 @@ describe("computePrideStats", () => {
     expect(fast).toEqual(inline);
   });
 
-  it("omits lines when subway is not an active mode", () => {
+  it("includes lines walkable in 15 min regardless of active modes", () => {
     const res10 = latLngToCell(40.73, -73.99, 10);
     const stationLineIndex = new Map<string, string[]>([[res10, ["F", "M"]]]);
     const cell = cellAt(res10, null);
-    cell.times.walk = 5;
+    cell.times.walk = 5; // within 15-min walk cutoff
+    const stats = computePrideStats([cell], ["walk"], 30, emptyTables, stationLineIndex);
+    expect(stats.lines).toEqual(["F", "M"]);
+  });
+
+  it("omits lines when walk time exceeds 15-min cutoff", () => {
+    const res10 = latLngToCell(40.73, -73.99, 10);
+    const stationLineIndex = new Map<string, string[]>([[res10, ["F", "M"]]]);
+    const cell = cellAt(res10, null);
+    cell.times.walk = 20; // beyond 15-min walk cutoff
     const stats = computePrideStats([cell], ["walk"], 30, emptyTables, stationLineIndex);
     expect(stats.lines).toEqual([]);
   });

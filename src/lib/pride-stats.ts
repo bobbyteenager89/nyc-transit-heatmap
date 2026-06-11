@@ -49,6 +49,8 @@ export function precomputeCellParents(cells: HexCell[]): string[] {
  *   When provided, skips the per-tick `cellToParent` calls — pass this on the
  *   hot path. Falls back to computing inline when omitted (e.g. in tests).
  */
+const WALK_LINES_CUTOFF = 15;
+
 export function computePrideStats(
   cells: HexCell[],
   activeModes: TransportMode[],
@@ -58,8 +60,7 @@ export function computePrideStats(
   cellParents?: string[],
 ): PrideStats {
   const reachableParents = new Set<string>();
-  const subwayReachableRes10 = new Set<string>();
-  const subwayActive = activeModes.includes("subway");
+  const walkReachableRes10 = new Set<string>();
 
   for (let i = 0; i < cells.length; i++) {
     const c = cells[i];
@@ -70,10 +71,12 @@ export function computePrideStats(
         break;
       }
     }
-    if (!reachable) continue;
-    reachableParents.add(cellParents ? cellParents[i] : cellToParent(c.h3Index, PRIDE_RES));
-    if (subwayActive && isReachable(c.times.subway, maxMinutes)) {
-      subwayReachableRes10.add(c.h3Index);
+    if (reachable) {
+      reachableParents.add(cellParents ? cellParents[i] : cellToParent(c.h3Index, PRIDE_RES));
+    }
+    // Walk-reachable lines: always computed, independent of active modes + slider
+    if (isReachable(c.times.walk, WALK_LINES_CUTOFF)) {
+      walkReachableRes10.add(c.h3Index);
     }
   }
 
@@ -95,11 +98,9 @@ export function computePrideStats(
   }
 
   const lines: string[] = [];
-  if (subwayActive) {
-    for (const h3 of subwayReachableRes10) {
-      const ls = stationLineIndex.get(h3);
-      if (ls) lines.push(...ls);
-    }
+  for (const h3 of walkReachableRes10) {
+    const ls = stationLineIndex.get(h3);
+    if (ls) lines.push(...ls);
   }
 
   return {

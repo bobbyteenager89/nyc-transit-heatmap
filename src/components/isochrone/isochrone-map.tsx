@@ -51,7 +51,6 @@ interface IsochroneMapProps {
   streetMode: StreetMode;
   onStreetModeChange: (mode: StreetMode) => void;
   onMapClick?: (location: LatLng) => void;
-  onStationClick?: (station: { name: string; lat: number; lng: number }) => void;
   friendOrigin?: LatLng | null;
   friendCells?: HexCell[];
   fairnessRange?: number;
@@ -189,7 +188,6 @@ function IsochroneMapInner({
   streetMode,
   onStreetModeChange,
   onMapClick,
-  onStationClick,
   friendOrigin,
   friendCells = [],
   fairnessRange = 5,
@@ -381,6 +379,18 @@ function IsochroneMapInner({
         },
       }, firstSymbol);
 
+      // --- Global map darkening layer — sits between base tiles and hex fill so
+      // isochrone colors pop without darkening the hexes themselves ---
+      m.addSource("map-darken", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          geometry: { type: "Polygon", coordinates: [[[-80, 38], [-80, 43], [-70, 43], [-70, 38], [-80, 38]]] },
+          properties: {},
+        },
+      });
+      m.addLayer({ id: "map-darken-fill", type: "fill", source: "map-darken", paint: { "fill-color": "#000000", "fill-opacity": 0.38 } });
+
       // --- Hex fill source — added after street layers so hexes render above streets ---
       m.addSource("iso-hexes", {
         type: "geojson",
@@ -431,17 +441,6 @@ function IsochroneMapInner({
         }, firstSymbol);
       } catch (err) { console.warn("[IsochroneMap] waterway-mask layer unavailable", err); }
 
-      // Parks
-      try {
-        m.addLayer({
-          id: "park-overlay",
-          type: "fill",
-          source: "composite",
-          "source-layer": "landuse",
-          filter: ["in", "class", "park", "cemetery", "pitch"],
-          paint: { "fill-color": "#0d2818", "fill-opacity": 0.7 },
-        }, firstSymbol);
-      } catch (err) { console.warn("[IsochroneMap] park-overlay layer unavailable", err); }
 
       // Neighborhood lines — on top of everything
       try {
@@ -922,7 +921,7 @@ function IsochroneMapInner({
     };
   }, [streetMode, cells, activeModes, viewMode, mapReady]);
 
-  useSubwayStations(mapRef, mapReady, onStationClick);
+  useSubwayStations(mapRef, mapReady);
 
   useFairnessLayer({
     mapRef,

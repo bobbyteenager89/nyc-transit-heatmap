@@ -16,14 +16,7 @@ import { MTA_LINE_COLORS } from "@/components/isochrone/isochrone-map";
 export function useSubwayStations(
   mapRef: React.RefObject<mapboxgl.Map | null>,
   mapReady: boolean,
-  onStationClick?: (station: { name: string; lat: number; lng: number }) => void
 ) {
-  // Ref so the click handler always sees the latest callback without
-  // re-registering layers on every parent re-render.
-  const onStationClickRef = React.useRef(onStationClick);
-  React.useEffect(() => {
-    onStationClickRef.current = onStationClick;
-  }, [onStationClick]);
 
   useEffect(() => {
     const m = mapRef.current;
@@ -63,10 +56,10 @@ export function useSubwayStations(
           paint: {
             "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.5, 14, 5],
             "circle-color": ["get", "lineColor"],
-            "circle-opacity": 0.5,
+            "circle-opacity": 0.18,
             "circle-stroke-width": 0.5,
             "circle-stroke-color": "#ffffff",
-            "circle-stroke-opacity": 0.2,
+            "circle-stroke-opacity": 0.08,
           },
         });
 
@@ -87,22 +80,12 @@ export function useSubwayStations(
 
         m.on("mousemove", "subway-stations-circle", (e) => {
           if (!e.features?.[0]) return;
-          m.getCanvas().style.cursor = "pointer";
           const hoveredName = e.features[0].properties!.name as string;
           m.setFilter("subway-stations-hover", ["==", ["get", "name"], hoveredName]);
         });
 
         m.on("mouseleave", "subway-stations-circle", () => {
-          m.getCanvas().style.cursor = "";
           m.setFilter("subway-stations-hover", ["==", ["get", "name"], ""]);
-        });
-
-        m.on("click", "subway-stations-circle", (e) => {
-          const f = e.features?.[0];
-          if (!f) return;
-          const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
-          const name = f.properties!.name as string;
-          onStationClickRef.current?.({ name, lat, lng });
         });
       })
       .catch(() => {

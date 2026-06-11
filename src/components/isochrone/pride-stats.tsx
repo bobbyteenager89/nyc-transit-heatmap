@@ -77,7 +77,7 @@ export function PrideStats({ stats, maxMinutes }: PrideStatsProps) {
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            {stats.lines.length} SUBWAY LINES
+            {stats.lines.length} LINES · 15 MIN WALK
           </span>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {stats.lines.map((l) => (

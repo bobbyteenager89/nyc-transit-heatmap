@@ -335,17 +335,6 @@ export default function ExplorePage() {
     [runCompute, updateURL, maxMinutes, activeModes]
   );
 
-  const handleStationClick = useCallback(
-    (station: { name: string; lat: number; lng: number }) => {
-      const loc = { lat: station.lat, lng: station.lng };
-      setOrigin(loc);
-      setOriginAddress(station.name);
-      runCompute(loc);
-      updateURL(loc, maxMinutes, activeModes, station.name);
-    },
-    [runCompute, updateURL, maxMinutes, activeModes]
-  );
-
   const handleQuickStart = useCallback(
     (name: string, lat: number, lng: number) => {
       const latlng = { lat, lng };
@@ -562,10 +551,20 @@ export default function ExplorePage() {
     }
     const q = qp.toString();
     const label = originAddress || "this spot";
+    const statLine = prideStats
+      ? [
+          prideStats.population ? `${(prideStats.population / 1000).toFixed(0)}k people` : null,
+          prideStats.restaurants ? `${prideStats.restaurants} restaurants` : null,
+          prideStats.bars ? `${prideStats.bars} bars` : null,
+        ].filter(Boolean).join(", ")
+      : null;
+    const shareText = statLine
+      ? `${label} in ${maxMinutes} min: ${statLine}. What's your reach?\n\n`
+      : `${maxMinutes}-minute reach from ${label} by transit. What's yours?\n\n`;
     return {
       url: `/p/${slug}${q ? `?${q}` : ""}`,
-      title: `${maxMinutes}-minute reach from ${label}`,
-      text: `See how far you can go in ${maxMinutes} minutes by ${activeModes.join(", ")} from ${label}.`,
+      title: `${maxMinutes}-min transit reach from ${label}`,
+      text: shareText,
     };
   }, [origin, maxMinutes, activeModes, originAddress, prideStats]);
 
@@ -1229,7 +1228,6 @@ export default function ExplorePage() {
           streetMode={streetMode}
           onStreetModeChange={setStreetMode}
           onMapClick={handleMapClick}
-          onStationClick={handleStationClick}
           friendOrigin={friendOrigin}
           viewMode={viewMode}
           reachBounds={reachBounds}
