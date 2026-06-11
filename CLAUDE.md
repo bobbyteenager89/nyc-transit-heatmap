@@ -74,6 +74,10 @@ Grid-worker chunks via `setTimeout(processChunk, 0)`. Browsers throttle timers i
 ### Silent Promise Rejection: No Error State = Blank Map, No Feedback
 When compute hangs/times out, promise rejected but hook only `console.error()`'d. No `computeError` state, so UI showed blank map + working sidebar with zero indication of failure. User sees no error, refreshes, loops. **Fix:** Add `computeError: string | null` state, set it in catch block (exclude "cancelled" noise), clear on new compute, render a banner. See `.claude/compound-docs/2026-06-11-silent-promise-rejection.md`.
 
+### Census CenPop2020_Mean_BG.txt: Block-Group Population, No API Key
+URL: `https://www2.census.gov/geo/docs/reference/cenpop2020/blkgrp/CenPop2020_Mean_BG.txt`
+Tab-delimited: STATEFP, COUNTYFP, TRACTCE, BLKGRPCE, POPULATION, LATITUDE, LONGITUDE. Filter to NY state (STATEFP="36"), bin `(LATITUDE, LONGITUDE)` to an h3 cell with `latLngToCell`, sum POPULATION per cell. No Census API key needed. Used in `scripts/build-pride-data.ts` to generate `public/data/pride-population.json` at res-9. 8.8M total pop, 3,918 res-9 cells in NYC metro.
+
 ### innerText vs textContent: text-transform CSS Hides Search Keywords
 `innerText` respects CSS, so `text-transform: uppercase` on "Your Reach" means `innerText` returns "YOUR REACH". Search/grep for the visible text, not the DOM text. Affects Puppeteer + fuzzy-find tools.
 
