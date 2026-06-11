@@ -43,7 +43,7 @@ export function ModeTabs({ active, onChange }: ModeTabsProps) {
             marginBottom: -1,
             cursor: "pointer",
             transition: "color 0.15s",
-            minHeight: 40,
+            minHeight: 44,
           }}
         >
           {label}

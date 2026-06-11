@@ -26,7 +26,7 @@ export function MobileResultCard({
         </div>
         <button
           onClick={onMenuOpen}
-          className="flex-shrink-0 w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+          className="flex-shrink-0 w-11 h-11 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
           aria-label="Open settings"
         >
           <svg width="14" height="12" viewBox="0 0 14 12" fill="currentColor" aria-hidden="true">

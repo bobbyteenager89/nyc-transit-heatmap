@@ -31,6 +31,15 @@ export function AddressAutocomplete({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reflect addresses set outside this input (map click, quick-start,
+  // geolocation, reverse geocode) — but never clobber active typing.
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) {
+      setQuery(initialValue);
+    }
+  }, [initialValue]);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
   const NYC_BBOX = "-74.04,40.63,-73.87,40.83";
@@ -124,8 +133,19 @@ export function AddressAutocomplete({
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-2">
-      <label className="font-bold uppercase text-xs tracking-widest">{label}</label>
+      <label
+        style={{
+          fontFamily: "var(--font-data)",
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.46)",
+        }}
+      >
+        {label}
+      </label>
       <input
+        ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => handleChange(e.target.value)}

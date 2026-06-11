@@ -93,6 +93,7 @@ export interface DynamicGridCompute {
   computing: boolean;
   expanding: boolean;
   computeProgress: number;
+  computeError: string | null;
   runCompute: (loc: LatLng) => Promise<void>;
 }
 
@@ -122,6 +123,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
   const [computing, setComputing] = useState(false);
   const [expanding, setExpanding] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
+  const [computeError, setComputeError] = useState<string | null>(null);
   const lastProgressRef = useRef(0);
 
   // Worker fires ~30 progress messages per compute pass (chunk size 5000 of
@@ -140,6 +142,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
       if (!stationGraph || !stationMatrix || !citiBikeData || !ferryData || !busData) return;
 
       setComputing(true);
+      setComputeError(null);
       lastProgressRef.current = 0;
       setComputeProgress(0);
       setGridBounds(CORE_NYC_BOUNDS);
@@ -202,6 +205,12 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
         }
       } catch (err) {
         console.error("Compute failed:", err);
+        // "Cancelled" rejections mean a newer compute superseded this one —
+        // not an error the user should see.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!msg.includes("cancelled")) {
+          setComputeError("Computation didn't finish — tap your location again to retry.");
+        }
       } finally {
         setComputing(false);
       }
@@ -220,6 +229,7 @@ export function useDynamicGridCompute(args: UseDynamicGridComputeArgs): DynamicG
     computing,
     expanding,
     computeProgress,
+    computeError,
     runCompute,
   };
 }

@@ -47,7 +47,7 @@ export function ModeLegend({ activeModes, onToggle, showAdvanced = false }: Mode
                 : "transparent",
               cursor: locked ? "default" : "pointer",
               transition: "border-color 0.15s, background 0.15s",
-              minHeight: 36,
+              minHeight: 44,
             }}
           >
             {/* Colored square dot */}
