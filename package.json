@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:pride": "npx tsx scripts/build-pride-data.ts"
   },
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^5.1.2",
