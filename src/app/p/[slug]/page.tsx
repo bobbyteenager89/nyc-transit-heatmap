@@ -3,10 +3,18 @@ import type { Metadata } from "next";
 import { decodeShareSlug } from "@/lib/share-slug";
 import { RecipientCTA } from "./recipient-cta";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// Pride-stat params travel as query string alongside the slug (the slug binary
+// format stays untouched). Forwarded verbatim to the OG route, which renders them.
+const STAT_KEYS = ["pop", "rest", "cafe", "bar", "park", "lines"] as const;
+
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const sp = await searchParams;
   const p = decodeShareSlug(slug);
   if (!p) return { title: "Isochrone NYC" };
 
@@ -17,6 +25,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     m: p.m.join(","),
     ...(p.address ? { address: p.address } : {}),
   });
+  for (const k of STAT_KEYS) {
+    const v = sp[k];
+    if (typeof v === "string" && v) ogParams.set(k, v);
+  }
   const ogUrl = `/api/og?${ogParams.toString()}`;
 
   const title = p.address
