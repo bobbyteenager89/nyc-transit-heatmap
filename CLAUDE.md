@@ -62,3 +62,17 @@
 ## Environment
 - Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local`
 - GTFS data in `data/gtfs/` (gitignored, run `scripts/download-gtfs.sh` to fetch)
+
+## Gotchas
+
+### Web Worker Race: requestIdleCallback Warmup Overwrites Compute Handler
+**S37 regression, fixed:** `warmGridWorker()` deferred via `requestIdleCallback` to avoid INP on mount. On share-link loads, `computeHexGrid()` fired first; the idle callback then overwrote `worker.onmessage`, swallowing the `data_loaded` ack. COMPUTE was never dispatched, promise hung 60s until watchdog killed the worker. **Fix:** Check `if (pendingReject)` in warmup (meaning a compute owns the handler), return early. Also check if warmup's LOAD_DATA is already in flight via `loadInFlightSignature`. See `.claude/compound-docs/2026-06-11-worker-onmessage-race-condition.md`.
+
+### Worker Timer Throttling: setTimeout(0) Stalls in Background & Headless
+Grid-worker chunks via `setTimeout(processChunk, 0)`. Browsers throttle timers in hidden pages to 1/sec (battery saving), causing computes to stall visible in backgrounded tabs. Headless Chrome (`--headless=new`) is treated as hidden. **Fix:** Use `MessageChannel` port messages instead—they're exempt from timer throttling and work at full speed even in headless. See `.claude/compound-docs/2026-06-11-worker-timer-throttling.md`.
+
+### Silent Promise Rejection: No Error State = Blank Map, No Feedback
+When compute hangs/times out, promise rejected but hook only `console.error()`'d. No `computeError` state, so UI showed blank map + working sidebar with zero indication of failure. User sees no error, refreshes, loops. **Fix:** Add `computeError: string | null` state, set it in catch block (exclude "cancelled" noise), clear on new compute, render a banner. See `.claude/compound-docs/2026-06-11-silent-promise-rejection.md`.
+
+### innerText vs textContent: text-transform CSS Hides Search Keywords
+`innerText` respects CSS, so `text-transform: uppercase` on "Your Reach" means `innerText` returns "YOUR REACH". Search/grep for the visible text, not the DOM text. Affects Puppeteer + fuzzy-find tools.
