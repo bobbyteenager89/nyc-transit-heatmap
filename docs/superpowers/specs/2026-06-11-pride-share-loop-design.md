@@ -29,9 +29,24 @@ Subway lines are the only **listed** stat (named bullets); the rest are counts.
 
 ## Architecture
 
-**Approach 1 — build-time per-hex aggregation + runtime sum in the worker.**
+**Approach 1 — build-time per-hex aggregation + runtime sum, CLIENT-SIDE.**
 Chosen over runtime spatial-join (heavy payload, INP cost) and edge-API recompute
 (round-trip + re-derives what the client already has).
+
+**Refinements during planning (supersede the worker/res-10 notes below):**
+- **Computed client-side, not in the worker.** The time slider re-filters existing
+  cells client-side with no recompute; `ReachStats` already `useMemo`s over
+  `(cells, maxMinutes)`. Pride stats do the same so they react to the slider
+  instantly — and we avoid touching the fragile worker race code entirely.
+- **Tables keyed at res-9, not res-10.** Derive the reachable res-9 parent set from
+  the res-10 cells (`cellToParent(h3, 9)` into a `Set`), then sum/union over it.
+  Keeps tables small (~10–15k NYC cells) and JSON parse cheap. Load tables lazily
+  via `requestIdleCallback` off the INP critical path.
+- **Population source: Census Centers of Population (no API key).**
+  `CenPop2020_Mean_BG.txt` — block-group population-weighted centroid + population.
+  Bin each BG centroid to its res-9 cell; sum populations. Verified: 5 NYC counties
+  = 8,804,190 (matches 2020 decennial). Avoids the Census API key (1-way door) and
+  all geometry/polyfill work.
 
 ### Build-time (new `scripts/build-pride-data.ts`, wired into `build:subway` or its own `build:pride`)
 
