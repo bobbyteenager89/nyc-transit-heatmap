@@ -17,12 +17,23 @@ export const LINE_COLORS: Record<string, string> = {
 // MTA bullet display order.
 const ORDER = "ABCDEFGJLMNQRWZ1234567S".split("");
 
+// Collapse GTFS express/shuttle route_ids to the line a rider recognizes:
+// "6X"→"6", "FX"→"F", "7X"→"7"; the named shuttles (GS Grand Central,
+// FS Franklin Ave, H Rockaway) all show as "S".
+export function normalizeLine(line: string): string {
+  if (line === "GS" || line === "FS" || line === "H" || line === "S") return "S";
+  if (line.length === 2 && line.endsWith("X")) return line[0];
+  return line;
+}
+
 export function sortLines(lines: string[]): string[] {
   const rank = (l: string) => {
     const i = ORDER.indexOf(l[0]);
     return i === -1 ? 99 : i;
   };
-  return [...new Set(lines)].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+  return [...new Set(lines.map(normalizeLine))].sort(
+    (a, b) => rank(a) - rank(b) || a.localeCompare(b)
+  );
 }
 
 // Yellow (N/Q/R/W) and light-gray (L) bullets need dark text for contrast.
