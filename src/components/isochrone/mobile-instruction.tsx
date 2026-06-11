@@ -32,7 +32,7 @@ export function MobileInstruction({ onQuickStart }: MobileInstructionProps) {
             <button
               key={loc.name}
               onClick={() => onQuickStart(loc.name, loc.lat, loc.lng)}
-              className="px-3 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-body hover:bg-accent/20 transition-colors"
+              className="px-4 py-2.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-body hover:bg-accent/20 transition-colors"
             >
               {loc.name}
             </button>

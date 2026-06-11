@@ -38,7 +38,8 @@ export async function GET(req: NextRequest) {
   if (!mapboxToken) {
     return new Response("Missing Mapbox token", { status: 500 });
   }
-  const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${safeLng},${safeLat},12,0/1200x630@2x?access_token=${mapboxToken}`;
+  const pin = `pin-l+22d3ee(${safeLng},${safeLat})`;
+  const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${pin}/${safeLng},${safeLat},12,0/1200x630@2x?access_token=${mapboxToken}`;
 
   return new ImageResponse(
     (
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
             left: 0,
             width: 1200,
             height: 630,
-            opacity: 0.4,
+            opacity: 0.85,
           }}
         />
 
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
             right: 0,
             bottom: 0,
             background:
-              "linear-gradient(to bottom, rgba(18,19,26,0.3) 0%, rgba(18,19,26,0.9) 100%)",
+              "linear-gradient(to bottom, rgba(18,19,26,0.15) 0%, rgba(18,19,26,0.7) 100%)",
             display: "flex",
           }}
         />

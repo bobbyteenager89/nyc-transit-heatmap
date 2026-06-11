@@ -447,6 +447,27 @@ function loadData(msg: LoadDataMessage | LegacyMessage) {
   };
 }
 
+// Chunk scheduling via MessageChannel instead of setTimeout: browsers throttle
+// timers in workers of hidden pages (1/s background, 1/min intensive), which
+// stretched a ~10s compute past the 60s watchdog whenever the tab was
+// backgrounded mid-compute — the map silently came back empty. Message tasks
+// are exempt from timer throttling.
+const chunkScheduler = new MessageChannel();
+let scheduledChunk: (() => void) | null = null;
+chunkScheduler.port1.onmessage = () => {
+  const fn = scheduledChunk;
+  scheduledChunk = null;
+  fn?.();
+};
+function scheduleChunk(fn: () => void) {
+  scheduledChunk = fn;
+  chunkScheduler.port2.postMessage(null);
+}
+
+// Increments per COMPUTE so chunks from a superseded compute stop instead of
+// interleaving with (and double-reporting over) the new one.
+let computeGeneration = 0;
+
 function runCompute(
   hexCenters: { h3Index: string; lat: number; lng: number }[],
   origin: LatLng | null,
@@ -458,6 +479,8 @@ function runCompute(
     return;
   }
 
+  const generation = ++computeGeneration;
+
   const { stationGraph, stationMatrix, idxMap, stationGrid, dockGrid, terminalGrid, ferryAdjacency, busStopGrid } = persistentState;
 
   // Clear station-pair cache per compute (origin changes invalidate it)
@@ -468,6 +491,7 @@ function runCompute(
   let processed = 0;
 
   function processChunk() {
+    if (generation !== computeGeneration) return; // superseded by a newer COMPUTE
     const end = Math.min(processed + CHUNK_SIZE, total);
 
     if (destinations.length === 0 && origin) {
@@ -531,7 +555,7 @@ function runCompute(
     self.postMessage({ type: "progress", percent: Math.round((processed / total) * 100) });
 
     if (processed < total) {
-      setTimeout(processChunk, 0);
+      scheduleChunk(processChunk);
     } else {
       self.postMessage({ type: "result", cells });
     }
