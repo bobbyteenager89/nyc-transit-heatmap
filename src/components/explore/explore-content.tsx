@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import type { StreetMode } from "@/components/isochrone/isochrone-map";
@@ -515,6 +515,27 @@ export default function ExplorePage() {
     () => origin ?? { lat: 40.694, lng: -73.99 },
     [origin]
   );
+
+  // Extent of the reachable area — the map auto-fits to this when a compute
+  // finishes, so the whole heatmap is on screen. maxMinutes is read through a
+  // ref on purpose: refitting on every slider tick would fight the user.
+  const maxMinutesRef = useRef(maxMinutes);
+  maxMinutesRef.current = maxMinutes;
+  const reachBounds = useMemo<[[number, number], [number, number]] | null>(() => {
+    if (computing || cells.length === 0) return null;
+    const limit = maxMinutesRef.current;
+    let west = Infinity, south = Infinity, east = -Infinity, north = -Infinity;
+    for (const cell of cells) {
+      if (cell.compositeScore > limit) continue;
+      const { lat, lng } = cell.center;
+      if (lng < west) west = lng;
+      if (lng > east) east = lng;
+      if (lat < south) south = lat;
+      if (lat > north) north = lat;
+    }
+    if (west === Infinity) return null;
+    return [[west, south], [east, north]];
+  }, [computing, cells]);
 
   // Shared between desktop sidebar and mobile bottom sheet.
   const geoLocationButton = (
@@ -1154,6 +1175,7 @@ export default function ExplorePage() {
           onStationClick={handleStationClick}
           friendOrigin={friendOrigin}
           viewMode={viewMode}
+          reachBounds={reachBounds}
         />
       </main>
 

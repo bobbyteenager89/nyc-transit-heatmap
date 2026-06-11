@@ -56,6 +56,9 @@ interface IsochroneMapProps {
   friendCells?: HexCell[];
   fairnessRange?: number;
   viewMode?: ViewMode;
+  /** When set, the camera fits this box (the computed reach extent) so the
+   *  whole heatmap is visible. [[west, south], [east, north]]. */
+  reachBounds?: [[number, number], [number, number]] | null;
 }
 
 /**
@@ -191,6 +194,7 @@ function IsochroneMapInner({
   friendCells = [],
   fairnessRange = 5,
   viewMode = "fastest",
+  reachBounds = null,
 }: IsochroneMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -584,6 +588,20 @@ function IsochroneMapInner({
       m.flyTo({ center: [center.lng, center.lat], zoom: 12, duration: 800 });
     }
   }, [center, mapReady, friendOrigin]);
+
+  // Fit the camera to the computed reach extent so the whole heatmap is
+  // visible after a compute finishes. Fires only when reachBounds changes
+  // (compute completion), never on slider drags or pans.
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !mapReady || !reachBounds) return;
+    m.fitBounds(reachBounds, {
+      // Bottom padding clears the mobile result card; top clears the ? button.
+      padding: { top: 70, bottom: 150, left: 50, right: 50 },
+      duration: 1200,
+      maxZoom: 13,
+    });
+  }, [reachBounds, mapReady]);
 
   // Friend origin marker (amber) — always shows "B" label
   useEffect(() => {
