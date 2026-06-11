@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AddressAutocomplete } from "@/components/shared/address-autocomplete";
 import { IsochroneMap } from "@/components/isochrone/isochrone-map";
 import type { StreetMode } from "@/components/isochrone/isochrone-map";
@@ -10,7 +10,7 @@ import { PanelSection } from "@/components/ui/panel-section";
 import { ReachStats } from "@/components/isochrone/reach-stats";
 import { PrideStats } from "@/components/isochrone/pride-stats";
 import { nearestStopsForAllModes } from "@/lib/reach-stats";
-import { computePrideStats } from "@/lib/pride-stats";
+import { computePrideStats, precomputeCellParents } from "@/lib/pride-stats";
 import { buildStationLineIndex } from "@/lib/pride-data";
 import { usePrideTables } from "@/hooks/use-pride-tables";
 import { PlayButton } from "@/components/isochrone/play-button";
@@ -521,12 +521,20 @@ export default function ExplorePage() {
     () => (stationGraph ? buildStationLineIndex(stationGraph) : new Map<string, string[]>()),
     [stationGraph]
   );
+  // Precompute each cell's res-9 parent ONCE per compute (keyed on cells only).
+  // Keeps the expensive h3 cellToParent calls out of the per-slider-tick path.
+  const cellParents = useMemo(() => precomputeCellParents(cells), [cells]);
+  // Heavy stat passes (this + ReachStats) iterate all ~150k cells. Drive them
+  // off a DEFERRED maxMinutes so a fast slider drag keeps the map + readout
+  // responsive while the stat panels recompute at lower priority (React 19
+  // interrupts the stale pass when the user keeps dragging).
+  const deferredMaxMinutes = useDeferredValue(maxMinutes);
   const prideStats = useMemo(
     () =>
       prideTables && cells.length > 0
-        ? computePrideStats(cells, activeModes, maxMinutes, prideTables, stationLineIndex)
+        ? computePrideStats(cells, activeModes, deferredMaxMinutes, prideTables, stationLineIndex, cellParents)
         : null,
-    [prideTables, cells, activeModes, maxMinutes, stationLineIndex]
+    [prideTables, cells, activeModes, deferredMaxMinutes, stationLineIndex, cellParents]
   );
 
   // Shareable link. The origin is snapped to its res-8 H3 centroid (~460m) so
@@ -931,14 +939,14 @@ export default function ExplorePage() {
             <ReachStats
               cells={cells}
               activeModes={activeModes}
-              maxMinutes={maxMinutes}
+              maxMinutes={deferredMaxMinutes}
               nearestStops={nearestStops}
             />
           </PanelSection>
 
           {prideStats && (
             <PanelSection title="What's Within Reach">
-              <PrideStats stats={prideStats} maxMinutes={maxMinutes} />
+              <PrideStats stats={prideStats} maxMinutes={deferredMaxMinutes} />
             </PanelSection>
           )}
 
@@ -1022,7 +1030,7 @@ export default function ExplorePage() {
         <>
           {prideStats && (
             <PanelSection title="What's Within Reach">
-              <PrideStats stats={prideStats} maxMinutes={maxMinutes} />
+              <PrideStats stats={prideStats} maxMinutes={deferredMaxMinutes} />
             </PanelSection>
           )}
           {shareLink && (

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computePrideStats, type PrideTables } from "./pride-stats";
+import { computePrideStats, precomputeCellParents, type PrideTables } from "./pride-stats";
 import { cellToParent, cellToLatLng, latLngToCell } from "h3-js";
 import type { HexCell, TransportMode } from "./types";
 
@@ -54,6 +54,22 @@ describe("computePrideStats", () => {
     const stationLineIndex = new Map<string, string[]>([[res10, ["F", "M", "F"]]]);
     const stats = computePrideStats([cellAt(res10, 12)], ["subway"], 30, emptyTables, stationLineIndex);
     expect(stats.lines).toEqual(["F", "M"]);
+  });
+
+  it("precomputed cellParents path matches the inline path exactly", () => {
+    const a = latLngToCell(40.73, -73.99, 10);
+    const b = latLngToCell(40.75, -73.97, 10);
+    const tables: PrideTables = {
+      population: { [cellToParent(a, 9)]: 5000, [cellToParent(b, 9)]: 1200 },
+      pois: { [cellToParent(a, 9)]: [40, 8, 6] },
+      parks: { [cellToParent(b, 9)]: [7] },
+    };
+    const cells = [cellAt(a, 10), cellAt(b, 25)];
+    const inline = computePrideStats(cells, ["subway"], 30, tables, new Map());
+    const parents = precomputeCellParents(cells);
+    const fast = computePrideStats(cells, ["subway"], 30, tables, new Map(), parents);
+    expect(parents).toEqual([cellToParent(a, 9), cellToParent(b, 9)]);
+    expect(fast).toEqual(inline);
   });
 
   it("omits lines when subway is not an active mode", () => {
