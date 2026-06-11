@@ -845,3 +845,43 @@ This was a long, multi-phase session driven by live feedback. Eight commits on t
 - Tuned heatmap visuals (opacity 0.55→0.65, hex outlines, vivid ramp, street grid overlay)
 - Full review suite + CEO product review + preflight
 - 9 commits, 34 files, +1917/-291 lines, 62 tests passing
+
+---
+
+## 2026-04-27 — Session 31: Isochrone NYC design system implementation
+
+### Accomplished
+- **Fetched + analyzed Claude Design handoff bundle** — extracted gzip/tar archive from Anthropic API, read README + chat transcript + all JSX source files (`tokens.jsx`, `surface-explore.jsx`, `primitives.jsx`)
+- **Implemented full design system** from `Isochrone NYC.html` into production codebase (8 files changed, 467 insertions)
+- Inter Tight + JetBrains Mono, ModeTabs underline, ModeLegend 2-col, TimeSlider custom drag, ReachStats 3-col bars, PanelSection hairline, Sidebar 360px wordmark
+- Deployed to prod
+
+---
+
+## 2026-04-28 — Session 33: / becomes Explore; opacity fix; /explore redirect
+
+### Accomplished
+- Made `/` the Explore experience; extracted `explore-content.tsx` as client component
+- `/explore` → `/` 308 redirect preserving query params
+- Sitemap collapsed to single canonical route
+
+---
+
+## 2026-05-03 — Session 34: Review + attribution footer + mapbox-gl 3.23
+
+### Accomplished
+- /review clean; attribution footer (MTA/Citi Bike/NYC Open Data/Mapbox/OSM); 5 silent catches → console.warn; mapbox-gl ^3.23; deployed
+
+---
+
+## 2026-05-15 — Session 35: INP fix (warmGridWorker) + route cleanup
+
+### Accomplished
+- INP 8,523ms → ~1,200ms via warmGridWorker pre-spin; deleted /find /rankings /compare routes (6 files)
+
+---
+
+## 2026-05-23 — Session 36: Dead-code purge + ReachStats data completeness
+
+### Accomplished
+- Hard-deleted 2,282 LOC (wizard/results/landing/setup); extracted reach-stats.ts; rewrote reach-stats.tsx with union row, % grid, nearest-stop hints; 20 unit tests; /review clean

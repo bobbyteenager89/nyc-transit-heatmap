@@ -5,189 +5,23 @@
 ---
 
 ## Current State
-**Last session:** 2026-06-11 — S38: Mobile parity + share-link hang root-cause fix (S37 warmup race) + auto-fit camera + marketing assets, all merged & live
+**Last session:** 2026-06-11 — S39: Pride-share loop + Knicks chrome + stats OG card + slider jank perf fix
 **Next:**
-- Brainstorm pride-share loop (population/POI stats card, anonymized dot, share text+link)
-- Knicks brand-chrome mockups (2-3 variants: wordmark/accents/OG in #006BB6/#F58426, time ramp untouched)
-- Re-record demo GIF on prod (now has new mobile sheet + auto-fit reveal)
-- Real-phone QA still outstanding (slider drag, pinch zoom at 375px)
+- Re-record marketing/ assets (stale — predates pride card + Knicks chrome + auto-fit reveal)
+- Real-phone QA still outstanding (375px slider drag, pinch zoom)
+- Optional: T3 CEO review (64d stale)
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
-**Mode:** brainstorm
-**First action:** Invoke brainstorming for the pride-share loop — v1 stats card (population + restaurants + coffee shops within reach), share artifact that provokes counter-shares. Data: census tracts pre-baked at build time (like subway graph), POIs from OSM/Overpass. See memory: transit-heatmap-viral-vision.
+**Mode:** shallow
+**First action:** Ask Andrew what's next — re-recording marketing/ or real-phone QA or new feature
 **Open questions:**
-- Anonymization: snap shared dot to hex center, or fuzz radius? How much?
-- v1 stat set: population + restaurants + coffee shops — what else is brag-worthy (bars, parks, subway lines)?
-- Share artifact: stats baked into the OG card vs separate downloadable card?
-- Knicks chrome: which of the 2-3 mockup variants (decide after seeing them)
+- Re-record demo GIF now that prod has pride card + Knicks chrome + auto-fit reveal?
+- Real-phone QA (375px slider drag, pinch zoom) — any device available?
 **Decisions pending:** none
 **Ready plan:** none
-
----
-
----
-
-## 2026-04-27 — Session 31: Isochrone NYC design system implementation
-
-### Accomplished
-- **Fetched + analyzed Claude Design handoff bundle** — extracted gzip/tar archive from Anthropic API, read README + chat transcript + all JSX source files (`tokens.jsx`, `surface-explore.jsx`, `primitives.jsx`)
-- **Implemented full design system** from `Isochrone NYC.html` into production codebase (8 files changed, 467 insertions)
-- **Inter Tight + JetBrains Mono** via `next/font/google` — loaded in `layout.tsx`, CSS variables `--font-ui` / `--font-data` in `@theme inline`, applied to all explore components
-- **ModeTabs → underline style** — removed pill container, `borderBottom: 2px solid var(--accent)` per active tab
-- **ModeLegend → 2-col ModePill** — removed SVG icons, replaced with 8×8 colored square dot, colored border + `color-mix()` tint when active
-- **TimeSlider → custom drag** — replaced `<input type="range">` with Pointer Events API + `setPointerCapture`, 32px mono readout, gradient track (green→purple, 12 stops), tick marks
-- **ReachStats → 3-col ReachBars** — `gridTemplateColumns: "70px 1fr 56px"`, 4px bars with mode colors, JetBrains Mono labels
-- **PanelSection** — lighter hairline border (`rgba(255,255,255,0.06)`), tighter 14px padding, mono section titles
-- **Sidebar** — narrowed from 420px → 360px, new wordmark (Inter Tight 700, cyan "NYC"), mono version label
-- **Deployed to production** — `vercel --prod`, all routes 200 on prod
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/app/layout.tsx` | Added Inter Tight + JetBrains Mono via next/font/google |
-| `src/app/globals.css` | Added `--font-ui` + `--font-data` Tailwind tokens, updated surface colors |
-| `src/app/explore/page.tsx` | Sidebar 360px, new wordmark, section labels updated, Street Style + View As redesigned |
-| `src/components/isochrone/mode-tabs.tsx` | Underline tab style, JetBrains Mono labels |
-| `src/components/isochrone/mode-legend.tsx` | 2-col ModePill, colored dot, no SVG icons |
-| `src/components/isochrone/time-slider.tsx` | Custom Pointer Events drag, 32px mono readout, gradient track |
-| `src/components/isochrone/reach-stats.tsx` | 3-col grid, 4px bars, JetBrains Mono |
-| `src/components/ui/panel-section.tsx` | Lighter hairline border, 14px padding, mono title |
-
-### Preflight
-- Build: ✅ clean (4.1s compile, TypeScript clean)
-- Tests: ✅ 120/120
-- Mobile 375px: ✅ fullscreen map + instruction card
-- Desktop 1440px: ✅ sidebar visible with all new components
-- Smoke test: ✅ 4/4 routes 200 on prod
-
-### Next Steps
-- [x] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
-- [ ] Data-load failure UX
-- [ ] Record demo GIF + soft launch
-
----
-
-## 2026-04-28 — Session 33: / becomes Explore; opacity fix; /explore redirect
-
-### Accomplished
-- **Made `/` the Explore experience** — landing card with 3 mode tiles replaced by the full Explore (drop-a-pin → reach map). Find + Rankings stay live at `/find` and `/rankings` but unlinked + dropped from sitemap.
-- **Extracted client component** — moved 1064-line `src/app/explore/page.tsx` → `src/components/explore/explore-content.tsx` so root `/page.tsx` can be a server component with `generateMetadata` for dynamic OG.
-- **`/explore` → `/` 308 redirect** preserving query params (verified: `/explore?lat=40.758&lng=-73.985&t=30` → `/?lat=40.758&lng=-73.985&t=30`). Existing share links / OG cards keep working.
-- **"Drop a pin to start" legibility fix** — heading `text-white/20` → `/70`, helper `text-white/30` → `/50`. Was nearly invisible against the dark map.
-- **Removed `src/app/explore/layout.tsx`** — its `generateMetadata` logic merged into the new root `page.tsx`.
-- **Sitemap collapsed** to a single canonical route (`/`).
-- **Mobile redesign already shipped** in earlier commits — instruction card → result card → menu drawer flow is wired. Could not verify at 375px because Chrome's window resize on macOS doesn't shrink the inner viewport below ~1700px; will verify on phone next session.
-- **Deployed to prod** — `vercel --prod`, smoke checks pass.
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/app/page.tsx` | Replace landing-card UI with server component: `generateMetadata` + render `<ExploreContent />` |
-| `src/app/explore/page.tsx` | Replace 1064-line client component with `permanentRedirect` handler preserving query params |
-| `src/components/explore/explore-content.tsx` | New — extracted from old `/explore/page.tsx` |
-| `src/app/explore/layout.tsx` | Deleted — metadata logic moved to root `/page.tsx` |
-| `src/app/sitemap.ts` | Drop `/explore /find /rankings /compare`, leaving only `/` |
-
-### Next Steps
-- [ ] Phone-test mobile flow (drop-pin / menu drawer / result card)
-- [x] Attribution footer (MTA/Mapbox/Citi Bike/NYC Open Data)
-- [ ] Record demo GIF + soft launch
-- [ ] Optional: run T3 CEO review on the / consolidation
-
----
-
-## 2026-05-03 — Session 34: Review + attribution footer + mapbox-gl 3.23
-
-### Accomplished
-- **Ran `/review`** — all T0-T2 clean: preflight (build clean, 120/120), smoke test (7/7 routes 200 on prod), code/security/perf suite (3 low-severity findings), design review (pass), health check (clean working tree)
-- **Attribution footer** — added data/map attribution to desktop sidebar (bottom, after content) and mobile menu drawer. JetBrains Mono, `rgba(255,255,255,0.28)`, hairline top border. Links: MTA · Citi Bike · NYC Open Data · © Mapbox · © OpenStreetMap
-- **Replaced 5 silent `catch {}` blocks** with `console.warn("[IsochroneMap] <layer> layer unavailable", err)` in `isochrone-map.tsx` — street-overlay, water-mask, waterway-mask, park-overlay, neighborhood-lines
-- **Bumped mapbox-gl** `^3.22.0` → `^3.23.0`, ran `npm install`, verified 120/120 tests still pass
-- **Deleted stray `~/package-lock.json`** — orphan lockfile at home directory unrelated to any project
-- **Deployed to prod** — `vercel --prod`, all routes 200
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/components/explore/explore-content.tsx` | Attribution footer in desktop sidebar + mobile menu content |
-| `src/components/isochrone/isochrone-map.tsx` | 5 silent catches → console.warn with layer name |
-| `package.json` | mapbox-gl ^3.22 → ^3.23 |
-| `package-lock.json` | Updated lockfile |
-
-### Verification
-- Build: ✅ clean
-- Tests: ✅ 120/120
-- Smoke (prod): ✅ 4/4 routes 200 post-deploy
-
-### Next Steps
-- [ ] Verify mobile flow on real phone (drop-pin, menu drawer, result card)
-- [ ] Record demo GIF (Kap recommended; ~8-10s showing pin drop → heatmap reveal → slider drag)
-- [ ] Soft launch (Twitter/X + LinkedIn)
-- [ ] Optional: T3 CEO review (27d stale)
-
----
-
-## 2026-05-15 — Session 35: INP fix (warmGridWorker) + route cleanup
-
-### Accomplished
-- **Full QA + /review ran**: preflight clean, smoke test (7/7 routes), code/security/perf suite clean, design review clean, CEO plan review (Quick / REDUCTION posture)
-- **INP 8,523ms → ~1,200ms**: Added `warmGridWorker()` to `src/lib/grid.ts` — pre-spins web worker and sends `LOAD_DATA` on mount (after transit data ready). First quick-pick click now only sends COMPUTE instead of worker-spin + LOAD_DATA + COMPUTE
-- **Added `warmGridWorker` useEffect in `explore-content.tsx`**: fires after `dataReady` + all transit data loaded; calls warmGridWorker with full transit payload
-- **Deleted 3 unlinked routes**: `/find` (page.tsx + layout.tsx), `/rankings` (page.tsx + rankings-list.tsx), `/compare` (page.tsx + layout.tsx) — 6 files. Build: 9 → 7 routes. REDUCTION CEO posture pre-soft-launch
-- **2 commits pushed to main** and deployed: `47537f4` (INP fix), `6f6b27b` (route deletions)
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/lib/grid.ts` | Added `WarmupInput` type + `warmGridWorker()` function (+57 lines) |
-| `src/components/explore/explore-content.tsx` | Added `warmGridWorker` import + mount-time useEffect |
-| `src/app/find/` | Deleted (page.tsx, layout.tsx) |
-| `src/app/rankings/` | Deleted (page.tsx, rankings-list.tsx) |
-| `src/app/compare/` | Deleted (page.tsx, layout.tsx) |
-
-### Next Steps
-- [x] Widget polish — ReachStats data completeness (union total, % of grid, nearest-stop hints)
-- [x] /dead-code-scanner: hard-delete wizard/, results/, landing/, setup/ dirs (2,282 LOC)
-- [x] build:rankings orphan — removed script + rankings.json from build
-- [ ] Verify mobile on real phone (drop-pin, menu drawer, result card)
-- [ ] Record demo GIF + soft launch
-
----
-
-## 2026-05-23 — Session 36: Dead-code purge + ReachStats data completeness
-
-### Accomplished
-- **Hard-deleted 2,282 LOC** across wizard/ (5 files), results/ (6 files), landing/ (4 files), setup/ (2 files) — zero surviving imports confirmed via grep
-- **Removed `build:rankings` orphan** — deleted `scripts/build-rankings.ts` + `public/data/rankings.json` + stripped the pre-build step from `package.json`
-- **Extracted `src/lib/reach-stats.ts`** — pure-function library for all ReachStats math: `reachableCellCount`, `unionReach` (dedup), `perModeReach` (sorted desc), `nearestStopWalkMinutes`, `nearestStopsForAllModes`. Cell area derived from `getHexagonAreaAvg(H3_RESOLUTION, "km2")` × 0.386102 mi²/km²
-- **Rewrote `src/components/isochrone/reach-stats.tsx`** — added union-total row (any mode), % of grid alongside mi², nearest-stop walk-hint subtext per mode (subway/bus/ferry/bike)
-- **Wired `nearestStops` useMemo** in `explore-content.tsx` — feeds origin + transit data → `nearestStopsForAllModes` → prop to ReachStats
-- **Added 20 unit tests** (`src/lib/__tests__/reach-stats.test.ts`) — 140/140 passing total
-- **Ran /review** — fixed 3 warnings: `H3_RESOLUTION_FOR_GRID` duplicate → import from constants, nearest-stop text 9px→10px, union/per-mode rows got `role="group"` + `aria-label` a11y
-- **3 commits pushed to main**, Vercel auto-deployed
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/lib/reach-stats.ts` | NEW — pure-function reach stats library |
-| `src/lib/__tests__/reach-stats.test.ts` | NEW — 20 unit tests |
-| `src/components/isochrone/reach-stats.tsx` | Rewritten — union row, % grid, nearest-stop hints, a11y |
-| `src/components/explore/explore-content.tsx` | Added nearestStops useMemo + prop pass |
-| `src/components/wizard/` | Deleted (5 files) |
-| `src/components/results/` | Deleted (6 files) |
-| `src/components/landing/` | Deleted (4 files) |
-| `src/components/setup/` | Deleted (2 files) |
-| `scripts/build-rankings.ts` | Deleted |
-| `public/data/rankings.json` | Deleted |
-| `package.json` | Removed build:rankings + pre-build step |
-
-### Next Steps
-- [ ] Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
-- [ ] Record demo GIF + soft launch (Twitter/LinkedIn)
-- [ ] Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6)
 
 ---
 
@@ -251,3 +85,40 @@
 - [ ] Pride-share brainstorm (see Kickoff)
 - [ ] Knicks brand-chrome mockups
 - [ ] Re-record demo GIF on new prod; real-phone QA
+
+---
+
+## 2026-06-11 — Session 39: Pride-share loop + Knicks chrome + slider jank perf fix
+
+### Accomplished
+- **Pride-share loop** (end-to-end): `scripts/build-pride-data.ts` fetches Census CenPop2020_Mean_BG (no API key) + Overpass OSM POIs/parks → `public/data/pride-population.json` + `pride-pois.json` + `pride-parks.json` (res-9 keyed, committed)
+- **`src/lib/subway-lines.ts`** — `LINE_COLORS`, `normalizeLine()` (6X→6, GS/FS/H→S), `sortLines()`, `lineTextColor()`
+- **`src/lib/pride-stats.ts`** — `computePrideStats` + `precomputeCellParents` (perf); 6 unit tests in `pride-stats.test.ts`; 148/148 tests pass
+- **`src/lib/pride-data.ts`** + `src/hooks/use-pride-tables.ts` — lazy load + `requestIdleCallback` defer
+- **`src/components/isochrone/pride-stats.tsx`** — sidebar panel: population, restaurants, cafes, bars, parks, subway line bullets
+- **`src/app/api/og/route.tsx`** rewritten — stat params (pop/rest/cafe/bar/park/lines), `hashFuzz()` for deterministic pin offset, Knicks split-bar mark, 3-col stats grid + line bullets row
+- **`src/app/p/[slug]/page.tsx`** — forwards stat params from searchParams to OG URL
+- **Knicks variant-C chrome** — split-bar mark (5×22 gradient #006BB6/#F58426, borderRadius 2) in site wordmark; "NYC" span → `#F58426`; same mark on OG card
+- **Snap-then-fuzz anonymization** — share origin snapped to res-8 centroid; visual-only hashFuzz pin on OG card
+- **Perf fix (slider jank)**: `precomputeCellParents` memoized on `cells` only (hoist WASM calls out of tick path: 71ms → 6.8ms); `useDeferredValue(maxMinutes)` decouples slider readout + GL filter (immediate) from stat panel recompute (lower priority)
+- **10 commits pushed to main**, deployed to prod (`a067ce8`); build clean, 148/148 tests
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `scripts/build-pride-data.ts` | NEW — Census + Overpass build script |
+| `public/data/pride-*.json` | NEW — generated res-9 tables (population, pois, parks) |
+| `src/lib/subway-lines.ts` | NEW — LINE_COLORS, normalizeLine, sortLines, lineTextColor |
+| `src/lib/pride-stats.ts` | NEW — computePrideStats + precomputeCellParents |
+| `src/lib/pride-stats.test.ts` | NEW — 6 unit tests |
+| `src/lib/pride-data.ts` | NEW — data loaders + buildStationLineIndex |
+| `src/hooks/use-pride-tables.ts` | NEW — requestIdleCallback deferred load |
+| `src/components/isochrone/pride-stats.tsx` | NEW — sidebar stats panel |
+| `src/components/explore/explore-content.tsx` | Knicks chrome, prideStats memos, deferredMaxMinutes, shareLink with stat params |
+| `src/app/api/og/route.tsx` | Rewritten — stats panel, hashFuzz pin, Knicks chrome |
+| `src/app/p/[slug]/page.tsx` | Forward stat params to OG URL |
+
+### Next Steps
+- [ ] Re-record marketing/ assets (now stale — predates pride card + Knicks chrome)
+- [ ] Real-phone QA (375px slider drag, pinch zoom)
+- [ ] Optional: T3 CEO review (64d stale)
