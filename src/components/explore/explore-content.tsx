@@ -695,6 +695,8 @@ export default function ExplorePage() {
       <div className="px-1 pt-2 pb-1 hidden md:block">
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
             fontFamily: "var(--font-ui)",
             fontSize: 22,
             fontWeight: 700,
@@ -703,8 +705,20 @@ export default function ExplorePage() {
             color: "#f5f6fa",
           }}
         >
-          Isochrone{" "}
-          <span style={{ color: "var(--color-accent, #22d3ee)" }}>NYC</span>
+          {/* Knicks split-bar mark */}
+          <span
+            aria-hidden="true"
+            style={{
+              width: 5,
+              height: 22,
+              borderRadius: 2,
+              marginRight: 9,
+              background: "linear-gradient(#006BB6 50%, #F58426 50%)",
+            }}
+          />
+          <span>
+            Isochrone <span style={{ color: "#F58426" }}>NYC</span>
+          </span>
         </div>
         <p
           style={{
