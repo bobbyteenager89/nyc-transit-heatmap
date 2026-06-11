@@ -76,3 +76,5 @@ When compute hangs/times out, promise rejected but hook only `console.error()`'d
 
 ### innerText vs textContent: text-transform CSS Hides Search Keywords
 `innerText` respects CSS, so `text-transform: uppercase` on "Your Reach" means `innerText` returns "YOUR REACH". Search/grep for the visible text, not the DOM text. Affects Puppeteer + fuzzy-find tools.
+
+Global learnings: ~/.claude/projects/-Users-andrew/memory/learnings/ (grep Module:/Tags: before implementing in a known area)

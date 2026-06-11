@@ -5,21 +5,24 @@
 ---
 
 ## Current State
-**Last session:** 2026-05-28 — S37: INP fix (warmGridWorker idle-defer + progress throttle + React.memo) + fairness layer setFilter + parallel data loads + location defaults
+**Last session:** 2026-06-11 — S38: Mobile parity + share-link hang root-cause fix (S37 warmup race) + auto-fit camera + marketing assets, all merged & live
 **Next:**
-- Verify mobile at 375px on real phone (drop-pin, menu drawer, result card)
-- Record demo GIF + soft launch (Twitter/LinkedIn)
-- Check Vercel Speed Insights in 1-2 days to confirm INP improvement in prod traffic
-- Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6, react 19.2.6, vitest 4.1.7)
+- Brainstorm pride-share loop (population/POI stats card, anonymized dot, share text+link)
+- Knicks brand-chrome mockups (2-3 variants: wordmark/accents/OG in #006BB6/#F58426, time ramp untouched)
+- Re-record demo GIF on prod (now has new mobile sheet + auto-fit reveal)
+- Real-phone QA still outstanding (slider drag, pinch zoom at 375px)
 **Branch:** main / clean
 
 ---
 
 ## Next Session Kickoff
-**Mode:** shallow
-**First action:** Phone QA + demo GIF — verify 375px flow on real phone, record with Kap, then soft launch on Twitter/LinkedIn. Also check Vercel Speed Insights to see if S37 INP fixes show in prod metrics.
+**Mode:** brainstorm
+**First action:** Invoke brainstorming for the pride-share loop — v1 stats card (population + restaurants + coffee shops within reach), share artifact that provokes counter-shares. Data: census tracts pre-baked at build time (like subway graph), POIs from OSM/Overpass. See memory: transit-heatmap-viral-vision.
 **Open questions:**
-- none
+- Anonymization: snap shared dot to hex center, or fuzz radius? How much?
+- v1 stat set: population + restaurants + coffee shops — what else is brag-worthy (bars, parks, subway lines)?
+- Share artifact: stats baked into the OG card vs separate downloadable card?
+- Knicks chrome: which of the 2-3 mockup variants (decide after seeing them)
 **Decisions pending:** none
 **Ready plan:** none
 
@@ -219,3 +222,32 @@
 - [ ] Record demo GIF + soft launch (Twitter/LinkedIn)
 - [ ] Check Vercel Speed Insights in 1-2 days to confirm INP improvement
 - [ ] Optional: 7 patch dep updates (tailwind 4.3, mapbox-gl 3.24, next 16.2.6, react 19.2.6, vitest 4.1.7)
+
+---
+## 2026-06-11 — Session 38: Mobile parity, hang root-cause fix, auto-fit, marketing assets
+
+### Accomplished
+- Full /review sweep (preflight, smoke, code/design/security, health) → 12 findings, all P1-P5 fixed
+- Mobile parity: bottom sheet gained ModeTabs (Reach/Live/Meet), mode description, "Use my location", Meet/Live panels; 8 controls bumped to 44px tap targets; dialog a11y on How-it-works; AddressAutocomplete syncs externally-set addresses
+- ROOT-CAUSED prod hang ("Computing… 0%" → blank map): S37 requestIdleCallback warmup clobbered the in-flight compute's worker.onmessage → COMPUTE never dispatched → 60s watchdog killed worker silently. Also: worker setTimeout chunking throttled in hidden tabs (fix: MessageChannel), and errors swallowed (fix: computeError banner). Regression test: src/lib/grid-warmup-race.test.ts. Verified headless against prod: previously hung forever, now ~8s
+- Auto-fit camera to reach extent after compute (fitBounds, slider-drag safe)
+- OG share card: map 0.4→0.85 opacity, lighter gradient, cyan pin at location
+- next 16.2.4→16.2.9 (13 CVEs); marketing/: demo GIF (+mp4+small), desktop hero, OG preview, iMessage mockup
+- PR #4 merged + deployed + verified live; compound-docs captured 3 learnings (worker race, timer throttling, silent failures) → CLAUDE.md Gotchas + global learnings
+- Product direction captured (memory: transit-heatmap-viral-vision): pride-share stats, comparison-as-the-loop, Knicks chrome only
+
+### Files Modified
+| File | Changes |
+| explore-content.tsx | mobile menu parity, shared JSX consts, a11y dialog, error banner, reachBounds |
+| grid.ts / grid-worker.ts | warmup race guards, MessageChannel chunk scheduling, generation counter |
+| use-dynamic-grid-compute.ts | computeError state (no more silent failure) |
+| isochrone-map.tsx | reachBounds fitBounds effect |
+| mobile-bottom-sheet/-instruction/-result-card, mode-tabs/-legend, map-legend | 44px tap targets, spacing |
+| address-autocomplete.tsx | external value sync, mono label |
+| api/og/route.tsx | brighter map + pin |
+| marketing/ | demo GIF/mp4, screenshots, iMessage mockup |
+
+### Next Steps
+- [ ] Pride-share brainstorm (see Kickoff)
+- [ ] Knicks brand-chrome mockups
+- [ ] Re-record demo GIF on new prod; real-phone QA
